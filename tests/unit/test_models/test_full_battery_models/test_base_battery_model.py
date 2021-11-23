@@ -5,7 +5,6 @@ from pybamm.models.full_battery_models.base_battery_model import BatteryModelOpt
 import pybamm
 import unittest
 import io
-import os
 from contextlib import redirect_stdout
 
 OPTIONS_DICT = {
@@ -37,6 +36,7 @@ PRINT_OPTIONS_OUTPUT = """\
 'total interfacial current density as a state': 'false' (possible: ['true', 'false'])
 'working electrode': 'both' (possible: ['both', 'negative', 'positive'])
 'SEI film resistance': 'none' (possible: ['none', 'distributed', 'average'])
+'stress-induced diffusion': 'false' (possible: ['true', 'false'])
 """  # noqa: E501
 
 
@@ -75,6 +75,14 @@ class TestBaseBatteryModel(unittest.TestCase):
         param_flux_2 = parameter_values.process_symbol(flux_2)
         disc_flux_2 = disc.process_symbol(param_flux_2)
         self.assertEqual(flux_1.id, disc_flux_2.id)
+
+    def test_summary_variables(self):
+        model = pybamm.BaseBatteryModel()
+        model.variables["var"] = pybamm.Scalar(1)
+        model.summary_variables = ["var"]
+        self.assertEqual(model.summary_variables, ["var"])
+        with self.assertRaisesRegex(KeyError, "No cycling variable defined"):
+            model.summary_variables = ["bad var"]
 
     def test_default_geometry(self):
         var = pybamm.standard_spatial_vars
@@ -117,8 +125,8 @@ class TestBaseBatteryModel(unittest.TestCase):
             var.x_n: 20,
             var.x_s: 20,
             var.x_p: 20,
-            var.r_n: 30,
-            var.r_p: 30,
+            var.r_n: 20,
+            var.r_p: 20,
             var.y: 10,
             var.z: 10,
             var.R_n: 30,
@@ -168,6 +176,22 @@ class TestBaseBatteryModel(unittest.TestCase):
             pybamm.BaseBatteryModel(
                 {"dimensionality": 1, "current collector": "bad option"}
             )
+        with self.assertRaisesRegex(pybamm.OptionError, "1D current collectors"):
+            pybamm.BaseBatteryModel(
+                {
+                    "current collector": "potential pair",
+                    "dimensionality": 1,
+                    "thermal": "x-full",
+                }
+            )
+        with self.assertRaisesRegex(pybamm.OptionError, "2D current collectors"):
+            pybamm.BaseBatteryModel(
+                {
+                    "current collector": "potential pair",
+                    "dimensionality": 2,
+                    "thermal": "x-full",
+                }
+            )
         with self.assertRaisesRegex(pybamm.OptionError, "surface form"):
             pybamm.BaseBatteryModel({"surface form": "bad surface form"})
         with self.assertRaisesRegex(pybamm.OptionError, "convection"):
@@ -178,7 +202,7 @@ class TestBaseBatteryModel(unittest.TestCase):
             pybamm.BaseBatteryModel({"convection": "full transverse"})
         with self.assertRaisesRegex(pybamm.OptionError, "particle"):
             pybamm.BaseBatteryModel({"particle": "bad particle"})
-        with self.assertRaisesRegex(NotImplementedError, "The 'fast diffusion'"):
+        with self.assertRaisesRegex(pybamm.OptionError, "The 'fast diffusion'"):
             pybamm.BaseBatteryModel({"particle": "fast diffusion"})
         with self.assertRaisesRegex(pybamm.OptionError, "particle shape"):
             pybamm.BaseBatteryModel({"particle shape": "bad particle shape"})
@@ -252,6 +276,11 @@ class TestBaseBatteryModel(unittest.TestCase):
                     "plating porosity change"
                 }
             )
+        # stress-induced diffusion
+        with self.assertRaisesRegex(pybamm.OptionError, "cannot have stress"):
+            pybamm.BaseBatteryModel({"stress-induced diffusion": "true"})
+
+        # hydrolysis
         with self.assertRaisesRegex(pybamm.OptionError, "surface formulation"):
             pybamm.lead_acid.LOQS({"hydrolysis": "true", "surface form": "false"})
 
@@ -282,23 +311,6 @@ class TestBaseBatteryModel(unittest.TestCase):
         a = pybamm.Variable("a")
         model.algebraic = {a: a - 1}
         self.assertIsInstance(model.default_solver, pybamm.CasadiAlgebraicSolver)
-
-    def test_default_parameters(self):
-        # check parameters are read in ok
-        model = pybamm.BaseBatteryModel()
-        self.assertEqual(
-            model.default_parameter_values["Reference temperature [K]"], 298.15
-        )
-
-        # change path and try again
-
-        cwd = os.getcwd()
-        os.chdir("..")
-        model = pybamm.BaseBatteryModel()
-        self.assertEqual(
-            model.default_parameter_values["Reference temperature [K]"], 298.15
-        )
-        os.chdir(cwd)
 
     def test_timescale(self):
         model = pybamm.BaseModel()
