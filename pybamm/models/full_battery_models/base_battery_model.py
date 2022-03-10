@@ -49,7 +49,7 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 "surface form" cannot be 'false'.
             * "lithium plating" : str, optional
                 Sets the model for lithium plating. Can be "none" (default),
-                "reversible" or "irreversible".
+                "reversible", "partially reversible", or "irreversible".
             * "loss of active material" : str
                 Sets the model for loss of active material. Can be "none" (default),
                 "stress-driven", or "reaction-driven".
@@ -160,7 +160,7 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 "integrated",
             ],
             "hydrolysis": ["true", "false"],
-            "lithium plating": ["none", "reversible", "irreversible"],
+            "lithium plating": ["none", "reversible", "partially reversible" "irreversible"],
             "lithium plating porosity change": ["true", "false"],
             "loss of active material": ["none", "stress-driven", "reaction-driven"],
             "operating mode": ["current", "voltage", "power", "CCCV"],

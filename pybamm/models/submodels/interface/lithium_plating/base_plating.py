@@ -53,7 +53,7 @@ class BasePlating(BaseInterface):
 
         return variables
 
-    def _get_standard_concentration_variables(self, c_plated_Li):
+    def _get_standard_concentration_variables(self, c_plated_Li, c_dead_Li):
         """
         A private function to obtain the standard variables which
         can be derived from the local plated lithium concentration.
@@ -82,20 +82,27 @@ class BasePlating(BaseInterface):
         L_plated_Li_av = pybamm.x_average(L_plated_Li)
         Q_plated_Li = c_plated_Li_av * param.L_n * param.L_y * param.L_z
 
+        c_dead_Li_av = pybamm.x_average(c_dead_Li)
+        Q_dead_Li = c_dead_Li_av * param.L_n * param.L_y * param.L_z
+
         variables = {
             "Lithium plating concentration": c_plated_Li,
             "Lithium plating concentration [mol.m-3]": c_plated_Li * c_scale,
             "X-averaged lithium plating concentration": c_plated_Li_av,
             "X-averaged lithium plating concentration"
             " [mol.m-3]": c_plated_Li_av * c_scale,
+            "Dead lithium concentration": c_dead_Li,
+            "Dead lithium concentration [mol.m-3]": c_dead_Li * c_scale,
+            "X-averaged dead lithium concentration": c_dead_Li_av,
+            "X-averaged dead lithium concentration"
+            " [mol.m-3]": c_dead_Li_av * c_scale,
             "Lithium plating thickness": L_plated_Li,
             "Lithium plating thickness [m]": L_plated_Li * L_scale,
             "X-averaged lithium plating thickness [m]": L_plated_Li_av * L_scale,
-            "Loss of lithium to lithium plating [mol]": Q_plated_Li * c_scale,
-            "Loss of capacity to lithium plating [A.h]": Q_plated_Li
-            * c_scale
-            * param.F
-            / 3600,
+            "Loss of lithium to lithium plating [mol]": (Q_plated_Li + Q_dead_Li)
+            * c_scale,
+            "Loss of capacity to lithium plating [A.h]": 
+            (Q_plated_Li + Q_dead_Li) * c_scale * param.F / 3600,
         }
 
         return variables
