@@ -7,8 +7,9 @@ import numpy as np
 
 class StandardVariables:
     def __init__(self):
-        # Discharge capacity
-        self.Q = pybamm.Variable("Discharge capacity [A.h]")
+        # Discharge capacity and energy
+        self.Q_Ah = pybamm.Variable("Discharge capacity [A.h]")
+        self.Q_Wh = pybamm.Variable("Discharge energy [W.h]")
 
         # Electrolyte concentration
         self.c_e_n = pybamm.Variable(
@@ -318,6 +319,26 @@ class StandardVariables:
         self.L_outer_interface = pybamm.Variable(
             "Outer SEI thickness",
             domain=["current collector"],
+        )
+
+        # Interface utilisation
+        self.u_n = pybamm.Variable(
+            "Negative electrode interface utilisation",
+            domain="negative electrode",
+            auxiliary_domains={"secondary": "current collector"},
+        )
+        self.u_p = pybamm.Variable(
+            "Positive electrode interface utilisation",
+            domain="positive electrode",
+            auxiliary_domains={"secondary": "current collector"},
+        )
+        self.u_n_xav = pybamm.Variable(
+            "X-averaged negative electrode interface utilisation",
+            domain="current collector",
+        )
+        self.u_p_xav = pybamm.Variable(
+            "X-averaged positive electrode interface utilisation",
+            domain="current collector",
         )
 
     def __setattr__(self, name, value):

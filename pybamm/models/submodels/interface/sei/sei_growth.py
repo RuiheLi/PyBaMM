@@ -15,7 +15,7 @@ class SEIGrowth(BaseModel):
         The parameters to use for this submodel
     reaction_loc : str
         Where the reaction happens: "x-average" (SPM, SPMe, etc),
-        "full electrode" (full DFN), or "interface" (half-cell DFN)
+        "full electrode" (full DFN), or "interface" (half-cell model)
     options : dict, optional
         A dictionary of options to be passed to the model.
 
@@ -188,6 +188,6 @@ class SEIGrowth(BaseModel):
         L_inner_0 = self.param.L_inner_0
         L_outer_0 = self.param.L_outer_0
         if self.options["SEI"] == "ec reaction limited":
-            self.initial_conditions = {L_outer: L_outer_0}
+            self.initial_conditions = {L_outer: L_inner_0 + L_outer_0}
         else:
             self.initial_conditions = {L_inner: L_inner_0, L_outer: L_outer_0}

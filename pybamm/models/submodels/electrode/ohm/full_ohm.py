@@ -37,7 +37,7 @@ class Full(BaseModel):
     def get_coupled_variables(self, variables):
 
         phi_s = variables[self.domain + " electrode potential"]
-        tor = variables[self.domain + " electrode tortuosity"]
+        tor = variables[self.domain + " electrode transport efficiency"]
         T = variables[self.domain + " electrode temperature"]
 
         if self.domain == "Negative":
@@ -77,7 +77,7 @@ class Full(BaseModel):
 
         phi_s = variables[self.domain + " electrode potential"]
         phi_s_cn = variables["Negative current collector potential"]
-        tor = variables[self.domain + " electrode tortuosity"]
+        tor = variables[self.domain + " electrode transport efficiency"]
         T = variables[self.domain + " electrode temperature"]
 
         if self.domain == "Negative":
@@ -102,6 +102,6 @@ class Full(BaseModel):
         if self.domain == "Negative":
             phi_s_init = pybamm.Scalar(0)
         elif self.domain == "Positive":
-            phi_s_init = self.param.U_p_init - self.param.U_n_init
+            phi_s_init = self.param.ocv_init
 
         self.initial_conditions[phi_s] = phi_s_init

@@ -20,11 +20,11 @@ class BaseModel(pybamm.BaseBatteryModel):
         # Assess whether the submodel is a half-cell model
         self.half_cell = self.options["working electrode"] != "both"
 
-        # Default timescale is discharge timescale
-        self.timescale = self.param.tau_discharge
+        # Default timescale
+        self._timescale = self.param.timescale
 
         # Set default length scales
-        self.length_scales = {
+        self._length_scales = {
             "negative electrode": self.param.L_x,
             "separator": self.param.L_x,
             "positive electrode": self.param.L_x,
@@ -47,9 +47,9 @@ class BaseModel(pybamm.BaseBatteryModel):
     @property
     def default_parameter_values(self):
         if self.half_cell:
-            return pybamm.ParameterValues(chemistry=pybamm.parameter_sets.Xu2019)
+            return pybamm.ParameterValues("Xu2019")
         else:
-            return pybamm.ParameterValues(chemistry=pybamm.parameter_sets.Marquis2019)
+            return pybamm.ParameterValues("Marquis2019")
 
     @property
     def default_quick_plot_variables(self):
@@ -136,7 +136,10 @@ class BaseModel(pybamm.BaseBatteryModel):
         # Lithium lost to side reactions
         # Different way of measuring LLI but should give same value
         LLI_sei = self.variables["Loss of lithium to SEI [mol]"]
-        LLI_pl = self.variables["Loss of lithium to lithium plating [mol]"]
+        if self.half_cell:
+            LLI_pl = pybamm.Scalar(0)
+        else:
+            LLI_pl = self.variables["Loss of lithium to lithium plating [mol]"]
 
         LLI_reactions = LLI_sei + LLI_pl
         self.variables.update(
@@ -168,9 +171,7 @@ class BaseModel(pybamm.BaseBatteryModel):
             "Total lithium lost from particles [mol]",
             "Total lithium lost from electrolyte [mol]",
             "Loss of lithium to SEI [mol]",
-            "Loss of lithium to lithium plating [mol]",
             "Loss of capacity to SEI [A.h]",
-            "Loss of capacity to lithium plating [A.h]",
             "Total lithium lost to side reactions [mol]",
             "Total capacity lost to side reactions [A.h]",
             # Resistance
@@ -182,6 +183,8 @@ class BaseModel(pybamm.BaseBatteryModel):
                 "Negative electrode capacity [A.h]",
                 "Loss of active material in negative electrode [%]",
                 "Total lithium in negative electrode [mol]",
+                "Loss of lithium to lithium plating [mol]",
+                "Loss of capacity to lithium plating [A.h]",
             ]
 
         self.summary_variables = summary_variables
@@ -214,29 +217,23 @@ class BaseModel(pybamm.BaseBatteryModel):
             )
 
     def set_other_reaction_submodels_to_zero(self):
-        self.submodels["negative oxygen interface"] = pybamm.interface.NoReaction(
+        self.submodels["negative oxygen interface"] = pybamm.kinetics.NoReaction(
             self.param, "Negative", "lithium-ion oxygen"
         )
-        self.submodels["positive oxygen interface"] = pybamm.interface.NoReaction(
+        self.submodels["positive oxygen interface"] = pybamm.kinetics.NoReaction(
             self.param, "Positive", "lithium-ion oxygen"
         )
 
     def set_crack_submodel(self):
-        # this option can either be a string (both sides the same) or a 2-tuple
-        # to indicate different options in negative and positive electrodes
-        if isinstance(self.options["particle mechanics"], str):
-            crack_left = self.options["particle mechanics"]
-            crack_right = self.options["particle mechanics"]
-        else:
-            crack_left, crack_right = self.options["particle mechanics"]
-        for crack_side, domain in [[crack_left, "Negative"], [crack_right, "Positive"]]:
-            if crack_side == "none":
+        for domain in ["Negative", "Positive"]:
+            crack = getattr(self.options, domain.lower())["particle mechanics"]
+            if crack == "none":
                 pass
-            elif crack_side == "swelling only":
+            elif crack == "swelling only":
                 self.submodels[
                     domain.lower() + " particle mechanics"
                 ] = pybamm.particle_mechanics.SwellingOnly(self.param, domain)
-            elif crack_side == "swelling and cracking":
+            elif crack == "swelling and cracking":
                 self.submodels[
                     domain.lower() + " particle mechanics"
                 ] = pybamm.particle_mechanics.CrackPropagation(
@@ -244,28 +241,16 @@ class BaseModel(pybamm.BaseBatteryModel):
                 )
 
     def set_active_material_submodel(self):
-        # this option can either be a string (both sides the same) or a 2-tuple
-        # to indicate different options in negative and positive electrodes
-        if isinstance(self.options["loss of active material"], str):
-            lam_left = self.options["loss of active material"]
-            lam_right = self.options["loss of active material"]
-        else:
-            lam_left, lam_right = self.options["loss of active material"]
-        for lam_side, domain in [[lam_left, "Negative"], [lam_right, "Positive"]]:
-            if lam_side == "none":
+        for domain in ["Negative", "Positive"]:
+            lam = getattr(self.options, domain.lower())["loss of active material"]
+            if lam == "none":
                 self.submodels[
                     domain.lower() + " active material"
                 ] = pybamm.active_material.Constant(self.param, domain, self.options)
-            elif lam_side == "stress-driven":
+            else:
                 self.submodels[
                     domain.lower() + " active material"
-                ] = pybamm.active_material.StressDriven(
-                    self.param, domain, self.options, self.x_average
-                )
-            elif lam_side == "reaction-driven":
-                self.submodels[
-                    domain.lower() + " active material"
-                ] = pybamm.active_material.ReactionDriven(
+                ] = pybamm.active_material.LossActiveMaterial(
                     self.param, domain, self.options, self.x_average
                 )
 
@@ -286,27 +271,31 @@ class BaseModel(pybamm.BaseBatteryModel):
             )
 
     def set_li_metal_counter_electrode_submodels(self):
-        if self.options["SEI"] in ["none", "constant"]:
+        if (
+            self.options["SEI"] in ["none", "constant"]
+            and self.options["intercalation kinetics"] == "symmetric Butler-Volmer"
+            and self.options["surface form"] == "false"
+        ):
+            # only symmetric Butler-Volmer can be inverted
             self.submodels[
                 "counter electrode potential"
             ] = pybamm.electrode.ohm.LithiumMetalExplicit(self.param, self.options)
             self.submodels[
                 "counter electrode interface"
-            ] = pybamm.interface.InverseButlerVolmer(
+            ] = pybamm.kinetics.InverseButlerVolmer(
                 self.param, "Negative", "lithium metal plating", self.options
             )  # assuming symmetric reaction for now so we can take the inverse
             self.submodels[
                 "counter electrode interface current"
-            ] = pybamm.interface.CurrentForInverseButlerVolmerLithiumMetal(
+            ] = pybamm.kinetics.CurrentForInverseButlerVolmerLithiumMetal(
                 self.param, "Negative", "lithium metal plating", self.options
             )
         else:
             self.submodels[
                 "counter electrode potential"
             ] = pybamm.electrode.ohm.LithiumMetalSurfaceForm(self.param, self.options)
-            self.submodels[
-                "counter electrode interface"
-            ] = pybamm.interface.ButlerVolmer(
+            neg_intercalation_kinetics = self.get_intercalation_kinetics("Negative")
+            self.submodels["counter electrode interface"] = neg_intercalation_kinetics(
                 self.param, "Negative", "lithium metal plating", self.options
             )
 
@@ -321,5 +310,7 @@ class BaseModel(pybamm.BaseBatteryModel):
         # Models added specifically for the counter electrode have been labelled with
         # "counter electrode" so as not to be caught by this check
         self.submodels = {
-            k: v for k, v in self.submodels.items() if not k.startswith("negative")
+            k: v
+            for k, v in self.submodels.items()
+            if not (k.startswith("negative") or k == "lithium plating")
         }

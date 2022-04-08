@@ -14,29 +14,34 @@ OPTIONS_DICT = {
 }
 
 PRINT_OPTIONS_OUTPUT = """\
+'calculate discharge energy': 'false' (possible: ['false', 'true'])
 'cell geometry': 'pouch' (possible: ['arbitrary', 'pouch'])
+'calculate heat source for isothermal models': 'false' (possible: ['false', 'true'])
 'convection': 'none' (possible: ['none', 'uniform transverse', 'full transverse'])
 'current collector': 'uniform' (possible: ['uniform', 'potential pair', 'potential pair quite conductive'])
 'dimensionality': 0 (possible: [0, 1, 2])
 'electrolyte conductivity': 'default' (possible: ['default', 'full', 'leading order', 'composite', 'integrated'])
-'external submodels': []
-'hydrolysis': 'false' (possible: ['true', 'false'])
+'hydrolysis': 'false' (possible: ['false', 'true'])
+'intercalation kinetics': 'symmetric Butler-Volmer' (possible: ['symmetric Butler-Volmer', 'asymmetric Butler-Volmer', 'linear', 'Marcus', 'Marcus-Hush-Chidsey'])
+'interface utilisation': 'full' (possible: ['full', 'constant', 'current-driven'])
 'lithium plating': 'none' (possible: ['none', 'reversible', 'irreversible'])
-'lithium plating porosity change': 'false' (possible: ['true', 'false'])
-'loss of active material': 'stress-driven' (possible: ['none', 'stress-driven', 'reaction-driven'])
-'operating mode': 'current' (possible: ['current', 'voltage', 'power', 'CCCV'])
+'lithium plating porosity change': 'false' (possible: ['false', 'true'])
+'loss of active material': 'stress-driven' (possible: ['none', 'stress-driven', 'reaction-driven', 'stress and reaction-driven'])
+'operating mode': 'current' (possible: ['current', 'voltage', 'power', 'differential power', 'explicit power', 'resistance', 'differential resistance', 'explicit resistance', 'CCCV'])
 'particle': 'Fickian diffusion' (possible: ['Fickian diffusion', 'fast diffusion', 'uniform profile', 'quadratic profile', 'quartic profile'])
 'particle mechanics': 'swelling only' (possible: ['none', 'swelling only', 'swelling and cracking'])
-'particle shape': 'spherical' (possible: ['spherical', 'user', 'no particles'])
+'particle shape': 'spherical' (possible: ['spherical', 'no particles'])
 'particle size': 'single' (possible: ['single', 'distribution'])
 'SEI': 'none' (possible: ['none', 'constant', 'reaction limited', 'solvent-diffusion limited', 'electron-migration limited', 'interstitial-diffusion limited', 'ec reaction limited'])
-'SEI porosity change': 'false' (possible: ['true', 'false'])
+'SEI film resistance': 'none' (possible: ['none', 'distributed', 'average'])
+'SEI porosity change': 'false' (possible: ['false', 'true'])
+'stress-induced diffusion': 'true' (possible: ['false', 'true'])
 'surface form': 'differential' (possible: ['false', 'differential', 'algebraic'])
 'thermal': 'x-full' (possible: ['isothermal', 'lumped', 'x-lumped', 'x-full'])
-'total interfacial current density as a state': 'false' (possible: ['true', 'false'])
+'total interfacial current density as a state': 'false' (possible: ['false', 'true'])
 'working electrode': 'both' (possible: ['both', 'negative', 'positive'])
-'SEI film resistance': 'none' (possible: ['none', 'distributed', 'average'])
-'stress-induced diffusion': 'false' (possible: ['true', 'false'])
+'external submodels': []
+'timescale': 'default'
 """  # noqa: E501
 
 
@@ -84,81 +89,80 @@ class TestBaseBatteryModel(unittest.TestCase):
         with self.assertRaisesRegex(KeyError, "No cycling variable defined"):
             model.summary_variables = ["bad var"]
 
+    def test_timescale_lengthscale_errors(self):
+        model = pybamm.BaseBatteryModel()
+        with self.assertRaisesRegex(NotImplementedError, "Timescale cannot be"):
+            model.timescale = 1
+        with self.assertRaisesRegex(NotImplementedError, "Length scales cannot be"):
+            model.length_scales = {}
+
     def test_default_geometry(self):
-        var = pybamm.standard_spatial_vars
 
         model = pybamm.BaseBatteryModel({"dimensionality": 0})
         self.assertEqual(
-            model.default_geometry["current collector"][var.z]["position"], 1
+            model.default_geometry["current collector"]["z"]["position"], 1
         )
         model = pybamm.BaseBatteryModel({"dimensionality": 1})
-        self.assertEqual(model.default_geometry["current collector"][var.z]["min"], 0)
+        self.assertEqual(model.default_geometry["current collector"]["z"]["min"], 0)
         model = pybamm.BaseBatteryModel({"dimensionality": 2})
-        self.assertEqual(model.default_geometry["current collector"][var.y]["min"], 0)
+        self.assertEqual(model.default_geometry["current collector"]["y"]["min"], 0)
 
     def test_default_submesh_types(self):
         model = pybamm.BaseBatteryModel({"dimensionality": 0})
         self.assertTrue(
             issubclass(
-                model.default_submesh_types["current collector"].submesh_type,
+                model.default_submesh_types["current collector"],
                 pybamm.SubMesh0D,
             )
         )
         model = pybamm.BaseBatteryModel({"dimensionality": 1})
         self.assertTrue(
             issubclass(
-                model.default_submesh_types["current collector"].submesh_type,
+                model.default_submesh_types["current collector"],
                 pybamm.Uniform1DSubMesh,
             )
         )
         model = pybamm.BaseBatteryModel({"dimensionality": 2})
         self.assertTrue(
             issubclass(
-                model.default_submesh_types["current collector"].submesh_type,
+                model.default_submesh_types["current collector"],
                 pybamm.ScikitUniform2DSubMesh,
             )
         )
 
     def test_default_var_pts(self):
-        var = pybamm.standard_spatial_vars
         var_pts = {
-            var.x_n: 20,
-            var.x_s: 20,
-            var.x_p: 20,
-            var.r_n: 20,
-            var.r_p: 20,
-            var.y: 10,
-            var.z: 10,
-            var.R_n: 30,
-            var.R_p: 30,
+            "x_n": 20,
+            "x_s": 20,
+            "x_p": 20,
+            "r_n": 20,
+            "r_p": 20,
+            "y": 10,
+            "z": 10,
+            "R_n": 30,
+            "R_p": 30,
         }
         model = pybamm.BaseBatteryModel({"dimensionality": 0})
         self.assertDictEqual(var_pts, model.default_var_pts)
 
-        var_pts.update({var.x_n: 10, var.x_s: 10, var.x_p: 10})
+        var_pts.update({"x_n": 10, "x_s": 10, "x_p": 10})
         model = pybamm.BaseBatteryModel({"dimensionality": 2})
         self.assertDictEqual(var_pts, model.default_var_pts)
 
     def test_default_spatial_methods(self):
         model = pybamm.BaseBatteryModel({"dimensionality": 0})
-        self.assertTrue(
-            isinstance(
-                model.default_spatial_methods["current collector"],
-                pybamm.ZeroDimensionalSpatialMethod,
-            )
+        self.assertIsInstance(
+            model.default_spatial_methods["current collector"],
+            pybamm.ZeroDimensionalSpatialMethod,
         )
         model = pybamm.BaseBatteryModel({"dimensionality": 1})
-        self.assertTrue(
-            isinstance(
-                model.default_spatial_methods["current collector"], pybamm.FiniteVolume
-            )
+        self.assertIsInstance(
+            model.default_spatial_methods["current collector"], pybamm.FiniteVolume
         )
         model = pybamm.BaseBatteryModel({"dimensionality": 2})
-        self.assertTrue(
-            isinstance(
-                model.default_spatial_methods["current collector"],
-                pybamm.ScikitFiniteElement,
-            )
+        self.assertIsInstance(
+            model.default_spatial_methods["current collector"],
+            pybamm.ScikitFiniteElement,
         )
 
     def test_options(self):
@@ -256,6 +260,10 @@ class TestBaseBatteryModel(unittest.TestCase):
                     )
                 }
             )
+        # check default options change
+        model = pybamm.BaseBatteryModel({"loss of active material": "stress-driven"})
+        self.assertEqual(model.options["particle mechanics"], "swelling only")
+        self.assertEqual(model.options["stress-induced diffusion"], "true")
 
         # crack model
         with self.assertRaisesRegex(pybamm.OptionError, "particle mechanics"):
@@ -283,6 +291,30 @@ class TestBaseBatteryModel(unittest.TestCase):
         # hydrolysis
         with self.assertRaisesRegex(pybamm.OptionError, "surface formulation"):
             pybamm.lead_acid.LOQS({"hydrolysis": "true", "surface form": "false"})
+
+        # timescale
+        with self.assertRaisesRegex(pybamm.OptionError, "timescale"):
+            pybamm.BaseBatteryModel({"timescale": "bad timescale"})
+
+        # thermal x-lumped
+        with self.assertRaisesRegex(pybamm.OptionError, "x-lumped"):
+            pybamm.lithium_ion.BaseModel(
+                {"cell geometry": "arbitrary", "thermal": "x-lumped"}
+            )
+
+        # thermal half-cell
+        with self.assertRaisesRegex(pybamm.OptionError, "X-full"):
+            pybamm.BaseBatteryModel(
+                {"thermal": "x-full", "working electrode": "positive"}
+            )
+        with self.assertRaisesRegex(pybamm.OptionError, "X-lumped"):
+            pybamm.BaseBatteryModel(
+                {
+                    "dimensionality": 2,
+                    "thermal": "x-lumped",
+                    "working electrode": "positive",
+                }
+            )
 
     def test_build_twice(self):
         model = pybamm.lithium_ion.SPM()  # need to pick a model to set vars and build
@@ -323,6 +355,16 @@ class TestOptions(unittest.TestCase):
             BatteryModelOptions(OPTIONS_DICT).print_options()
             output = buffer.getvalue()
         self.assertEqual(output, PRINT_OPTIONS_OUTPUT)
+
+    def test_domain_options(self):
+        options = BatteryModelOptions(
+            {"particle": ("Fickian diffusion", "quadratic profile")}
+        )
+        self.assertEqual(options.negative["particle"], "Fickian diffusion")
+        self.assertEqual(options.positive["particle"], "quadratic profile")
+        # something that is the same in both domains
+        self.assertEqual(options.negative["thermal"], "isothermal")
+        self.assertEqual(options.positive["thermal"], "isothermal")
 
 
 if __name__ == "__main__":

@@ -13,6 +13,13 @@ class BaseUnitTestLithiumIon:
         options = {"thermal": "isothermal"}
         self.check_well_posedness(options)
 
+    def test_well_posed_isothermal_heat_source(self):
+        options = {
+            "calculate heat source for isothermal models": "true",
+            "thermal": "isothermal",
+        }
+        self.check_well_posedness(options)
+
     def test_well_posed_2plus1D(self):
         options = {"current collector": "potential pair", "dimensionality": 1}
         self.check_well_posedness(options)
@@ -76,8 +83,16 @@ class BaseUnitTestLithiumIon:
         options = {"particle": ("Fickian diffusion", "quartic profile")}
         self.check_well_posedness(options)
 
-    def test_well_posed_particle_shape_user(self):
-        options = {"particle shape": "user"}
+    def test_well_posed_constant_utilisation(self):
+        options = {"interface utilisation": "constant"}
+        self.check_well_posedness(options)
+
+    def test_well_posed_current_driven_utilisation(self):
+        options = {"interface utilisation": "current-driven"}
+        self.check_well_posedness(options)
+
+    def test_well_posed_mixed_utilisation(self):
+        options = {"interface utilisation": ("current-driven", "constant")}
         self.check_well_posedness(options)
 
     def test_well_posed_loss_active_material_stress_negative(self):
@@ -92,8 +107,12 @@ class BaseUnitTestLithiumIon:
         options = {"loss of active material": "stress-driven"}
         self.check_well_posedness(options)
 
-    def test_well_posed_loss_active_material_stress_reaction_both(self):
+    def test_well_posed_loss_active_material_reaction(self):
         options = {"loss of active material": "reaction-driven"}
+        self.check_well_posedness(options)
+
+    def test_well_posed_loss_active_material_stress_reaction(self):
+        options = {"loss of active material": "stress and reaction-driven"}
         self.check_well_posedness(options)
 
     def test_well_posed_surface_form_differential(self):
@@ -102,6 +121,22 @@ class BaseUnitTestLithiumIon:
 
     def test_well_posed_surface_form_algebraic(self):
         options = {"surface form": "algebraic"}
+        self.check_well_posedness(options)
+
+    def test_well_posed_kinetics_asymmetric_butler_volmer(self):
+        options = {"intercalation kinetics": "asymmetric Butler-Volmer"}
+        self.check_well_posedness(options)
+
+    def test_well_posed_kinetics_linear(self):
+        options = {"intercalation kinetics": "linear"}
+        self.check_well_posedness(options)
+
+    def test_well_posed_kinetics_marcus(self):
+        options = {"intercalation kinetics": "Marcus"}
+        self.check_well_posedness(options)
+
+    def test_well_posed_kinetics_mhc(self):
+        options = {"intercalation kinetics": "Marcus-Hush-Chidsey"}
         self.check_well_posedness(options)
 
     def test_well_posed_sei_constant(self):
@@ -184,12 +219,28 @@ class BaseUnitTestLithiumIon:
         }
         self.check_well_posedness(options)
 
+    def test_well_posed_discharge_energy(self):
+        options = {"calculate discharge energy": "true"}
+        self.check_well_posedness(options)
+
     def test_well_posed_external_circuit_voltage(self):
         options = {"operating mode": "voltage"}
         self.check_well_posedness(options)
 
     def test_well_posed_external_circuit_power(self):
         options = {"operating mode": "power"}
+        self.check_well_posedness(options)
+
+    def test_well_posed_external_circuit_differential_power(self):
+        options = {"operating mode": "differential power"}
+        self.check_well_posedness(options)
+
+    def test_well_posed_external_circuit_resistance(self):
+        options = {"operating mode": "resistance"}
+        self.check_well_posedness(options)
+
+    def test_well_posed_external_circuit_differential_resistance(self):
+        options = {"operating mode": "differential resistance"}
         self.check_well_posedness(options)
 
     def test_well_posed_external_circuit_cccv(self):

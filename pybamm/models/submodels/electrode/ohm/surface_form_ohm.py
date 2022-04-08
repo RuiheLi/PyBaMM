@@ -16,13 +16,15 @@ class SurfaceForm(BaseModel):
         The parameters to use for this submodel
     domain : str
         Either 'Negative' or 'Positive'
+    options : dict, optional
+        A dictionary of options to be passed to the model.
 
 
     **Extends:** :class:`pybamm.electrode.ohm.BaseModel`
     """
 
-    def __init__(self, param, domain):
-        super().__init__(param, domain)
+    def __init__(self, param, domain, options=None):
+        super().__init__(param, domain, options=options)
 
     def get_coupled_variables(self, variables):
 
@@ -31,7 +33,7 @@ class SurfaceForm(BaseModel):
         x_p = pybamm.standard_spatial_vars.x_p
         i_boundary_cc = variables["Current collector current density"]
         i_e = variables[self.domain + " electrolyte current density"]
-        tor = variables[self.domain + " electrode tortuosity"]
+        tor = variables[self.domain + " electrode transport efficiency"]
         phi_s_cn = variables["Negative current collector potential"]
         T = variables[self.domain + " electrode temperature"]
 
@@ -56,9 +58,8 @@ class SurfaceForm(BaseModel):
         variables.update(self._get_standard_current_variables(i_s))
 
         if (
-            "Negative electrode current density" in variables
-            and "Positive electrode current density" in variables
-        ):
+            self.half_cell or "Negative electrode current density" in variables
+        ) and "Positive electrode current density" in variables:
             variables.update(self._get_standard_whole_cell_variables(variables))
 
         return variables

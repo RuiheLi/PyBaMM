@@ -71,20 +71,24 @@ class BaseModel(BaseElectrolyteConductivity):
 
             i_boundary_cc = variables["Current collector current density"]
             c_e_s = variables["Separator electrolyte concentration"]
-            phi_e_n = variables["Negative electrolyte potential"]
+            if self.half_cell:
+                phi_e_n_s = variables["Lithium metal interface electrolyte potential"]
+            else:
+                phi_e_n = variables["Negative electrolyte potential"]
+                phi_e_n_s = pybamm.boundary_value(phi_e_n, "right")
             tor_s = variables["Separator porosity"]
             T = variables["Separator temperature"]
 
             chi_e_s = param.chi(c_e_s, T)
             kappa_s_eff = param.kappa_e(c_e_s, T) * tor_s
 
-            phi_e = pybamm.boundary_value(phi_e_n, "right") + pybamm.IndefiniteIntegral(
+            phi_e = phi_e_n_s + pybamm.IndefiniteIntegral(
                 (1 + param.Theta * T) * chi_e_s / c_e_s * pybamm.grad(c_e_s)
                 - param.C_e * i_boundary_cc / kappa_s_eff,
                 x_s,
             )
 
-            i_e = pybamm.PrimaryBroadcast(i_boundary_cc, "separator")
+            i_e = pybamm.PrimaryBroadcastToEdges(i_boundary_cc, "separator")
             variables[self.domain + " electrolyte current density"] = i_e
 
             # Update boundary conditions (for indefinite integral)
@@ -96,11 +100,15 @@ class BaseModel(BaseElectrolyteConductivity):
         variables[self.domain + " electrolyte potential"] = phi_e
 
         if self.domain == "Positive":
-            phi_e_n = variables["Negative electrolyte potential"]
             phi_e_s = variables["Separator electrolyte potential"]
             phi_e_p = variables["Positive electrolyte potential"]
 
-            i_e_n = variables["Negative electrolyte current density"]
+            if self.half_cell:
+                phi_e_n = None
+                i_e_n = None
+            else:
+                phi_e_n = variables["Negative electrolyte potential"]
+                i_e_n = variables["Negative electrolyte current density"]
             i_e_s = variables["Separator electrolyte current density"]
             i_e_p = variables["Positive electrolyte current density"]
             i_e = pybamm.concatenation(i_e_n, i_e_s, i_e_p)
@@ -115,8 +123,8 @@ class BaseModel(BaseElectrolyteConductivity):
 
     def _get_conductivities(self, variables):
         param = self.param
-        tor_e = variables[self.domain + " electrolyte tortuosity"]
-        tor_s = variables[self.domain + " electrode tortuosity"]
+        tor_e = variables[self.domain + " electrolyte transport efficiency"]
+        tor_s = variables[self.domain + " electrode transport efficiency"]
         c_e = variables[self.domain + " electrolyte concentration"]
         T = variables[self.domain + " electrode temperature"]
         if self.domain == "Negative":
@@ -136,9 +144,9 @@ class BaseModel(BaseElectrolyteConductivity):
 
         delta_phi_e = variables[self.domain + " electrode surface potential difference"]
         if self.domain == "Negative":
-            delta_phi_e_init = self.param.U_n(self.param.c_n_init(0), self.param.T_init)
+            delta_phi_e_init = self.param.U_n_init
         elif self.domain == "Positive":
-            delta_phi_e_init = self.param.U_p(self.param.c_p_init(1), self.param.T_init)
+            delta_phi_e_init = self.param.U_p_init
 
         self.initial_conditions = {delta_phi_e: delta_phi_e_init}
 

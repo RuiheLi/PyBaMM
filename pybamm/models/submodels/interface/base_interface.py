@@ -110,7 +110,7 @@ class BaseInterface(pybamm.BaseSubModel):
             c_s_surf = pybamm.maximum(tol, pybamm.minimum(c_s_surf, 1 - tol))
 
             if self.domain == "Negative":
-                j0 = param.j0_n(c_e, c_s_surf, T) / param.C_r_n
+                j0 = param.gamma_n * param.j0_n(c_e, c_s_surf, T) / param.C_r_n
             elif self.domain == "Positive":
                 j0 = param.gamma_p * param.j0_p(c_e, c_s_surf, T) / param.C_r_p
 
@@ -611,10 +611,7 @@ class BaseInterface(pybamm.BaseSubModel):
 
         # X-average, and broadcast if necessary
         eta_r_av = pybamm.x_average(eta_r)
-        if self.half_cell and self.domain == "Negative":
-            # Half-cell domain, eta should not be broadcast
-            pass
-        elif eta_r.domain == ["current collector"]:
+        if eta_r.domain == ["current collector"]:
             eta_r = pybamm.PrimaryBroadcast(eta_r, self.domain_for_broadcast)
 
         domain_reaction = (

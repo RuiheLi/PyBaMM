@@ -38,7 +38,6 @@ class TestExperiment(unittest.TestCase):
                 "Run US06 (V) for 5 minutes",
                 "Run US06 (W) for 0.5 hours",
             ],
-            {"test": "test"},
             drive_cycles={"US06": drive_cycle},
             period="20 seconds",
         )
@@ -135,7 +134,6 @@ class TestExperiment(unittest.TestCase):
                 None,
             ],
         )
-        self.assertEqual(experiment.parameters, {"test": "test"})
         self.assertEqual(experiment.period, 20)
 
     def test_read_strings_cccv_combined(self):
@@ -326,10 +324,6 @@ class TestExperiment(unittest.TestCase):
             pybamm.Experiment(["Discharge at 1 B for 2 hours"])
         with self.assertRaisesRegex(ValueError, "time units must be"):
             pybamm.Experiment(["Discharge at 1 A for 2 years"])
-        with self.assertRaisesRegex(
-            TypeError, "experimental parameters should be a dictionary"
-        ):
-            pybamm.Experiment([], "not a dictionary")
 
     def test_termination(self):
         experiment = pybamm.Experiment(["Discharge at 1 C for 20 seconds"])
@@ -339,6 +333,7 @@ class TestExperiment(unittest.TestCase):
             ["Discharge at 1 C for 20 seconds"], termination="80.7% capacity"
         )
         self.assertEqual(experiment.termination, {"capacity": (80.7, "%")})
+
         experiment = pybamm.Experiment(
             ["Discharge at 1 C for 20 seconds"], termination="80.7 % capacity"
         )
@@ -348,10 +343,23 @@ class TestExperiment(unittest.TestCase):
             ["Discharge at 1 C for 20 seconds"], termination="4.1Ah capacity"
         )
         self.assertEqual(experiment.termination, {"capacity": (4.1, "Ah")})
+
         experiment = pybamm.Experiment(
             ["Discharge at 1 C for 20 seconds"], termination="4.1 A.h capacity"
         )
         self.assertEqual(experiment.termination, {"capacity": (4.1, "Ah")})
+
+        experiment = pybamm.Experiment(
+            ["Discharge at 1 C for 20 seconds"], termination="3V"
+        )
+        self.assertEqual(experiment.termination, {"voltage": (3, "V")})
+
+        experiment = pybamm.Experiment(
+            ["Discharge at 1 C for 20 seconds"], termination=["3V", "4.1Ah capacity"]
+        )
+        self.assertEqual(
+            experiment.termination, {"voltage": (3, "V"), "capacity": (4.1, "Ah")}
+        )
 
         with self.assertRaisesRegex(ValueError, "Only capacity"):
             experiment = pybamm.Experiment(

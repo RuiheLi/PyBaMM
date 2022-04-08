@@ -40,11 +40,12 @@ class SPMe(SPM):
 
         self.set_external_circuit_submodel()
         self.set_porosity_submodel()
+        self.set_interface_utilisation_submodel()
         self.set_crack_submodel()
         self.set_active_material_submodel()
-        self.set_tortuosity_submodels()
+        self.set_transport_efficiency_submodels()
         self.set_convection_submodel()
-        self.set_interfacial_submodel()
+        self.set_intercalation_kinetics_submodel()
         self.set_other_reaction_submodels_to_zero()
         self.set_particle_submodel()
         self.set_solid_submodel()
@@ -72,11 +73,15 @@ class SPMe(SPM):
             "transverse convection"
         ] = pybamm.convection.transverse.NoConvection(self.param, self.options)
 
-    def set_tortuosity_submodels(self):
-        self.submodels["electrolyte tortuosity"] = pybamm.tortuosity.Bruggeman(
+    def set_transport_efficiency_submodels(self):
+        self.submodels[
+            "electrolyte transport efficiency"
+        ] = pybamm.transport_efficiency.Bruggeman(
             self.param, "Electrolyte", self.options, True
         )
-        self.submodels["electrode tortuosity"] = pybamm.tortuosity.Bruggeman(
+        self.submodels[
+            "electrode transport efficiency"
+        ] = pybamm.transport_efficiency.Bruggeman(
             self.param, "Electrode", self.options, True
         )
 
@@ -93,7 +98,7 @@ class SPMe(SPM):
 
         surf_form = pybamm.electrolyte_conductivity.surface_potential_form
 
-        if self.options["surface form"] == "false":
+        if self.options["surface form"] == "false" or self.half_cell:
             if self.options["electrolyte conductivity"] in ["default", "composite"]:
                 self.submodels[
                     "electrolyte conductivity"
@@ -106,6 +111,7 @@ class SPMe(SPM):
                 ] = pybamm.electrolyte_conductivity.Integrated(
                     self.param, options=self.options
                 )
+        if self.options["surface form"] == "false":
             surf_model = surf_form.Explicit
         elif self.options["surface form"] == "differential":
             surf_model = surf_form.CompositeDifferential
