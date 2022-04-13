@@ -19,7 +19,10 @@ class BasePlating(BaseInterface):
     .. [1] SEJ O'Kane, ID Campbell, MWJ Marzook, GJ Offer and M Marinescu. "Physical
            Origin of the Differential Voltage Minimum Associated with Li Plating in
            Lithium-Ion Batteries". Journal of The Electrochemical Society,
-           167:090540, 2019
+           167:090540, 2020
+    .. [2] SEJ O'Kane, W Ai, G Madabattula, D Alonso-Alvarez, R Timms, V Sulzer,
+           JS Edge, B Wu, GJ Offer and M Marinescu. "Lithium-ion battery degradation:
+           how to model it". Physical Chemistry: Chemical Physics, 24:7909, 2022
 
     **Extends:** :class:`pybamm.interface.BaseInterface`
     """
