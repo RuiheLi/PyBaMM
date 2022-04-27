@@ -248,9 +248,6 @@ class LithiumIonParameters(BaseParameters):
         self.c_plated_Li_0_dim = pybamm.Parameter(
             "Initial plated lithium concentration [mol.m-3]"
         )
-        self.dead_Li_decay_constant_dim = pybamm.Parameter(
-            "Dead lithium decay constant [s-1]"
-        )
 
         # Initial conditions
         # Note: the initial concentration in the electrodes can be set as a function
@@ -512,6 +509,11 @@ class LithiumIonParameters(BaseParameters):
         return pybamm.FunctionParameter(
             "Exchange-current density for plating [A.m-2]", inputs
         )
+    
+    def dead_lithium_decay_rate_dimensional(self, L_sei):
+        """Dimensional dead lithium decay rate [s-1]"""
+        inputs = {"Total SEI thickness [m]": L_sei}
+        return pybamm.FunctionParameter("Dead lithium decay rate [s-1]", inputs)
 
     def U_n_dimensional(self, sto, T):
         """Dimensional open-circuit potential in the negative electrode [V]"""
@@ -865,8 +867,6 @@ class LithiumIonParameters(BaseParameters):
 
         self.beta_plating = self.Gamma_plating * self.V_bar_plated_Li * self.c_Li_typ
 
-        self.dead_Li_decay_constant = self.dead_Li_decay_constant_dim * self.timescale
-
         # Initial conditions
         self.c_e_init = self.c_e_init_dimensional / self.c_e_typ
 
@@ -1032,6 +1032,12 @@ class LithiumIonParameters(BaseParameters):
         T_dim = self.Delta_T * T + self.T_ref
 
         return self.j0_plating_dimensional(c_e_dim, c_Li_dim, T_dim) / self.j_scale_n
+
+    def dead_lithium_decay_rate(self, L_inner, L_outer):
+        """Dimensionless exchange-current density for stripping"""
+        L_sei_dim = (L_inner + L_outer) * L_sei_0_dim
+
+        return self.dead_lithium_decay_rate_dimensional(L_sei_dim) * self.timescale
 
     def U_n(self, c_s_n, T):
         """Dimensionless open-circuit potential in the negative electrode"""

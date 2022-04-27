@@ -117,9 +117,9 @@ class Plating(BasePlating):
             a = variables["Negative electrode surface area to volume ratio"]
 
         Gamma_plating = self.param.Gamma_plating
-        dead_Li_decay_constant = self.param.dead_Li_decay_constant
         if self.options["lithium plating"] == "partially reversible":
-            coupling_term = dead_Li_decay_constant * c_plated_Li
+            dead_lithium_decay_rate = self.param.dead_lithium_decay_rate
+            coupling_term = dead_lithium_decay_rate * c_plated_Li
         elif self.options["lithium plating"] in ["reversible","irreversible"]:
             zero = pybamm.Scalar(0)
             coupling_term = zero
