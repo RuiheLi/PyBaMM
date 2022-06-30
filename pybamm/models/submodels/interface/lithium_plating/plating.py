@@ -60,11 +60,7 @@ class Plating(BasePlating):
                 auxiliary_domains={"secondary": "current collector"},
             )
 
-<<<<<<< HEAD
-        variables = self._get_standard_concentration_variables(c_plated_Li,c_dead_Li)
-=======
         variables = self._get_standard_concentration_variables(c_plated_Li, c_dead_Li)
->>>>>>> 7c5b44eac083c76ac7464d4c334d04351c067643
 
         return variables
 
@@ -83,18 +79,11 @@ class Plating(BasePlating):
         eta_stripping = delta_phi + phi_ref + eta_sei
         eta_plating = -eta_stripping
         prefactor = 1 / (1 + self.param.Theta * T)
-<<<<<<< HEAD
-        alpha_stripping = self.param.alpha_stripping
-        alpha_plating = self.param.alpha_stripping
-
-        if self.options["lithium plating"] in ["reversible","partially reversible"]:
-=======
         # NEW: transfer coefficients can be set by the user
         alpha_stripping = self.param.alpha_stripping
         alpha_plating = self.param.alpha_plating
 
         if self.options["lithium plating"] in ["reversible", "partially reversible"]:
->>>>>>> 7c5b44eac083c76ac7464d4c334d04351c067643
             j_stripping = j0_stripping * pybamm.exp(
                 prefactor * alpha_stripping * eta_stripping
             ) - j0_plating * pybamm.exp(prefactor * alpha_plating * eta_plating)
@@ -130,14 +119,6 @@ class Plating(BasePlating):
             L_sei = variables["Total SEI thickness"]
 
         Gamma_plating = self.param.Gamma_plating
-<<<<<<< HEAD
-        if self.options["lithium plating"] == "partially reversible":
-            dead_lithium_decay_rate = self.param.dead_lithium_decay_rate
-            coupling_term = dead_lithium_decay_rate * c_plated_Li
-        elif self.options["lithium plating"] in ["reversible","irreversible"]:
-            zero = pybamm.Scalar(0)
-            coupling_term = zero
-=======
         # In the partially reversible plating model, coupling term turns reversible
         # lithium into dead lithium. In other plating models, it is zero.
         if self.options["lithium plating"] == "partially reversible":
@@ -145,7 +126,6 @@ class Plating(BasePlating):
             coupling_term = dead_lithium_decay_rate * c_plated_Li
         else:
             coupling_term = pybamm.Scalar(0)
->>>>>>> 7c5b44eac083c76ac7464d4c334d04351c067643
 
         self.rhs = {
             c_plated_Li: -Gamma_plating * a * j_stripping - coupling_term,
