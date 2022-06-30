@@ -61,6 +61,7 @@ class BaseInterface(pybamm.BaseSubModel):
             The exchange current density.
         """
         param = self.param
+        domain_param = self.domain_param
 
         c_e = variables[self.domain + " electrolyte concentration"]
         T = variables[self.domain + " electrode temperature"]
@@ -109,10 +110,11 @@ class BaseInterface(pybamm.BaseSubModel):
             c_e = pybamm.maximum(tol, c_e)
             c_s_surf = pybamm.maximum(tol, pybamm.minimum(c_s_surf, 1 - tol))
 
-            if self.domain == "Negative":
-                j0 = param.gamma_n * param.j0_n(c_e, c_s_surf, T) / param.C_r_n
-            elif self.domain == "Positive":
-                j0 = param.gamma_p * param.j0_p(c_e, c_s_surf, T) / param.C_r_p
+            j0 = (
+                domain_param.gamma
+                * domain_param.j0(c_e, c_s_surf, T)
+                / domain_param.C_r
+            )
 
         elif self.reaction == "lithium metal plating":
             j0 = param.j0_plating(c_e, 1, T)
@@ -122,10 +124,7 @@ class BaseInterface(pybamm.BaseSubModel):
             if isinstance(c_e, pybamm.Broadcast) and isinstance(T, pybamm.Broadcast):
                 c_e = c_e.orphans[0]
                 T = T.orphans[0]
-            if self.domain == "Negative":
-                j0 = param.j0_n(c_e, T)
-            elif self.domain == "Positive":
-                j0 = param.j0_p(c_e, T)
+            j0 = domain_param.j0(c_e, T)
 
         elif self.reaction == "lead-acid oxygen":
             # If variable was broadcast, take only the orphan
@@ -135,88 +134,11 @@ class BaseInterface(pybamm.BaseSubModel):
             if self.domain == "Negative":
                 j0 = pybamm.Scalar(0)
             elif self.domain == "Positive":
-                j0 = param.j0_p_Ox(c_e, T)
+                j0 = param.p.j0_Ox(c_e, T)
         else:
             j0 = pybamm.Scalar(0)
 
         return j0
-
-    def _get_open_circuit_potential(self, variables):
-        """
-        A private function to obtain the open circuit potential and entropic change
-
-        Parameters
-        ----------
-        variables: dict
-            The variables in the full model.
-
-        Returns
-        -------
-        ocp : :class:`pybamm.Symbol`
-            The open-circuit potential
-        dUdT : :class:`pybamm.Symbol`
-            The entropic change in open-circuit potential due to temperature
-
-        """
-
-        if self.reaction == "lithium-ion main":
-            T = variables[self.domain + " electrode temperature"]
-            # For "particle-size distribution" models, take distribution version
-            # of c_s_surf that depends on particle size.
-            if self.options["particle size"] == "distribution":
-                c_s_surf = variables[
-                    self.domain + " particle surface concentration distribution"
-                ]
-                # If variable was broadcast, take only the orphan
-                if isinstance(c_s_surf, pybamm.Broadcast) and isinstance(
-                    T, pybamm.Broadcast
-                ):
-                    c_s_surf = c_s_surf.orphans[0]
-                    T = T.orphans[0]
-                T = pybamm.PrimaryBroadcast(T, [self.domain.lower() + " particle size"])
-            else:
-                c_s_surf = variables[self.domain + " particle surface concentration"]
-
-                # If variable was broadcast, take only the orphan
-                if isinstance(c_s_surf, pybamm.Broadcast) and isinstance(
-                    T, pybamm.Broadcast
-                ):
-                    c_s_surf = c_s_surf.orphans[0]
-                    T = T.orphans[0]
-
-            if self.domain == "Negative":
-                ocp = self.param.U_n(c_s_surf, T)
-                dUdT = self.param.dUdT_n(c_s_surf)
-            elif self.domain == "Positive":
-                ocp = self.param.U_p(c_s_surf, T)
-                dUdT = self.param.dUdT_p(c_s_surf)
-        elif self.reaction == "lithium metal plating":
-            T = variables[self.domain + " electrode temperature"]
-            ocp = self.param.U_n_ref
-            dUdT = 0 * T
-        elif self.reaction == "lead-acid main":
-            c_e = variables[self.domain + " electrolyte concentration"]
-            # If c_e was broadcast, take only the orphan
-            if isinstance(c_e, pybamm.Broadcast):
-                c_e = c_e.orphans[0]
-            if self.domain == "Negative":
-                ocp = self.param.U_n(c_e, self.param.T_init)
-            elif self.domain == "Positive":
-                ocp = self.param.U_p(c_e, self.param.T_init)
-            dUdT = pybamm.Scalar(0)
-
-        elif self.reaction == "lead-acid oxygen":
-            if self.domain == "Negative":
-                ocp = self.param.U_n_Ox
-            elif self.domain == "Positive":
-                ocp = self.param.U_p_Ox
-            dUdT = pybamm.Scalar(0)
-
-        else:
-            ocp = pybamm.Scalar(0)
-            dUdT = pybamm.Scalar(0)
-
-        return ocp, dUdT
 
     def _get_number_of_electrons_in_reaction(self):
         """Returns the number of electrons in the reaction."""
@@ -225,10 +147,7 @@ class BaseInterface(pybamm.BaseSubModel):
             "lithium-ion main",
             "lithium metal plating",
         ]:
-            if self.domain == "Negative":
-                return self.param.ne_n
-            elif self.domain == "Positive":
-                return self.param.ne_p
+            return self.domain_param.ne
         elif self.reaction == "lead-acid oxygen":
             return self.param.ne_Ox
         else:
@@ -246,7 +165,7 @@ class BaseInterface(pybamm.BaseSubModel):
             # current
             return pybamm.Scalar(1), pybamm.Scalar(1)
         elif self.reaction == "lead-acid main":
-            return self.param.s_plus_n_S, self.param.s_plus_p_S
+            return self.param.n.s_plus_S, self.param.p.s_plus_S
         elif self.reaction == "lead-acid oxygen":
             return self.param.s_plus_Ox, self.param.s_plus_Ox
         else:
@@ -282,21 +201,15 @@ class BaseInterface(pybamm.BaseSubModel):
                 + self.domain.lower()
                 + " electrode surface area to volume ratio"
             ]
+            sgn = 1 if self.domain == "Negative" else -1
 
-            if self.domain == "Negative":
-                j_total_average = i_boundary_cc / (a_av * self.param.l_n)
-
-            elif self.domain == "Positive":
-                j_total_average = -i_boundary_cc / (a_av * self.param.l_p)
+            j_total_average = sgn * i_boundary_cc / (a_av * self.domain_param.l)
 
         return j_total_average
 
     def _get_standard_interfacial_current_variables(self, j):
         param = self.param
-        if self.domain == "Negative":
-            j_scale = param.j_scale_n
-        elif self.domain == "Positive":
-            j_scale = param.j_scale_p
+        j_scale = self.domain_param.j_scale
 
         if self.reaction == "lithium metal plating":
             # Half-cell domain, j should not be broadcast
@@ -356,10 +269,7 @@ class BaseInterface(pybamm.BaseSubModel):
 
         i_typ = self.param.i_typ
         L_x = self.param.L_x
-        if self.domain == "Negative":
-            j_scale = self.param.j_scale_n
-        elif self.domain == "Positive":
-            j_scale = self.param.j_scale_p
+        j_scale = self.domain_param.j_scale
 
         if self.half_cell and self.domain == "Negative":
             variables = {
@@ -391,8 +301,8 @@ class BaseInterface(pybamm.BaseSubModel):
 
         i_typ = param.i_typ
         L_x = param.L_x
-        j_n_scale = param.j_scale_n
-        j_p_scale = param.j_scale_p
+        j_n_scale = param.n.j_scale
+        j_p_scale = param.p.j_scale
 
         j_p_av = variables[
             "X-averaged positive electrode"
@@ -491,10 +401,7 @@ class BaseInterface(pybamm.BaseSubModel):
 
     def _get_standard_exchange_current_variables(self, j0):
         param = self.param
-        if self.domain == "Negative":
-            j_scale = param.j_scale_n
-        elif self.domain == "Positive":
-            j_scale = param.j_scale_p
+        j_scale = self.domain_param.j_scale
 
         if self.reaction == "lithium metal plating":
             # half-cell domain
@@ -558,8 +465,8 @@ class BaseInterface(pybamm.BaseSubModel):
         param = self.param
         i_typ = param.i_typ
         L_x = param.L_x
-        j_n_scale = param.j_scale_n
-        j_p_scale = param.j_scale_p
+        j_n_scale = param.n.j_scale
+        j_p_scale = param.p.j_scale
 
         zero_s = pybamm.FullBroadcast(0, "separator", "current collector")
         j0_p = variables[
@@ -660,10 +567,7 @@ class BaseInterface(pybamm.BaseSubModel):
     def _get_standard_average_surface_potential_difference_variables(
         self, delta_phi_av
     ):
-        if self.domain == "Negative":
-            ocp_ref = self.param.U_n_ref
-        elif self.domain == "Positive":
-            ocp_ref = self.param.U_p_ref
+        ocp_ref = self.domain_param.U_ref
 
         delta_phi_av_dim = ocp_ref + delta_phi_av * self.param.potential_scale
 
@@ -687,10 +591,7 @@ class BaseInterface(pybamm.BaseSubModel):
 
     def _get_standard_surface_potential_difference_variables(self, delta_phi):
 
-        if self.domain == "Negative":
-            ocp_ref = self.param.U_n_ref
-        elif self.domain == "Positive":
-            ocp_ref = self.param.U_p_ref
+        ocp_ref = self.domain_param.U_ref
         pot_scale = self.param.potential_scale
 
         # Broadcast if necessary
@@ -705,93 +606,6 @@ class BaseInterface(pybamm.BaseSubModel):
             self.domain + " electrode surface potential difference": delta_phi,
             self.domain + " electrode surface potential difference [V]": delta_phi_dim,
         }
-
-        return variables
-
-    def _get_standard_ocp_variables(self, ocp, dUdT):
-        """
-        A private function to obtain the open circuit potential and
-        related standard variables.
-
-        Parameters
-        ----------
-        ocp : :class:`pybamm.Symbol`
-            The open-circuit potential
-        dUdT : :class:`pybamm.Symbol`
-            The entropic change in ocp
-
-        Returns
-        -------
-        variables : dict
-            The variables dictionary including the open circuit potentials
-            and related standard variables.
-        """
-        # Size average. For ocp variables that depend on particle size, see
-        # "_get_standard_size_distribution_ocp_variables"
-        if ocp.domain in [["negative particle size"], ["positive particle size"]]:
-            ocp = pybamm.size_average(ocp)
-        if dUdT.domain in [["negative particle size"], ["positive particle size"]]:
-            dUdT = pybamm.size_average(dUdT)
-
-        # Average, and broadcast if necessary
-        dUdT_av = pybamm.x_average(dUdT)
-        ocp_av = pybamm.x_average(ocp)
-        if self.half_cell and self.domain == "Negative":
-            # Half-cell domain, ocp should not be broadcast
-            pass
-        elif ocp.domain == []:
-            ocp = pybamm.FullBroadcast(
-                ocp, self.domain_for_broadcast, "current collector"
-            )
-        elif ocp.domain == ["current collector"]:
-            ocp = pybamm.PrimaryBroadcast(ocp, self.domain_for_broadcast)
-
-        pot_scale = self.param.potential_scale
-        if self.domain == "Negative":
-            ocp_dim = self.param.U_n_ref + pot_scale * ocp
-            ocp_av_dim = self.param.U_n_ref + pot_scale * ocp_av
-        elif self.domain == "Positive":
-            ocp_dim = self.param.U_p_ref + pot_scale * ocp
-            ocp_av_dim = self.param.U_p_ref + pot_scale * ocp_av
-
-        variables = {
-            self.domain
-            + " electrode"
-            + self.reaction_name
-            + " open circuit potential": ocp,
-            self.domain
-            + " electrode"
-            + self.reaction_name
-            + " open circuit potential [V]": ocp_dim,
-            "X-averaged "
-            + self.domain.lower()
-            + " electrode"
-            + self.reaction_name
-            + " open circuit potential": ocp_av,
-            "X-averaged "
-            + self.domain.lower()
-            + " electrode"
-            + self.reaction_name
-            + " open circuit potential [V]": ocp_av_dim,
-        }
-        if self.reaction in ["lithium-ion main", "lead-acid main"]:
-            variables.update(
-                {
-                    self.domain + " electrode entropic change": dUdT,
-                    self.domain
-                    + " electrode entropic change [V.K-1]": pot_scale
-                    * dUdT
-                    / self.param.Delta_T,
-                    "X-averaged "
-                    + self.domain.lower()
-                    + " electrode entropic change": dUdT_av,
-                    "X-averaged "
-                    + self.domain.lower()
-                    + " electrode entropic change [V.K-1]": pot_scale
-                    * dUdT_av
-                    / self.param.Delta_T,
-                }
-            )
 
         return variables
 
@@ -811,10 +625,7 @@ class BaseInterface(pybamm.BaseSubModel):
         # j scale
         i_typ = self.param.i_typ
         L_x = self.param.L_x
-        if self.domain == "Negative":
-            j_scale = i_typ / (self.param.a_n_typ * L_x)
-        elif self.domain == "Positive":
-            j_scale = i_typ / (self.param.a_p_typ * L_x)
+        j_scale = i_typ / (self.domain_param.a_typ * L_x)
 
         variables = {
             self.domain
@@ -847,10 +658,7 @@ class BaseInterface(pybamm.BaseSubModel):
         """
         i_typ = self.param.i_typ
         L_x = self.param.L_x
-        if self.domain == "Negative":
-            j_scale = i_typ / (self.param.a_n_typ * L_x)
-        elif self.domain == "Positive":
-            j_scale = i_typ / (self.param.a_p_typ * L_x)
+        j_scale = i_typ / (self.domain_param.a_typ * L_x)
 
         # X-average or broadcast to electrode if necessary
         if j0.domains["secondary"] != [self.domain.lower() + " electrode"]:
@@ -918,78 +726,5 @@ class BaseInterface(pybamm.BaseSubModel):
             + domain_reaction.lower()
             + " distribution [V]": eta_r_av * pot_scale,
         }
-
-        return variables
-
-    def _get_standard_size_distribution_ocp_variables(self, ocp, dUdT):
-        """
-        A private function to obtain the open circuit potential and
-        related standard variables when there is a distribution of particle sizes.
-        """
-
-        # X-average or broadcast to electrode if necessary
-        if ocp.domains["secondary"] != [self.domain.lower() + " electrode"]:
-            ocp_av = ocp
-            ocp = pybamm.SecondaryBroadcast(ocp, self.domain_for_broadcast)
-        else:
-            ocp_av = pybamm.x_average(ocp)
-
-        if dUdT.domains["secondary"] != [self.domain.lower() + " electrode"]:
-            dUdT_av = dUdT
-            dUdT = pybamm.SecondaryBroadcast(dUdT, self.domain_for_broadcast)
-        else:
-            dUdT_av = pybamm.x_average(dUdT)
-
-        pot_scale = self.param.potential_scale
-        if self.domain == "Negative":
-            ocp_dim = self.param.U_n_ref + pot_scale * ocp
-            ocp_av_dim = self.param.U_n_ref + pot_scale * ocp_av
-        elif self.domain == "Positive":
-            ocp_dim = self.param.U_p_ref + pot_scale * ocp
-            ocp_av_dim = self.param.U_p_ref + pot_scale * ocp_av
-
-        variables = {
-            self.domain
-            + " electrode"
-            + self.reaction_name
-            + " open circuit potential distribution": ocp,
-            self.domain
-            + " electrode"
-            + self.reaction_name
-            + " open circuit potential distribution [V]": ocp_dim,
-            "X-averaged "
-            + self.domain.lower()
-            + " electrode"
-            + self.reaction_name
-            + " open circuit potential distribution": ocp_av,
-            "X-averaged "
-            + self.domain.lower()
-            + " electrode"
-            + self.reaction_name
-            + " open circuit potential distribution [V]": ocp_av_dim,
-        }
-        if self.reaction_name == "":
-            variables.update(
-                {
-                    self.domain
-                    + " electrode entropic change"
-                    + " (size-dependent)": dUdT,
-                    self.domain
-                    + " electrode entropic change"
-                    + " (size-dependent) [V.K-1]": pot_scale
-                    * dUdT
-                    / self.param.Delta_T,
-                    "X-averaged "
-                    + self.domain.lower()
-                    + " electrode entropic change"
-                    + " (size-dependent)": dUdT_av,
-                    "X-averaged "
-                    + self.domain.lower()
-                    + " electrode entropic change"
-                    + " (size-dependent) [V.K-1]": pot_scale
-                    * dUdT_av
-                    / self.param.Delta_T,
-                }
-            )
 
         return variables

@@ -1,4 +1,4 @@
-from pybamm import FullBroadcast, Parameter, Scalar
+from pybamm import Parameter
 
 
 def SEI_limited_dead_lithium_OKane2022(L_sei):
@@ -6,9 +6,9 @@ def SEI_limited_dead_lithium_OKane2022(L_sei):
     Decay rate for dead lithium formation [s-1].
     References
     ----------
-    .. [1] Simon E. J. O'Kane, Weilong Ai, Ganesh Madabattula, Diega Alonso-Alvarez, 
+    .. [1] Simon E. J. O'Kane, Weilong Ai, Ganesh Madabattula, Diega Alonso-Alvarez,
     Robert Timms, Valentin Sulzer, Jaqueline Sophie Edge, Billy Wu, Gregory J. Offer
-    and Monica Marinescu. "Lithium-ion battery degradation: how to model it." 
+    and Monica Marinescu. "Lithium-ion battery degradation: how to model it."
     Physical Chemistry: Chemical Physics 24, no. 13 (2022): 7909-7922.
     Parameters
     ----------
@@ -21,16 +21,10 @@ def SEI_limited_dead_lithium_OKane2022(L_sei):
     """
 
     gamma_0 = Parameter("Dead lithium decay constant [s-1]")
-    zero = pybamm.FullBroadcast(
-            pybamm.Scalar(0), "negative electrode", "current collector"
-        )
+    L_inner_0 = Parameter("Initial inner SEI thickness [m]")
+    L_outer_0 = Parameter("Initial outer SEI thickness [m]")
+    L_sei_0 = L_inner_0 + L_outer_0
 
-    if L_sei.id == zero.id:
-        gamma = gamma_0
-    else:
-        L_inner_0 = Parameter("Initial inner SEI thickness [m]")
-        L_outer_0 = Parameter("Initial outer SEI thickness [m]")
-        L_sei_0 = L_inner_0 + L_outer_0
-        gamma = gamma_0 * L_sei_0 / L_sei
+    gamma = gamma_0 * L_sei_0 / L_sei
 
     return gamma
