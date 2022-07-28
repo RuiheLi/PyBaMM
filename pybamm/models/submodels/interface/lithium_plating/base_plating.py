@@ -104,9 +104,6 @@ class BasePlating(BaseInterface):
         L_dead_Li_av = pybamm.x_average(L_dead_Li)
         Q_dead_Li = c_dead_Li_av * param.n.L * param.L_y * param.L_z
 
-        c_dead_Li_av = pybamm.x_average(c_dead_Li)
-        Q_dead_Li = c_dead_Li_av * param.L_n * param.L_y * param.L_z
-
         variables = {
             "Lithium plating concentration": c_plated_Li,
             "Lithium plating concentration [mol.m-3]": c_plated_Li * c_scale,
