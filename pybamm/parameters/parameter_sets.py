@@ -233,13 +233,24 @@ ORegan2022 = {
     "citation": ["ORegan2022", "Chen2020"],
 }
 
+ORegan2022_adjusted = {
+    "chemistry": "lithium_ion",
+    "cell": "LGM50_ORegan2022",
+    "negative electrode": "graphite_ORegan2022",
+    "separator": "separator_ORegan2022",
+    "positive electrode": "nmc_ORegan2022",
+    "electrolyte": "lipf6_Valoen2005",
+    "experiment": "1C_discharge_from_full_ORegan2022",
+    "citation": ["ORegan2022", "Chen2020"],
+}
+
 OKane2022 = {
     "chemistry": "lithium_ion",
     "cell": "LGM50_Chen2020",
     "negative electrode": "graphite_OKane2022",
     "separator": "separator_Chen2020",
     "positive electrode": "nmc_OKane2022",
-    "electrolyte": "lipf6_Nyman2008",
+    "electrolyte": "lipf6_OKane2022",
     "experiment": "1C_discharge_from_full_Chen2020",
     "sei": "OKane2022",
     "lithium plating": "okane2022_Li_plating",
