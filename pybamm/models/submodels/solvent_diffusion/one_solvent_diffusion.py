@@ -120,6 +120,7 @@ class OneSolventDiffusion(BaseSolventDiffusion):
             +  (  source_terms / param.gamma_e_ec_Rio * ( 
                 param.Xi  )    # replenishment: "-param.Vmolar_Li * param.c_ec_0_dim" (with minus)   
             )
+            + a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio # SEI
 
             #+  (  
             #    a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio *   
