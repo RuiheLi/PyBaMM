@@ -25,11 +25,11 @@ class OneSolventDiffusion(BaseSolventDiffusion):
 
     def get_fundamental_variables(self):
         if self.half_cell:
-            eps_c_EC_n    = None # Mark Ruihe Li add
+            eps_c_EC_n    = None 
         else:
-            eps_c_EC_n    = pybamm.standard_variables.eps_c_EC_n  # Mark Ruihe Li add   already add to standard_variables     can it not be standard_variables?
-        eps_c_EC_s    = pybamm.standard_variables.eps_c_EC_s  # Mark Ruihe Li add       already add to standard_variables     can it not be standard_variables?
-        eps_c_EC_p    = pybamm.standard_variables.eps_c_EC_p  # Mark Ruihe Li add       already add to standard_variables     can it not be standard_variables?
+            eps_c_EC_n    = pybamm.standard_variables.eps_c_EC_n     
+        eps_c_EC_s    = pybamm.standard_variables.eps_c_EC_s         
+        eps_c_EC_p    = pybamm.standard_variables.eps_c_EC_p         
 
         variables = self._get_standard_porosity_times_EC_concentration_variables( 
             eps_c_EC_n, eps_c_EC_s, eps_c_EC_p
@@ -41,7 +41,7 @@ class OneSolventDiffusion(BaseSolventDiffusion):
     def get_coupled_variables(self, variables):
 
         if self.half_cell:   # Mark Ruihe Li comment
-            c_EC_n    = None # Mark Ruihe Li add
+            c_EC_n    = None 
         else:
             eps_n = variables["Negative electrode porosity"]
             eps_c_EC_n= variables["Negative electrode porosity times EC concentration"]
@@ -77,11 +77,54 @@ class OneSolventDiffusion(BaseSolventDiffusion):
     def set_rhs(self, variables):   # Mark Ruihe Li modify  ? can we have more than one variables in this file?
 
         param = self.param
+        sign_2_n = pybamm.FullBroadcast(
+                pybamm.Scalar(1), "negative electrode", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2_s = pybamm.FullBroadcast(
+                pybamm.Scalar(0), "separator", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2_p = pybamm.FullBroadcast(
+                pybamm.Scalar(0), "positive electrode", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+
+        a_p = variables["Positive electrode surface area to volume ratio"]
+        a_n = variables["Negative electrode surface area to volume ratio"]
+        zero_s = pybamm.FullBroadcast(0, "separator", "current collector")
+        a = pybamm.concatenation(a_n, zero_s, a_p)
+        c_e = variables["Electrolyte concentration"]
+        c_EC  = variables["EC concentration"]
         eps_c_EC = variables["Porosity times EC concentration"]
+        tor = variables["Electrolyte transport efficiency"]
+        T = variables["Cell temperature"]
+        #N_EC = variables["EC flux"]
+        div_Vbox = variables["Transverse volume-averaged acceleration"]
+        j_inner =  variables["Inner SEI interfacial current density"]
+        j_outer =  variables["Outer SEI interfacial current density"]
+        j_SEI = j_inner + j_outer
+        j_sign_SEI = pybamm.concatenation(j_SEI, sign_2_s, sign_2_p )
+
+        sum_s_j = variables["Sum of electrolyte reaction source terms"]
+        sum_s_j.print_name = "a"
+        source_terms = sum_s_j / self.param.gamma_e
 
         
         self.rhs = {
-            eps_c_EC: 1
+            eps_c_EC: (
+                param.EC_ratio_Rio / param.gamma_e_ec_Rio * param.tau_discharge  / 
+                param.tau_cross_Rio * pybamm.div(tor * param.D_ec_Li_cross * pybamm.grad(c_e))
+                )
+            + param.tau_discharge  / param.tau_ec_Rio * pybamm.div(tor * param.D_ec * pybamm.grad(c_EC))
+            +  (  source_terms / param.gamma_e_ec_Rio * ( 
+                param.Xi  )    # replenishment: "-param.Vmolar_Li * param.c_ec_0_dim" (with minus)   
+            )
+
+            #+  (  
+            #    a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio *   
+            #    ( 1 - param.Vmolar_ec*param.c_ec_0_dim + 0.5*param.Vmolar_CH2OCO2Li2*param.c_ec_0_dim ) 
+            #    )
         } 
 
 
@@ -90,7 +133,7 @@ class OneSolventDiffusion(BaseSolventDiffusion):
         eps_c_EC= variables["Porosity times EC concentration"]
 
         self.initial_conditions = {
-            eps_c_EC: 0.1,   # This needs to be changed to be the same as Andrew's results
+            eps_c_EC: self.param.epsilon_init * self.param.c_ec_init,   # This needs to be changed to be the same as Andrew's results
         }
 
     def set_boundary_conditions(self, variables):

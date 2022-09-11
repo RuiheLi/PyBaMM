@@ -82,18 +82,61 @@ class Full(BaseElectrolyteDiffusion):
 
         param = self.param
 
+
+        # Mark Ruihe block start
+        sign_2_n = pybamm.FullBroadcast(
+                pybamm.Scalar(1), "negative electrode", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2_s = pybamm.FullBroadcast(
+                pybamm.Scalar(0), "separator", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2_p = pybamm.FullBroadcast(
+                pybamm.Scalar(0), "positive electrode", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2 = pybamm.concatenation(sign_2_n, sign_2_s, sign_2_p )
+
+        a_p = variables["Positive electrode surface area to volume ratio"]
+        a_n = variables["Negative electrode surface area to volume ratio"]
+        zero_s = pybamm.FullBroadcast(0, "separator", "current collector")
+        a = pybamm.concatenation(a_n, zero_s, a_p)
+
         eps_c_e = variables["Porosity times concentration"]
         c_e = variables["Electrolyte concentration"]
+        c_EC  = variables["EC concentration"]
         N_e = variables["Electrolyte flux"]
+        tor = variables["Electrolyte transport efficiency"]
+        T = variables["Cell temperature"]
+        j_inner =  variables["Inner SEI interfacial current density"]
+        j_outer =  variables["Outer SEI interfacial current density"]
+        j_SEI = j_inner + j_outer
+        j_sign_SEI = pybamm.concatenation(j_SEI, sign_2_s, sign_2_p )
         div_Vbox = variables["Transverse volume-averaged acceleration"]
 
         sum_s_j = variables["Sum of electrolyte reaction source terms"]
         sum_s_j.print_name = "a"
         source_terms = sum_s_j / self.param.gamma_e
 
-        self.rhs = {
-            eps_c_e: -pybamm.div(N_e) / param.C_e + source_terms - c_e * div_Vbox
-        }
+        if self.options["solvent diffusion"] == "none":
+            self.rhs = {
+                eps_c_e: -pybamm.div(N_e) / param.C_e + source_terms - c_e * div_Vbox
+            }
+        elif self.options["solvent diffusion"] == "EC":
+            self.rhs = {
+            eps_c_e: -pybamm.div(-tor * param.D_e(c_e, T) * pybamm.grad(c_e)) / param.C_e 
+            + param.e_ratio_Rio * param.gamma_e_ec_Rio * param.tau_discharge 
+            / param.tau_cross_Rio * pybamm.div(tor * param.D_ec_Li_cross * pybamm.grad(c_EC))
+            + ( 1-param.t_plus(c_e, T) )  * source_terms 
+            #-  sign_2 * (    param.c_e_init_dimensional * param.Vmolar_Li   * source_terms         )
+            #-  (    
+            #    param.c_e_init_dimensional / param.gamma_e * (
+            #    param.Vmolar_EC-0.5*param.Vmolar_CH2OCO2Li2) * a * j_sign_SEI 
+            #    )
+            - c_e * div_Vbox  } 
+        
+        # Mark Ruihe block start
 
     def set_initial_conditions(self, variables):
 

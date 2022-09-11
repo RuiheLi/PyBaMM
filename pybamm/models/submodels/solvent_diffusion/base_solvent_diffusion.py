@@ -42,7 +42,7 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
             EC.
         """
 
-        c_EC_typ = 4541 #self.param.c_EC_typ
+        c_ec_typ = 4541 #self.param.c_ec_typ
         c_EC = pybamm.concatenation(c_EC_n, c_EC_s, c_EC_p)
 
         if self.half_cell:
@@ -70,28 +70,28 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
  
         variables = {
             "EC concentration": c_EC,
-            "EC concentration [mol.m-3]": c_EC_typ * c_EC,
-            "EC concentration [Molar]": c_EC_typ * c_EC / 1000,
+            "EC concentration [mol.m-3]": c_ec_typ * c_EC,
+            "EC concentration [Molar]": c_ec_typ * c_EC / 1000,
             "X-averaged EC concentration": c_EC_av,
-            "X-averaged EC concentration [mol.m-3]": c_EC_typ * c_EC_av,
-            "X-averaged EC concentration [Molar]": c_EC_typ * c_EC_av / 1000,
+            "X-averaged EC concentration [mol.m-3]": c_ec_typ * c_EC_av,
+            "X-averaged EC concentration [Molar]": c_ec_typ * c_EC_av / 1000,
             "Negative EC concentration": c_EC_n,
-            "Negative EC concentration [mol.m-3]": c_EC_typ * c_EC_n,
-            "Negative EC concentration [Molar]": c_EC_typ * c_EC_n / 1000,
+            "Negative EC concentration [mol.m-3]": c_ec_typ * c_EC_n,
+            "Negative EC concentration [Molar]": c_ec_typ * c_EC_n / 1000,
             "Separator EC concentration": c_EC_s,
-            "Separator EC concentration [mol.m-3]": c_EC_typ * c_EC_s,
-            "Separator EC concentration [Molar]": c_EC_typ * c_EC_s / 1000,
+            "Separator EC concentration [mol.m-3]": c_ec_typ * c_EC_s,
+            "Separator EC concentration [Molar]": c_ec_typ * c_EC_s / 1000,
             "Positive EC concentration": c_EC_p,
-            "Positive EC concentration [mol.m-3]": c_EC_typ * c_EC_p,
-            "Positive EC concentration [Molar]": c_EC_typ * c_EC_p / 1000,
+            "Positive EC concentration [mol.m-3]": c_ec_typ * c_EC_p,
+            "Positive EC concentration [Molar]": c_ec_typ * c_EC_p / 1000,
             "X-averaged negative EC concentration": c_EC_n_av,
-            "X-averaged negative EC concentration [mol.m-3]": c_EC_typ
+            "X-averaged negative EC concentration [mol.m-3]": c_ec_typ
             * c_EC_n_av,
             "X-averaged separator EC concentration": c_EC_s_av,
-            "X-averaged separator EC concentration [mol.m-3]": c_EC_typ
+            "X-averaged separator EC concentration [mol.m-3]": c_ec_typ
             * c_EC_s_av,
             "X-averaged positive EC concentration": c_EC_p_av,
-            "X-averaged positive EC concentration [mol.m-3]": c_EC_typ
+            "X-averaged positive EC concentration [mol.m-3]": c_ec_typ
             * c_EC_p_av,
             
         }
@@ -135,7 +135,7 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
             The "Total EC in electrolyte [mol]" variable.
         """
 
-        c_EC_typ = 4541 #self.param.c_EC_typ
+        c_ec_typ = 4541 #self.param.c_ec_typ
         L_x = self.param.L_x
         A = self.param.A_cc
 
@@ -143,7 +143,7 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
 
         variables = {
             "Total EC in electrolyte": eps_c_EC_av,
-            "Total EC in electrolyte [mol]": c_EC_typ * L_x * A * eps_c_EC_av,
+            "Total EC in electrolyte [mol]": c_ec_typ * L_x * A * eps_c_EC_av,
         }
 
         return variables
