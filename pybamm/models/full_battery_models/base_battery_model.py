@@ -48,6 +48,8 @@ class BatteryModelOptions(pybamm.FuzzyDict):
             * "electrolyte conductivity" : str
                 Can be "default" (default), "full", "leading order", "composite" or
                 "integrated".
+            * "solvent diffusion" : str    # Mark Ruihe Li add
+                Can be "EC" (default), or "none".
             * "external submodels" : list
                 A list of the submodels that you would like to supply an external
                 variable for instead of solving in PyBaMM. The entries of the lists
@@ -200,6 +202,7 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 "composite",
                 "integrated",
             ],
+            "solvent diffusion": ["none","EC",],  # Mark Ruihe Li add
             "hydrolysis": ["false", "true"],
             "intercalation kinetics": [
                 "symmetric Butler-Volmer",
@@ -263,6 +266,7 @@ class BatteryModelOptions(pybamm.FuzzyDict):
             "x-average side reactions": ["false", "true"],
         }
 
+        # Mark Ruihe comment: use the first one as the default option
         default_options = {
             name: options[0] for name, options in self.possible_options.items()
         }

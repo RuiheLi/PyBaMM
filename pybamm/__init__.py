@@ -122,6 +122,7 @@ from .models.submodels import (
     current_collector,
     electrolyte_conductivity,
     electrolyte_diffusion,
+    solvent_diffusion,  # Mark Ruihe Li add
     electrode,
     external_circuit,
     interface,

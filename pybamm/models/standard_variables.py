@@ -63,6 +63,61 @@ class StandardVariables:
             bounds=(0, np.inf),
         )
 
+
+        # Mark Ruihe block start
+        # EC concentration
+        self.c_EC_n = pybamm.Variable(
+            "Negative EC concentration",
+            domain="negative electrode",
+            auxiliary_domains={"secondary": "current collector"},
+            bounds=(0, np.inf),
+        )
+        self.c_EC_s = pybamm.Variable(
+            "Separator EC concentration",
+            domain="separator",
+            auxiliary_domains={"secondary": "current collector"},
+            bounds=(0, np.inf),
+        )
+        self.c_EC_p = pybamm.Variable(
+            "Positive EC concentration",
+            domain="positive electrode",
+            auxiliary_domains={"secondary": "current collector"},
+            bounds=(0, np.inf),
+        )
+
+        self.c_EC_av = pybamm.Variable(
+            "X-averaged EC concentration",
+            domain="current collector",
+            bounds=(0, np.inf),
+        )
+
+        # Electrolyte porosity times EC concentration
+        self.eps_c_EC_n = pybamm.Variable(
+            "Negative electrode porosity times EC concentration",
+            domain="negative electrode",
+            auxiliary_domains={"secondary": "current collector"},
+            bounds=(0, np.inf),
+        )
+        self.eps_c_EC_s = pybamm.Variable(
+            "Separator porosity times EC concentration",
+            domain="separator",
+            auxiliary_domains={"secondary": "current collector"},
+            bounds=(0, np.inf),
+        )
+        self.eps_c_EC_p = pybamm.Variable(
+            "Positive electrode porosity times EC concentration",
+            domain="positive electrode",
+            auxiliary_domains={"secondary": "current collector"},
+            bounds=(0, np.inf),
+        )
+
+        self.eps_c_EC_av = pybamm.Variable(
+            "X-averaged porosity times EC concentration",
+            domain="current collector",
+            bounds=(0, np.inf),
+        )
+        # Mark Ruihe block end
+
         # Electrolyte potential
         self.phi_e_n = pybamm.Variable(
             "Negative electrolyte potential",

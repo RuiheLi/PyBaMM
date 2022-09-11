@@ -57,6 +57,10 @@ class BaseModel(pybamm.BaseBatteryModel):
         self.set_particle_submodel()
         self.set_solid_submodel()
         self.set_electrolyte_submodel()
+        
+        self.set_solvent_diffusion_submodel()  #Mark Ruihe Li add, 
+        # comment: compared with old PyBaMM, the new pybamm move set_submodel from DFN to base_lithium_ion_model
+
         self.set_thermal_submodel()
         self.set_current_collector_submodel()
 
