@@ -1,0 +1,6 @@
+(*some useful script*)
+
+(*clear results before moving on*)
+
+Clear[b, h, Emod, m, Lo, Lf, q, k, J, y, u, v];
+
