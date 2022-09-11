@@ -34,8 +34,6 @@ class OneSolventDiffusion(BaseSolventDiffusion):
         variables = self._get_standard_porosity_times_EC_concentration_variables( 
             eps_c_EC_n, eps_c_EC_s, eps_c_EC_p
         )
-
-
         return variables
 
     def get_coupled_variables(self, variables):

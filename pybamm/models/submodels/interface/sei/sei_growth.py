@@ -107,6 +107,7 @@ class SEIGrowth(BaseModel):
         L_sei = variables[f"Total {self.reaction} thickness"]
 
         T = variables["Negative electrode temperature"]
+        c_EC_neg = variables["Negative EC concentration [mol.m-3]"] # Mark Ruihe add
         R_sei = param.R_sei
         eta_SEI = delta_phi - j * L_sei * R_sei
         # Thermal prefactor for reaction, interstitial and EC models
@@ -126,8 +127,10 @@ class SEIGrowth(BaseModel):
             j_sei = -pybamm.exp(-prefactor * delta_phi) / (C_sei * L_sei_inner)
 
         elif self.options["SEI"] == "solvent-diffusion limited":
-            C_sei = param.C_sei_solvent
-            j_sei = -1 / (C_sei * L_sei_outer)
+            C_sei = param.C_sei_solvent 
+            j_sei = -1 / (
+                C_sei /c_EC_neg     # Mark Ruihe add
+                * L_sei_outer)
 
         elif self.options["SEI"] == "ec reaction limited":
             C_sei_ec = param.C_sei_ec
