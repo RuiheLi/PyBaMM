@@ -110,3 +110,15 @@ class SPMe(SPM):
         self.submodels["electrolyte diffusion"] = pybamm.electrolyte_diffusion.Full(
             self.param, self.options
         )
+
+    # Mark Ruihe block start
+    def set_solvent_diffusion_submodel(self): # Mark Ruihe Li modify
+        if self.options["solvent diffusion"] == "EC":
+            self.submodels[
+                "solvent diffusion"
+            ] = pybamm.solvent_diffusion.OneSolventDiffusion(self.param, self.options)
+        elif self.options["solvent diffusion"] == "none":
+            self.submodels[
+                "solvent diffusion"
+            ] = pybamm.solvent_diffusion.NoSolventDiffusion(self.param, self.options)
+    # Mark Ruihe block end

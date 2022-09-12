@@ -128,6 +128,7 @@ class SEIGrowth(BaseModel):
 
         elif self.options["SEI"] == "solvent-diffusion limited":
             C_sei = param.C_sei_solvent 
+            print("Confirm: using solvent-diffusion limited")
             j_sei = -1 / (
                 C_sei /c_EC_neg     # Mark Ruihe add
                 * L_sei_outer)
