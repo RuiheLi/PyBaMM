@@ -41,16 +41,6 @@ class NoSolventDiffusion(BaseSolventDiffusion):
 
         param.s.epsilon_init
 
-        eps_c_EC_typ_n = pybamm.FullBroadcast(
-            pybamm.Scalar(0.25), "negative electrode",
-            "current collector")
-        eps_c_EC_typ_s = pybamm.FullBroadcast(
-            pybamm.Scalar(0.47), "separator",
-            "current collector")
-        eps_c_EC_typ_p = pybamm.FullBroadcast(
-            pybamm.Scalar( 0.335), "positive electrode",
-            "current collector")
-
         variables.update(
             self._get_standard_porosity_times_EC_concentration_variables(
             param.n.epsilon_init,
