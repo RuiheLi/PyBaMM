@@ -42,7 +42,7 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
             EC.
         """
 
-        c_ec_typ = 4541 #self.param.c_ec_typ
+        c_ec_typ = self.param.c_ec_typ
         c_EC = pybamm.concatenation(c_EC_n, c_EC_s, c_EC_p)
 
         if self.half_cell:
@@ -120,7 +120,7 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
             )
         return variables
 
-    def _get_total_EC_concentration_electrolyte(self, eps_c_EC):
+    def _get_total_EC_concentration_electrolyte(self, eps_c_EC,Q_sei):
         """
         A private function to obtain the total EC concentration in the electrolyte.
 
@@ -134,8 +134,8 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
         variables : dict
             The "Total EC in electrolyte [mol]" variable.
         """
-
-        c_ec_typ = 4541 #self.param.c_ec_typ
+        
+        c_ec_typ = self.param.c_ec_typ
         L_x = self.param.L_x
         A = self.param.A_cc
 
@@ -144,6 +144,7 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
         variables = {
             "Total EC in electrolyte": eps_c_EC_av,
             "Total EC in electrolyte [mol]": c_ec_typ * L_x * A * eps_c_EC_av,
+            "Total EC in electrolyte and SEI [mol]": c_ec_typ * L_x * A * eps_c_EC_av + Q_sei,
         }
 
         return variables

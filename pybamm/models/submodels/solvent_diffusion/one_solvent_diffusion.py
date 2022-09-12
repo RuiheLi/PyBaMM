@@ -62,13 +62,14 @@ class OneSolventDiffusion(BaseSolventDiffusion):
         )
 
         eps_c_EC = variables["Porosity times EC concentration"]
-        c_EC = variables["EC concentration"]
+
+        Q_sei = variables["Loss of lithium to SEI [mol]"]
 
         #N_EC = c_EC* 122333    ###     need to write an expression for EC flux, but give up for now
 
         #variables.update(self._get_standard_flux_variables(N_EC))
         variables.update(
-            self._get_total_EC_concentration_electrolyte(eps_c_EC))
+            self._get_total_EC_concentration_electrolyte(eps_c_EC,Q_sei))
 
         return variables
 

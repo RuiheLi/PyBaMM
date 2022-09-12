@@ -24,78 +24,49 @@ class NoSolventDiffusion(BaseSolventDiffusion):
         super().__init__(param, options=options)
 
     def get_fundamental_variables(self):
-        if self.half_cell:
-            eps_c_EC_n    = None 
-        else:
-            eps_c_EC_n    = pybamm.standard_variables.eps_c_EC_n     
-        eps_c_EC_s    = pybamm.standard_variables.eps_c_EC_s         
-        eps_c_EC_p    = pybamm.standard_variables.eps_c_EC_p         
+        c_EC_typ_n = pybamm.FullBroadcast(
+            1.0, "negative electrode",
+            "current collector") # 
+        c_EC_typ_s = pybamm.FullBroadcast(
+            1.0, "separator",
+            "current collector")
+        c_EC_typ_p = pybamm.FullBroadcast(
+            1.0, "positive electrode",
+            "current collector")
+        variables=self._get_standard_EC_concentration_variables(
+            c_EC_typ_n,c_EC_typ_s,c_EC_typ_p)
+        print("have you come here?")
 
-        variables = self._get_standard_porosity_times_EC_concentration_variables( 
-            eps_c_EC_n, eps_c_EC_s, eps_c_EC_p
+        param = self.param
+
+        param.s.epsilon_init
+
+        eps_c_EC_typ_n = pybamm.FullBroadcast(
+            pybamm.Scalar(0.25), "negative electrode",
+            "current collector")
+        eps_c_EC_typ_s = pybamm.FullBroadcast(
+            pybamm.Scalar(0.47), "separator",
+            "current collector")
+        eps_c_EC_typ_p = pybamm.FullBroadcast(
+            pybamm.Scalar( 0.335), "positive electrode",
+            "current collector")
+
+        variables.update(
+            self._get_standard_porosity_times_EC_concentration_variables(
+            param.n.epsilon_init,
+            param.s.epsilon_init,
+            param.p.epsilon_init)
         )
+
         return variables
+
 
     def get_coupled_variables(self, variables):
-
-        if self.half_cell:   # Mark Ruihe Li comment
-            c_EC_n    = None 
-        else:
-            eps_n = variables["Negative electrode porosity"]
-            eps_c_EC_n= variables["Negative electrode porosity times EC concentration"]
-            c_EC_n = eps_c_EC_n / eps_n 
-
-        eps_n = variables["Negative electrode porosity"]
-        eps_c_EC_n= variables["Negative electrode porosity times EC concentration"]
-        c_EC_n = eps_c_EC_n / eps_n
-
-        eps_s = variables["Separator porosity"]
-        eps_p = variables["Positive electrode porosity"]
-        eps_c_EC_s = variables["Separator porosity times EC concentration"]
-        eps_c_EC_p = variables["Positive electrode porosity times EC concentration"]
-        c_EC_s = eps_c_EC_s / eps_s
-        c_EC_p = eps_c_EC_p / eps_p
-
-        variables.update(
-            self._get_standard_EC_concentration_variables(c_EC_n, c_EC_s, c_EC_p)  # Already Written
-        )
-
-        eps_c_EC = variables["Porosity times EC concentration"]
-
-        variables.update(
-            self._get_total_EC_concentration_electrolyte(eps_c_EC))
-            
-        return variables
-
-    def set_rhs(self, variables): 
-
-        eps_c_EC = variables["Porosity times EC concentration"]
-        if self.half_cell:
-            deps_c_EC_n_dt = None
-        else:
-            deps_c_EC_n_dt = pybamm.FullBroadcast(
-                0, "negative electrode", "current collector")
-        deps_c_EC_s_dt = pybamm.FullBroadcast(0, "separator", "current collector")
-        deps_c_EC_p_dt = pybamm.FullBroadcast(0, "positive electrode", "current collector")
-
-        deps_c_EC_dt = pybamm.concatenation(
-            deps_c_EC_n_dt, deps_c_EC_s_dt, deps_c_EC_p_dt)
-
-        self.rhs = {eps_c_EC: deps_c_EC_dt} 
-
         
-    def set_initial_conditions(self, variables):
+        eps_c_EC = variables["Porosity times EC concentration"]
+        Q_sei = variables["Loss of lithium to SEI [mol]"]
 
-        eps_c_EC= variables["Porosity times EC concentration"]
+        variables.update(
+            self._get_total_EC_concentration_electrolyte(eps_c_EC,0))
 
-        self.initial_conditions = {
-            eps_c_EC: self.param.epsilon_init * self.param.c_ec_init,   # This needs to be changed to be the same as Andrew's results
-        }
-
-    def set_boundary_conditions(self, variables):
-        param = self.param
-        c_EC = variables["EC concentration"]
-
-        self.boundary_conditions = {
-            c_EC: {"left": (pybamm.Scalar(0), "Neumann"), "right": (pybamm.Scalar(0), "Neumann")}, # This needs to be changed to be the same as Andrew's results
-        }
+        return variables
