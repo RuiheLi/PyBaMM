@@ -387,19 +387,20 @@ class LithiumIonParameters(BaseParameters):
             -(self.F * self.n.U_ref / (2 * self.R * self.T_ref))
         )
 
-
-        # Mark Ruihe block start
-        """ self.C_sei_solvent = (
+        self.C_sei_solvent = (
             self.n.j_scale
             * self.L_sei_0_dim
             / (self.c_sol_dimensional * self.F * self.D_sol_dimensional)
-        ) """
+        )
 
+        # Mark Ruihe block start
+        """
         self.C_sei_solvent = (
             self.n.j_scale
             * self.L_sei_0_dim
             / ( self.F * self.D_sol_dimensional)
         )
+        """
         # Mark Ruihe block end
 
         self.C_sei_electron = (

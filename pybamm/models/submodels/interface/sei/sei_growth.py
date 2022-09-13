@@ -107,7 +107,6 @@ class SEIGrowth(BaseModel):
         L_sei = variables[f"Total {self.reaction} thickness"]
 
         T = variables["Negative electrode temperature"]
-        c_EC_neg = variables["Negative EC concentration [mol.m-3]"] # Mark Ruihe add
         R_sei = param.R_sei
         eta_SEI = delta_phi - j * L_sei * R_sei
         # Thermal prefactor for reaction, interstitial and EC models
@@ -124,14 +123,13 @@ class SEIGrowth(BaseModel):
 
         elif self.options["SEI"] == "interstitial-diffusion limited":
             C_sei = param.C_sei_inter
+            print("Confirm: using interstitial-diffusion limited")
             j_sei = -pybamm.exp(-prefactor * delta_phi) / (C_sei * L_sei_inner)
 
         elif self.options["SEI"] == "solvent-diffusion limited":
             C_sei = param.C_sei_solvent 
             print("Confirm: using solvent-diffusion limited")
-            j_sei = -1 / (
-                C_sei /c_EC_neg     # Mark Ruihe add
-                * L_sei_outer)
+            j_sei = -1 / (C_sei * L_sei_outer)
 
         elif self.options["SEI"] == "ec reaction limited":
             C_sei_ec = param.C_sei_ec
@@ -182,8 +180,13 @@ class SEIGrowth(BaseModel):
         # All SEI growth mechanisms assumed to have Arrhenius dependence
         Arrhenius = pybamm.exp(param.E_over_RT_sei * (1 - prefactor))
 
-        j_inner = inner_sei_proportion * Arrhenius * j_sei
-        j_outer = (1 - inner_sei_proportion) * Arrhenius * j_sei
+        # All SEI growth mechanisms assumed to depend on relative EC concentration
+        c_EC_neg = variables["Negative EC concentration [mol.m-3]"] # Mark Ruihe add
+        c_EC_relative = c_EC_neg / param.c_sol_dimensional
+
+        # Put everything together
+        j_inner = inner_sei_proportion * Arrhenius * c_EC_relative * j_sei
+        j_outer = (1 - inner_sei_proportion) * Arrhenius * c_EC_relative * j_sei
 
         variables.update(self._get_standard_concentration_variables(variables))
         variables.update(self._get_standard_reaction_variables(j_inner, j_outer))
