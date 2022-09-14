@@ -119,6 +119,8 @@ class Full(BaseElectrolyteDiffusion):
         sum_s_j.print_name = "a"
         source_terms = sum_s_j / self.param.gamma_e
 
+        ratio_sei_li = 1.0 ; # change to 1 for now , initially is 0.5
+
         if self.options["solvent diffusion"] == "none":
             self.rhs = {
                 eps_c_e: -pybamm.div(N_e) / param.C_e + source_terms - c_e * div_Vbox
@@ -129,11 +131,12 @@ class Full(BaseElectrolyteDiffusion):
             + param.e_ratio_Rio * param.gamma_e_ec_Rio * param.tau_discharge 
             / param.tau_cross_Rio * pybamm.div(tor * param.D_ec_Li_cross * pybamm.grad(c_EC))
             + ( 1-param.t_plus(c_e, T) )  * source_terms 
-            #-  sign_2 * (    param.c_e_init_dimensional * param.Vmolar_Li   * source_terms         )
-            #-  (    
-            #    param.c_e_init_dimensional / param.gamma_e * (
-            #    param.Vmolar_EC-0.5*param.Vmolar_CH2OCO2Li2) * a * j_sign_SEI 
-            #    )
+            +  (    
+                param.c_e_init_dimensional / param.gamma_e * 
+                (
+                param.Vmolar_Li + param.Vmolar_ec-ratio_sei_li*param.Vmolar_CH2OCO2Li2
+                ) * a * j_sign_SEI 
+                )
             - c_e * div_Vbox  } 
         
         # Mark Ruihe block start

@@ -182,7 +182,7 @@ class SEIGrowth(BaseModel):
 
         # All SEI growth mechanisms assumed to depend on relative EC concentration
         c_EC_neg = variables["Negative EC concentration [mol.m-3]"] # Mark Ruihe add
-        c_EC_relative = c_EC_neg / param.c_sol_dimensional
+        c_EC_relative = c_EC_neg / param.c_ec_typ
 
         # Put everything together
         j_inner = inner_sei_proportion * Arrhenius * c_EC_relative * j_sei
