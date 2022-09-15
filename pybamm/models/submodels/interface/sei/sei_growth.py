@@ -106,11 +106,17 @@ class SEIGrowth(BaseModel):
         L_sei_outer = variables[f"Outer {self.reaction} thickness"]
         L_sei = variables[f"Total {self.reaction} thickness"]
 
-        T = variables["Negative electrode temperature"]
+        # Overpotential for reaction limited and EC reaction limited models
         R_sei = param.R_sei
         eta_SEI = delta_phi - j * L_sei * R_sei
+
         # Thermal prefactor for reaction, interstitial and EC models
+        T = variables["Negative electrode temperature"]
         prefactor = 1 / (1 + param.Theta * T)
+
+        # Bulk EC concentration relative to initial condition
+        c_ec_neg = variables["Negative EC concentration [mol.m-3]"]
+        c_ec_relative = c_ec_neg / param.c_ec_0_dim
 
         if self.options["SEI"] == "reaction limited":
             C_sei = param.C_sei_reaction
@@ -132,61 +138,59 @@ class SEIGrowth(BaseModel):
             j_sei = -1 / (C_sei * L_sei_outer)
 
         elif self.options["SEI"] == "ec reaction limited":
+            print("Confirm: using ec reaction limited")
             C_sei_ec = param.C_sei_ec
             C_ec = param.C_ec
 
             # we have a linear system for j_sei and c_ec
-            #  c_ec = 1 + j_sei * L_sei * C_ec
-            #  j_sei = - C_sei_ec * c_ec * exp()
+            #  c_ec_surf = 1 + j_sei * L_sei * C_ec
+            #  j_sei = - C_sei_ec * c_ec_surf * exp()
             # so
             #  j_sei = - C_sei_ec * exp() - j_sei * L_sei * C_ec * C_sei_ec * exp()
             # so
             #  j_sei = -C_sei_ec * exp() / (1 + L_sei * C_ec * C_sei_ec * exp())
-            #  c_ec = 1 / (1 + L_sei * C_ec * C_sei_ec * exp())
+            #  c_ec_surf = 1 / (1 + L_sei * C_ec * C_sei_ec * exp())
             C_sei_exp = C_sei_ec * pybamm.exp(-0.5 * prefactor * eta_SEI)
-            j_sei = -C_sei_exp / (1 + L_sei * C_ec * C_sei_exp)
-            c_ec = 1 / (1 + L_sei * C_ec * C_sei_exp)
+            c_ec_surf = c_ec_relative / (1 + L_sei * C_ec * C_sei_exp)
+            j_sei = -C_sei_exp * c_ec_surf
 
             # Get variables related to the concentration
-            c_ec_av = pybamm.x_average(c_ec)
+            c_ec_surf_av = pybamm.x_average(c_ec_surf)
             c_ec_scale = param.c_ec_0_dim
 
             if self.reaction == "SEI on cracks":
                 variables.update(
                     {
-                        "EC concentration on cracks": c_ec,
-                        "EC concentration on cracks [mol.m-3]": c_ec * c_ec_scale,
-                        "X-averaged EC concentration on cracks": c_ec_av,
-                        "X-averaged EC concentration on cracks [mol.m-3]": c_ec_av
+                        "EC concentration on cracks": c_ec_surf,
+                        "EC concentration on cracks [mol.m-3]": c_ec_surf * c_ec_scale,
+                        "X-averaged EC concentration on cracks": c_ec_surf_av,
+                        "X-averaged EC concentration on cracks [mol.m-3]": c_ec_surf_av
                         * c_ec_scale,
                     }
                 )
             else:
                 variables.update(
                     {
-                        "EC surface concentration": c_ec,
-                        "EC surface concentration [mol.m-3]": c_ec * c_ec_scale,
-                        "X-averaged EC surface concentration": c_ec_av,
-                        "X-averaged EC surface concentration [mol.m-3]": c_ec_av
+                        "EC surface concentration": c_ec_surf,
+                        "EC surface concentration [mol.m-3]": c_ec_surf * c_ec_scale,
+                        "X-averaged EC surface concentration": c_ec_surf_av,
+                        "X-averaged EC surface concentration [mol.m-3]": c_ec_surf_av
                         * c_ec_scale,
                     }
                 )
 
-        if self.options["SEI"] == "ec reaction limited":
-            inner_sei_proportion = 0
-        else:
-            inner_sei_proportion = param.inner_sei_proportion
-
         # All SEI growth mechanisms assumed to have Arrhenius dependence
         Arrhenius = pybamm.exp(param.E_over_RT_sei * (1 - prefactor))
 
-        # All SEI growth mechanisms assumed to depend on relative EC concentration
-        c_EC_neg = variables["Negative EC concentration [mol.m-3]"] # Mark Ruihe add
-        c_EC_relative = c_EC_neg / param.c_sol_dimensional
-
         # Put everything together
-        j_inner = inner_sei_proportion * Arrhenius * c_EC_relative * j_sei
-        j_outer = (1 - inner_sei_proportion) * Arrhenius * c_EC_relative * j_sei
+        if self.options["SEI"] == "ec reaction limited":
+            j_inner = 0
+            j_outer = Arrhenius * j_sei
+        else:
+            inner_sei_proportion = param.inner_sei_proportion
+            # Other SEI growth mechanisms also assumed to depend on EC concentration
+            j_inner = inner_sei_proportion * Arrhenius * c_ec_relative * j_sei
+            j_outer = (1 - inner_sei_proportion) * Arrhenius * c_ec_relative * j_sei
 
         variables.update(self._get_standard_concentration_variables(variables))
         variables.update(self._get_standard_reaction_variables(j_inner, j_outer))
