@@ -265,27 +265,30 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
             phi_e_n = variables["Negative electrolyte potential"]
             # concentration overpotential
             c_e_n = variables["Negative electrolyte concentration"]
+            c_EC_n = variables["Negative EC concentration"] # Mark: Ruihe add
             T_n = variables["Negative electrode temperature"]
             indef_integral_n = pybamm.IndefiniteIntegral(
-                param.chiT_over_c(c_e_n, T_n) * pybamm.grad(c_e_n),
+                param.chiT_over_c(c_e_n, c_EC_n,T_n) * pybamm.grad(c_e_n),
                 pybamm.standard_spatial_vars.x_n,
             )
 
         phi_e_p = variables["Positive electrolyte potential"]
 
         c_e_s = variables["Separator electrolyte concentration"]
+        c_EC_s = variables["Separator EC concentration"]# Mark: Ruihe add
         c_e_p = variables["Positive electrolyte concentration"]
+        c_EC_p = variables["Positive EC concentration"]# Mark: Ruihe add
 
         T_s = variables["Separator temperature"]
         T_p = variables["Positive electrode temperature"]
 
         # concentration overpotential
         indef_integral_s = pybamm.IndefiniteIntegral(
-            param.chiT_over_c(c_e_s, T_s) * pybamm.grad(c_e_s),
+            param.chiT_over_c(c_e_s, c_EC_s, T_s) * pybamm.grad(c_e_s),
             pybamm.standard_spatial_vars.x_s,
         )
         indef_integral_p = pybamm.IndefiniteIntegral(
-            param.chiT_over_c(c_e_p, T_p) * pybamm.grad(c_e_p),
+            param.chiT_over_c(c_e_p,c_EC_p, T_p) * pybamm.grad(c_e_p),
             pybamm.standard_spatial_vars.x_p,
         )
 

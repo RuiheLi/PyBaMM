@@ -64,11 +64,12 @@ class Full(BaseElectrolyteDiffusion):
         i_e = variables["Electrolyte current density"]
         v_box = variables["Volume-averaged velocity"]
         T = variables["Cell temperature"]
+        c_EC  = variables["EC concentration"]
 
         param = self.param
 
         N_e_diffusion = -tor * param.D_e(c_e, T) * pybamm.grad(c_e)
-        N_e_migration = param.C_e * param.t_plus(c_e, T) * i_e / param.gamma_e
+        N_e_migration = param.C_e * param.t_plus(c_e,c_EC, T) * i_e / param.gamma_e
         N_e_convection = param.C_e * c_e * v_box
 
         N_e = N_e_diffusion + N_e_migration + N_e_convection
@@ -119,7 +120,7 @@ class Full(BaseElectrolyteDiffusion):
         sum_s_j.print_name = "a"
         source_terms = sum_s_j / self.param.gamma_e
 
-        ratio_sei_li = 1.0 ; # change to 1 for now , initially is 0.5
+        ratio_sei_li = 1 ; # change to 1 for now , initially is 0.5
 
         if self.options["solvent diffusion"] == "none":
             self.rhs = {
@@ -130,7 +131,7 @@ class Full(BaseElectrolyteDiffusion):
             eps_c_e: -pybamm.div(-tor * param.D_e(c_e, T) * pybamm.grad(c_e)) / param.C_e 
             + param.e_ratio_Rio * param.gamma_e_ec_Rio * param.tau_discharge 
             / param.tau_cross_Rio * pybamm.div(tor * param.D_ec_Li_cross * pybamm.grad(c_EC))
-            + ( 1-param.t_plus(c_e, T) )  * source_terms 
+            + ( 1-param.t_plus(c_e,c_EC, T) )  * source_terms 
             +  (    
                 param.c_e_init_dimensional / param.gamma_e * 
                 (
@@ -161,7 +162,7 @@ class Full(BaseElectrolyteDiffusion):
             i_boundary_cc = variables["Current collector current density"]
             lbc = (
                 pybamm.boundary_value(
-                    -(1 - param.t_plus(c_e, T))
+                    -(1 - param.t_plus(c_e,c_EC, T))
                     / (tor * param.gamma_e * param.D_e(c_e, T)),
                     "left",
                 )

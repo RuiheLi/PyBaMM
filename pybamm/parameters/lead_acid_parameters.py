@@ -433,7 +433,7 @@ class LeadAcidParameters(BaseParameters):
         """Thermodynamic factor"""
         return (
             self.chi_dimensional(self.c_e_typ * c_e)
-            * (2 * (1 - self.t_plus(c_e, T)))
+            * (2 * (1 - self.param.t_plus(c_e, T)))
             / (
                 self.V_w
                 * self.c_T(self.c_e_typ * c_e, self.c_e_typ * c_ox, self.c_e_typ * c_hy)

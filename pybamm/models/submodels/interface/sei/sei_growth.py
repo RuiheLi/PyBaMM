@@ -116,7 +116,15 @@ class SEIGrowth(BaseModel):
 
         # Bulk EC concentration relative to initial condition
         c_ec_neg = variables["Negative EC concentration [mol.m-3]"]
-        c_ec_relative = c_ec_neg / param.c_ec_0_dim
+
+        # Mark Ruihe block start
+        if self.options["solvent diffusion"] == "EC": 
+            c_ec_relative = c_ec_neg / param.c_ec_typ # Mark Ruihe change from initial EC concentration to typical EC concentration, but actually they are the same in most cases 
+        elif self.options["solvent diffusion"] == "none":
+            c_ec_relative = param.c_ec_0_dim / param.c_ec_typ 
+            # change for standalone solvent consumption model in 1st paper 
+        # Mark Ruihe block end
+
 
         if self.options["SEI"] == "reaction limited":
             C_sei = param.C_sei_reaction

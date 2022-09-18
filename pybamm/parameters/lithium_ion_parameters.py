@@ -110,8 +110,8 @@ class LithiumIonParameters(BaseParameters):
         # Mark Ruihe block start
         self.Xi = pybamm.Parameter(
             "EC transference number") 
-        self.c_ec_0_dim = pybamm.Parameter(
-            "EC initial concentration in electrolyte [mol.m-3]") 
+        """ self.c_ec_0_dim = pybamm.Parameter(
+            "EC initial concentration in electrolyte [mol.m-3]")  """
         self.c_ec_typ = pybamm.Parameter("Typical EC concentration [mol.m-3]") 
         self.D_ec_Li_cross_dim = pybamm.Parameter(
             "EC Lithium ion cross diffusivity [m2.s-1]")
@@ -505,28 +505,29 @@ class LithiumIonParameters(BaseParameters):
         
         # Mark Ruihe block end
 
-    def chi(self, c_e, T):
+    def chi(self, c_e, c_EC, T):
         """
         Thermodynamic factor:
             (1-2*t_plus) is for Nernst-Planck,
             2*(1-t_plus) for Stefan-Maxwell,
         see Bizeray et al (2016) "Resolving a discrepancy ...".
         """
-        return (2 * (1 - self.t_plus(c_e, T))) * (self.one_plus_dlnf_dlnc(c_e, T))
+        return (2 * (1 - self.t_plus(c_e,c_EC, T))) * (self.one_plus_dlnf_dlnc(c_e, T))
 
-    def chiT_over_c(self, c_e, T):
+    def chiT_over_c(self, c_e,c_EC, T):
         """
         chi * (1 + Theta * T) / c,
         as it appears in the electrolyte potential equation
         """
         tol = pybamm.settings.tolerances["chi__c_e"]
         c_e = pybamm.maximum(c_e, tol)
-        return self.chi(c_e, T) * (1 + self.Theta * T) / c_e
+        return self.chi(c_e, c_EC, T) * (1 + self.Theta * T) / c_e
 
-    def t_plus(self, c_e, T):
+    def t_plus(self, c_e, c_EC, T):
         """Cation transference number (dimensionless)"""
         inputs = {
             "Electrolyte concentration [mol.m-3]": c_e * self.c_e_typ,
+            "EC concentration [mol.m-3]": c_EC * self.c_ec_typ,
             "Temperature [K]": self.Delta_T * T + self.T_ref,
         }
         return pybamm.FunctionParameter("Cation transference number", inputs)
