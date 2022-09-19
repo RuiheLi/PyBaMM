@@ -8,3 +8,21 @@ Cation transference number,[function]electrolyte_transference_number_EMC_FEC_19_
 1 + dlnf/dlnc,[function]electrolyte_TDF_EMC_FEC_19_1_Landesfeind2019,Landesfeind 2019,
 Electrolyte diffusivity [m2.s-1],[function]electrolyte_diffusivity_EMC_FEC_19_1_Landesfeind2019,Landesfeind 2019," "
 Electrolyte conductivity [S.m-1],[function]electrolyte_conductivity_EMC_FEC_19_1_Landesfeind2019,Landesfeind 2019," "
+
+
+# Mark Ruihe block start
+EC transference number,-1.4,Mark Ruihe Li add from Andrew,
+EC initial concentration in electrolyte [mol.m-3],4541,Mark Ruihe Li add,
+Typical EC concentration [mol.m-3],4541,Mark Ruihe Li add,
+EC Lithium ion cross diffusivity [m2.s-1],1.5e-10,Mark Ruihe Li add,
+Typical EC Lithium ion cross diffusivity [m2.s-1],1.5e-10,Mark Ruihe Li add,
+
+EC diffusivity in electrolyte [m2.s-1],5E-10,Mark Ruihe Li modify move from SEI parameters from Andrew,
+Typical EC diffusivity in electrolyte [m2.s-1],5E-10,Mark Ruihe Li add from Andrew,
+EC diffusivity in SEI [m2.s-1],2E-18,Mark Ruihe Li add from Yang2017,
+Typical EC diffusivity in SEI [m2.s-1],2E-18,Mark Ruihe Li add from Yang2017,
+
+EC partial molar volume [m3.mol-1],6.667e-5,Mark Ruihe Li add
+Li partial molar volume [m3.mol-1],1.3e-5,Mark Ruihe Li add
+CH2OCO2Li2 partial molar volume [m3.mol-1],9.585e-5,Mark Ruihe Li add
+# Mark Ruihe block end

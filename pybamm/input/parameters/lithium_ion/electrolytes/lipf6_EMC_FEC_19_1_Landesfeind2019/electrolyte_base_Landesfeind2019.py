@@ -113,7 +113,7 @@ def electrolyte_TDF_base_Landesfeind2019(c_e, T, coeffs):
     return tdf
 
 
-def electrolyte_transference_number_base_Landesfeind2019(c_e, T, coeffs):
+def electrolyte_transference_number_base_Landesfeind2019(c_e, c_EC,T, coeffs):
     """
     Transference number of LiPF6 in solvent_X as a function of ion concentration and
     temperature. The data comes from [1].
