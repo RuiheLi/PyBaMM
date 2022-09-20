@@ -109,7 +109,7 @@ class OneSolventDiffusion(BaseSolventDiffusion):
         sum_s_j.print_name = "a"
         source_terms = sum_s_j / self.param.gamma_e
 
-        ratio_sei_li = 1 ; # change to 1 for now , initially is 0.5
+        ratio_sei_li = 0.5 ; # change to 1 for now , initially is 0.5
 
         
         self.rhs = {
@@ -118,16 +118,16 @@ class OneSolventDiffusion(BaseSolventDiffusion):
                 param.tau_cross_Rio * pybamm.div(tor * param.D_ec_Li_cross * pybamm.grad(c_e))
                 )
             + param.tau_discharge  / param.tau_ec_Rio * pybamm.div(tor * param.D_ec * pybamm.grad(c_EC))
-            +  (  source_terms / param.gamma_e_ec_Rio * ( 
-                param.Xi-param.Vmolar_Li * param.c_ec_0_dim  )    # replenishment: "-param.Vmolar_Li * param.c_ec_0_dim" (with minus)   
-            )
-            + a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio # SEI
-
-            +  (  
-                a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio *   
-                ( 1 - param.Vmolar_ec*param.c_ec_0_dim 
-                + ratio_sei_li*param.Vmolar_CH2OCO2Li2*param.c_ec_0_dim ) 
-                )
+            # source term due to intecalation:
+            +    source_terms / param.gamma_e_ec_Rio * param.Xi   
+            # source term due to SEI
+            + a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio 
+            # source term due to replenishment
+            #- source_terms / param.gamma_e_ec_Rio * param.Vmolar_Li * param.c_ec_0_dim   # ignore volume of lithium
+            + (  
+            a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio *   
+            (  ratio_sei_li*param.Vmolar_CH2OCO2Li2*param.c_ec_0_dim 
+            - param.Vmolar_ec*param.c_ec_0_dim ) ) 
         } 
 
 

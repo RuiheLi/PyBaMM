@@ -47,12 +47,12 @@ import traceback
 #############           Step-2 Define Functions        ############
 ###################################################################
 
-from pybamm import exp, constants, Parameter
+from pybamm import exp,tanh, constants, Parameter
 
 def t_plus_tanh( c_e,c_EC, T  ):
     ratio = c_EC / c_e
     coff = 0.3
-    return coff/2 + coff/2 *  np.tanh((ratio-2.7705)*2)
+    return coff/2 + coff/2 *  tanh((ratio-2.7705)*2)
 
 
 
