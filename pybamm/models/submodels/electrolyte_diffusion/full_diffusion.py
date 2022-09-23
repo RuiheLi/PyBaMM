@@ -134,11 +134,11 @@ class Full(BaseElectrolyteDiffusion):
             + ( 1-param.t_plus(c_e,c_EC, T) )  * source_terms 
             - c_e * div_Vbox
             # source term due to replenishment
-            -  (    
-                param.c_e_init_dimensional / param.gamma_e * 
-                (param.Vmolar_ec - 
-                ratio_sei_li*param.Vmolar_CH2OCO2Li2  # + param.Vmolar_Li # ignore volume of lithium
-                ) * a * j_sign_SEI     ) 
+            #-  (    
+            #    param.c_e_init_dimensional / param.gamma_e * 
+            #    (param.Vmolar_ec - 
+            #    ratio_sei_li*param.Vmolar_CH2OCO2Li2  # + param.Vmolar_Li # ignore volume of lithium
+            #    ) * a * j_sign_SEI     ) 
             } 
         
         # Mark Ruihe block start
