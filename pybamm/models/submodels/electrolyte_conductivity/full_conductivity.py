@@ -43,7 +43,7 @@ class Full(BaseElectrolyteConductivity):
         c_EC  = variables["EC concentration"]
         phi_e = variables["Electrolyte potential"]
 
-        i_e = (param.kappa_e(c_e, T) * tor * param.gamma_e / param.C_e) * (
+        i_e = (param.kappa_e(c_e,c_EC, T) * tor * param.gamma_e / param.C_e) * (
             param.chiT_over_c(c_e,c_EC, T) * pybamm.grad(c_e) - pybamm.grad(phi_e)
         )
 

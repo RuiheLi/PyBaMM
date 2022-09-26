@@ -68,7 +68,7 @@ class Full(BaseElectrolyteDiffusion):
 
         param = self.param
 
-        N_e_diffusion = -tor * param.D_e(c_e, T) * pybamm.grad(c_e)
+        N_e_diffusion = -tor * param.D_e(c_e, c_EC,T) * pybamm.grad(c_e)
         N_e_migration = param.C_e * param.t_plus(c_e,c_EC, T) * i_e / param.gamma_e
         N_e_convection = param.C_e * c_e * v_box
 
@@ -128,7 +128,7 @@ class Full(BaseElectrolyteDiffusion):
             }
         elif self.options["solvent diffusion"] == "EC":
             self.rhs = {
-            eps_c_e: -pybamm.div(-tor * param.D_e(c_e, T) * pybamm.grad(c_e)) / param.C_e 
+            eps_c_e: -pybamm.div(-tor * param.D_e(c_e, c_EC, T) * pybamm.grad(c_e)) / param.C_e 
             + param.e_ratio_Rio * param.gamma_e_ec_Rio * param.tau_discharge 
             / param.tau_cross_Rio * pybamm.div(tor * param.D_ec_Li_cross * pybamm.grad(c_EC))
             + ( 1-param.t_plus(c_e,c_EC, T) )  * source_terms 
@@ -154,6 +154,7 @@ class Full(BaseElectrolyteDiffusion):
     def set_boundary_conditions(self, variables):
         param = self.param
         c_e = variables["Electrolyte concentration"]
+        c_EC  = variables["EC concentration"]
 
         if self.half_cell:
             # left bc at anode/separator interface
@@ -164,7 +165,7 @@ class Full(BaseElectrolyteDiffusion):
             lbc = (
                 pybamm.boundary_value(
                     -(1 - param.t_plus(c_e,c_EC, T))
-                    / (tor * param.gamma_e * param.D_e(c_e, T)),
+                    / (tor * param.gamma_e * param.D_e(c_e,c_EC, T)),
                     "left",
                 )
                 * i_boundary_cc

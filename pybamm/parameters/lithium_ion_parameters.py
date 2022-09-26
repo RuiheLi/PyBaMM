@@ -229,18 +229,24 @@ class LithiumIonParameters(BaseParameters):
         self.ocv_ref = self.p.U_ref - self.n.U_ref
         self.ocv_init_dim = self.p.U_init_dim - self.n.U_init_dim
 
-    def D_e_dimensional(self, c_e, T):
+    def D_e_dimensional(self, c_e, c_EC , T):
         """Dimensional diffusivity in electrolyte"""
         tol = pybamm.settings.tolerances["D_e__c_e"]
         c_e = pybamm.maximum(c_e, tol)
-        inputs = {"Electrolyte concentration [mol.m-3]": c_e, "Temperature [K]": T}
+        inputs = {
+            "Electrolyte concentration [mol.m-3]": c_e, 
+            "EC concentration [mol.m-3]": c_EC, 
+            "Temperature [K]": T}
         return pybamm.FunctionParameter("Electrolyte diffusivity [m2.s-1]", inputs)
 
-    def kappa_e_dimensional(self, c_e, T):
+    def kappa_e_dimensional(self, c_e,c_EC , T):
         """Dimensional electrolyte conductivity"""
         tol = pybamm.settings.tolerances["D_e__c_e"]
         c_e = pybamm.maximum(c_e, tol)
-        inputs = {"Electrolyte concentration [mol.m-3]": c_e, "Temperature [K]": T}
+        inputs = {
+            "Electrolyte concentration [mol.m-3]": c_e, 
+            "EC concentration [mol.m-3]": c_EC, 
+            "Temperature [K]": T}
         return pybamm.FunctionParameter("Electrolyte conductivity [S.m-1]", inputs)
 
     def j0_stripping_dimensional(self, c_e, c_Li, T):
@@ -301,7 +307,7 @@ class LithiumIonParameters(BaseParameters):
         self.tau_discharge = self.F * self.c_max * self.L_x / self.i_typ
 
         # Electrolyte diffusion timescale
-        self.D_e_typ = self.D_e_dimensional(self.c_e_typ, self.T_ref)
+        self.D_e_typ = self.D_e_dimensional(self.c_e_typ,self.c_ec_typ, self.T_ref)
         self.tau_diffusion_e = self.L_x ** 2 / self.D_e_typ
 
         # Thermal diffusion timescale
@@ -540,18 +546,22 @@ class LithiumIonParameters(BaseParameters):
         }
         return pybamm.FunctionParameter("1 + dlnf/dlnc", inputs)
 
-    def D_e(self, c_e, T):
+    def D_e(self, c_e,c_EC, T):
         """Dimensionless electrolyte diffusivity"""
         c_e_dimensional = c_e * self.c_e_typ
+        c_EC_dimensional = c_EC * self.c_ec_typ
         T_dim = self.Delta_T * T + self.T_ref
-        return self.D_e_dimensional(c_e_dimensional, T_dim) / self.D_e_typ
+        return self.D_e_dimensional(
+            c_e_dimensional, c_EC_dimensional,T_dim) / self.D_e_typ
 
-    def kappa_e(self, c_e, T):
+    def kappa_e(self, c_e,c_EC, T):
         """Dimensionless electrolyte conductivity"""
         c_e_dimensional = c_e * self.c_e_typ
+        c_EC_dimensional = c_EC * self.c_ec_typ
         kappa_scale = self.F ** 2 * self.D_e_typ * self.c_e_typ / (self.R * self.T_ref)
         T_dim = self.Delta_T * T + self.T_ref
-        return self.kappa_e_dimensional(c_e_dimensional, T_dim) / kappa_scale
+        return self.kappa_e_dimensional(
+            c_e_dimensional, c_EC_dimensional,T_dim) / kappa_scale
 
     def j0_stripping(self, c_e, c_Li, T):
         """Dimensionless exchange-current density for stripping"""
