@@ -4,7 +4,7 @@ from .electrolyte_base_Landesfeind2019 import (
 import numpy as np
 
 
-def electrolyte_conductivity_EMC_FEC_19_1_Landesfeind2019(c_e, T):
+def electrolyte_conductivity_EMC_FEC_19_1_Landesfeind2019(c_e,c_EC, T):
     """
     Conductivity of LiPF6 in EMC:FEC (19:1 w:w) as a function of ion concentration and
     temperature. The data comes from [1].
@@ -29,4 +29,4 @@ def electrolyte_conductivity_EMC_FEC_19_1_Landesfeind2019(c_e, T):
     """
     coeffs = np.array([2.51e-2, 1.75e2, 1.23, 2.05e-1, -8.81e-2, 2.83e-3])
 
-    return electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs)
+    return electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)

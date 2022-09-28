@@ -4,7 +4,7 @@ from .electrolyte_base_Landesfeind2019 import (
 import numpy as np
 
 
-def electrolyte_diffusivity_EC_DMC_1_1_Landesfeind2019(c_e, T):
+def electrolyte_diffusivity_EC_DMC_1_1_Landesfeind2019(c_e, c_EC,T):
     """
     Diffusivity of LiPF6 in EC:DMC (1:1 w:w) as a function of ion concentration and
     temperature. The data comes from [1].
@@ -29,4 +29,4 @@ def electrolyte_diffusivity_EC_DMC_1_1_Landesfeind2019(c_e, T):
     """
     coeffs = np.array([1.47e3, 1.33, -1.69e3, -5.63e2])
 
-    return electrolyte_diffusivity_base_Landesfeind2019(c_e, T, coeffs)
+    return electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)

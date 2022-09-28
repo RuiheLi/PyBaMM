@@ -1,7 +1,7 @@
 from pybamm import exp, sqrt
 
 
-def electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs):
+def electrolyte_conductivity_base_Landesfeind2019(c_e, c_EC, T, coeffs):
     """
     Conductivity of LiPF6 in solvent_X as a function of ion concentration and
     temperature. The data comes from [1].
@@ -36,7 +36,7 @@ def electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs):
     return sigma_e / 10
 
 
-def electrolyte_diffusivity_base_Landesfeind2019(c_e, T, coeffs):
+def electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs):
     """
     Diffusivity of LiPF6 in solvent_X as a function of ion concentration and
     temperature. The data comes from [1].
@@ -113,7 +113,7 @@ def electrolyte_TDF_base_Landesfeind2019(c_e, T, coeffs):
     return tdf
 
 
-def electrolyte_transference_number_base_Landesfeind2019(c_e, T, coeffs):
+def electrolyte_transference_number_base_Landesfeind2019(c_e, c_EC,T, coeffs):
     """
     Transference number of LiPF6 in solvent_X as a function of ion concentration and
     temperature. The data comes from [1].
