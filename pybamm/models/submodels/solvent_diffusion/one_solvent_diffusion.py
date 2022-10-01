@@ -38,6 +38,8 @@ class OneSolventDiffusion(BaseSolventDiffusion):
 
     def get_coupled_variables(self, variables):
 
+        param = self.param
+
         if self.half_cell:   # Mark Ruihe Li comment
             c_EC_n    = None 
         else:
@@ -56,18 +58,36 @@ class OneSolventDiffusion(BaseSolventDiffusion):
         c_EC_s = eps_c_EC_s / eps_s
         c_EC_p = eps_c_EC_p / eps_p
 
+        tor = variables["Electrolyte transport efficiency"]
+        i_e = variables["Electrolyte current density"]
+        T = variables["Cell temperature"]
+
 
         variables.update(
-            self._get_standard_EC_concentration_variables(c_EC_n, c_EC_s, c_EC_p)  # Already Written
+            self._get_standard_EC_concentration_variables(c_EC_n, c_EC_s, c_EC_p) 
         )
+
+        c_EC  = variables["EC concentration"]
+        c_e = variables["Electrolyte concentration"]
 
         eps_c_EC = variables["Porosity times EC concentration"]
 
         Q_sei = variables["Loss of lithium to SEI [mol]"]
 
+        N_EC_diffusion = -tor * param.D_ec * pybamm.grad(c_EC)
+        N_cross_diffusion = -(
+            param.tau_EC_Rio  * param.EC_ratio_Rio / 
+            param.tau_cross_Rio /param.gamma_e_EC_Rio* 
+            tor * param.D_ec_Li_cross * pybamm.grad(c_e) )
+        N_EC_migration = param.C_e* param.Xi * i_e / param.gamma_e *(
+            param.tau_EC_Rio / param.gamma_e_EC_Rio / param.tau_diffusion_e
+        )
+
+        N_EC = N_EC_diffusion + N_cross_diffusion + N_EC_migration
+
         #N_EC = c_EC* 122333    ###     need to write an expression for EC flux, but give up for now
 
-        #variables.update(self._get_standard_flux_variables(N_EC))
+        variables.update(self._get_standard_EC_flux_variables(N_EC))
         variables.update(
             self._get_total_EC_concentration_electrolyte(eps_c_EC,Q_sei))
 
@@ -98,7 +118,7 @@ class OneSolventDiffusion(BaseSolventDiffusion):
         eps_c_EC = variables["Porosity times EC concentration"]
         tor = variables["Electrolyte transport efficiency"]
         T = variables["Cell temperature"]
-        #N_EC = variables["EC flux"]
+        N_EC = variables["EC flux"]
         div_Vbox = variables["Transverse volume-averaged acceleration"]
         j_inner =  variables["Inner SEI interfacial current density"]
         j_outer =  variables["Outer SEI interfacial current density"]
@@ -109,29 +129,45 @@ class OneSolventDiffusion(BaseSolventDiffusion):
         sum_s_j.print_name = "a"
         source_terms = sum_s_j / self.param.gamma_e
 
-        ratio_sei_li = 0.5 ; # change to 1 for now , initially is 0.5
+        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
+        ratio_ec_li  = 1 ; 
+        if self.options["solvent diffusion"] == "EC w refill":
+            self.rhs = {
+                eps_c_EC: - param.tau_discharge / param.tau_EC_Rio * pybamm.div(N_EC) 
+                # source term due to SEI
+                + a * j_sign_SEI / param.gamma_e / param.gamma_e_EC_Rio * ratio_ec_li
+                # source term due to replenishment 
+                + a * j_sign_SEI / param.gamma_e / param.gamma_e_EC_Rio 
+                * param.c_ec_0_dim * (
+                    ratio_ec_li * param.Vmolar_ec 
+                    +ratio_sei_li * param.Vmolar_CH2OCO2Li2)
+                + source_terms / param.gamma_e_EC_Rio 
+                * param.c_ec_0_dim * param.Vmolar_Li 
 
-        print("turn source term due to Li+ migration anymore")
+                #(   old ones:
+                #    param.EC_ratio_Rio / param.gamma_e_ec_Rio * param.tau_discharge  / 
+                #    param.tau_cross_Rio * pybamm.div(tor * param.D_ec_Li_cross * pybamm.grad(c_e))
+                #    )
+                #+ param.tau_discharge  / param.tau_ec_Rio * pybamm.div(tor * param.D_ec * pybamm.grad(c_EC))
+                ## source term due to migration:
+                #+    source_terms / param.gamma_e_ec_Rio * param.Xi   
+                
+                ## source term due to SEI
+                #+ a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio 
+                # source term due to replenishment
+                #- source_terms / param.gamma_e_ec_Rio * param.Vmolar_Li * param.c_ec_0_dim   # ignore volume of lithium
+                #+ (  
+                #a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio *   
+                #(  ratio_sei_li*param.Vmolar_CH2OCO2Li2*param.c_ec_0_dim 
+                #- param.Vmolar_ec*param.c_ec_0_dim ) ) 
+            } 
+        elif self.options["solvent diffusion"] == "EC wo refill":
+            self.rhs = {
+                eps_c_EC: - param.tau_discharge / param.tau_EC_Rio * pybamm.div(N_EC) 
+                # source term due to SEI
+                + a * j_sign_SEI / param.gamma_e / param.gamma_e_EC_Rio * ratio_ec_li
+            } 
 
-        
-        self.rhs = {
-            eps_c_EC: (
-                param.EC_ratio_Rio / param.gamma_e_ec_Rio * param.tau_discharge  / 
-                param.tau_cross_Rio * pybamm.div(tor * param.D_ec_Li_cross * pybamm.grad(c_e))
-                )
-            + param.tau_discharge  / param.tau_ec_Rio * pybamm.div(tor * param.D_ec * pybamm.grad(c_EC))
-            # source term due to migration:
-            +    source_terms / param.gamma_e_ec_Rio * param.Xi   
-            
-            # source term due to SEI
-            + a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio 
-            # source term due to replenishment
-            #- source_terms / param.gamma_e_ec_Rio * param.Vmolar_Li * param.c_ec_0_dim   # ignore volume of lithium
-            #+ (  
-            #a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio *   
-            #(  ratio_sei_li*param.Vmolar_CH2OCO2Li2*param.c_ec_0_dim 
-            #- param.Vmolar_ec*param.c_ec_0_dim ) ) 
-        } 
 
 
     def set_initial_conditions(self, variables):

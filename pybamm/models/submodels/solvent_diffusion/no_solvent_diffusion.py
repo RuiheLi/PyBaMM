@@ -54,7 +54,20 @@ class NoSolventDiffusion(BaseSolventDiffusion):
     def get_coupled_variables(self, variables):
         
         eps_c_EC = variables["Porosity times EC concentration"]
-        Q_sei = variables["Loss of lithium to SEI [mol]"]
+        #Q_sei = variables["Loss of lithium to SEI [mol]"]
+
+        N_EC_n = pybamm.FullBroadcast(
+            0.0, "negative electrode",
+            "current collector") 
+        N_EC_s = pybamm.FullBroadcast(
+            0.0, "separator",
+            "current collector")  
+        N_EC_p = pybamm.FullBroadcast(
+            0.0, "positive electrode",
+            "current collector") 
+        N_EC = pybamm.concatenation(N_EC_n, N_EC_s, N_EC_p )
+
+        variables.update(self._get_standard_EC_flux_variables(N_EC))
 
         variables.update(
             self._get_total_EC_concentration_electrolyte(eps_c_EC,0))

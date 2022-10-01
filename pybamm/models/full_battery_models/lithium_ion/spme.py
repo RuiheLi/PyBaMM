@@ -113,7 +113,7 @@ class SPMe(SPM):
 
     # Mark Ruihe block start
     def set_solvent_diffusion_submodel(self): # Mark Ruihe Li modify
-        if self.options["solvent diffusion"] == "EC":
+        if self.options["solvent diffusion"] in ["EC w refill","EC wo refill"]:
             self.submodels[
                 "solvent diffusion"
             ] = pybamm.solvent_diffusion.OneSolventDiffusion(self.param, self.options)

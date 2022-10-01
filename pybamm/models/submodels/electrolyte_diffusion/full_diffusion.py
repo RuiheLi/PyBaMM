@@ -69,10 +69,17 @@ class Full(BaseElectrolyteDiffusion):
         param = self.param
 
         N_e_diffusion = -tor * param.D_e(c_e, c_EC,T) * pybamm.grad(c_e)
+        N_cross_diffusion = -(
+            param.e_ratio_Rio * param.gamma_e_ec_Rio * 
+            param.tau_diffusion_e / param.tau_cross_Rio * 
+            tor * param.D_ec_Li_cross * pybamm.grad(c_EC) )
         N_e_migration = param.C_e * param.t_plus(c_e,c_EC, T) * i_e / param.gamma_e
         N_e_convection = param.C_e * c_e * v_box
 
-        N_e = N_e_diffusion + N_e_migration + N_e_convection
+        if self.options["solvent diffusion"] == "none":
+            N_e = N_e_diffusion + N_e_migration + N_e_convection
+        elif self.options["solvent diffusion"] == "EC":
+            N_e = N_e_diffusion + N_cross_diffusion + N_e_migration
 
         variables.update(self._get_standard_flux_variables(N_e))
         variables.update(self._get_total_concentration_electrolyte(eps_c_e))
@@ -120,25 +127,34 @@ class Full(BaseElectrolyteDiffusion):
         sum_s_j.print_name = "a"
         source_terms = sum_s_j / self.param.gamma_e
 
-        ratio_sei_li = 0.5 ; # change to 1 for now , initially is 0.5
+        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
+        ratio_ec_li  = 1 ; 
 
         if self.options["solvent diffusion"] == "none":
             self.rhs = {
                 eps_c_e: -pybamm.div(N_e) / param.C_e + source_terms - c_e * div_Vbox
             }
-        elif self.options["solvent diffusion"] == "EC":
+        elif self.options["solvent diffusion"] == "EC w refill":
             self.rhs = {
-            eps_c_e: -pybamm.div(-tor * param.D_e(c_e, c_EC, T) * pybamm.grad(c_e)) / param.C_e 
-            + param.e_ratio_Rio * param.gamma_e_ec_Rio * param.tau_discharge 
-            / param.tau_cross_Rio * pybamm.div(tor * param.D_ec_Li_cross * pybamm.grad(c_EC))
-            + ( 1-param.t_plus(c_e,c_EC, T) )  * source_terms 
+            eps_c_e: -pybamm.div(N_e) / param.C_e + source_terms 
             - c_e * div_Vbox
             # source term due to replenishment
+            - (
+                source_terms * param.Vmolar_Li * param.c_e_init_dimensional  +
+                a * j_sign_SEI / param.gamma_e * param.c_e_init_dimensional * (
+                    param.Vmolar_ec*ratio_ec_li +param.Vmolar_CH2OCO2Li2*ratio_sei_li
+                )
+            )
             #-  (    
             #    param.c_e_init_dimensional / param.gamma_e * 
             #    (param.Vmolar_ec - 
             #    ratio_sei_li*param.Vmolar_CH2OCO2Li2  # + param.Vmolar_Li # ignore volume of lithium
             #    ) * a * j_sign_SEI     ) 
+            } 
+        elif self.options["solvent diffusion"] == "EC wo refill":
+            self.rhs = {
+            eps_c_e: -pybamm.div(N_e) / param.C_e + source_terms 
+            - c_e * div_Vbox
             } 
         
         # Mark Ruihe block start

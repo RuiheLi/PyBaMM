@@ -100,6 +100,33 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
         c_EC.print_name = "c_EC"
 
         return variables
+    
+    def _get_standard_EC_flux_variables(self, N_EC):
+        """
+        A private function to obtain the standard variables which
+        can be derived from the mass flux of EC in the electrolyte.
+
+        Parameters
+        ----------
+        N_EC : :class:`pybamm.Symbol`
+            The EC flux in the electrolyte.
+
+        Returns
+        -------
+        variables : dict
+            The variables which can be derived from the flux in the
+            electrolyte.
+        """
+
+        param = self.param
+        flux_EC_scale = param.D_ec_typ * param.c_ec_typ / param.L_x
+
+        variables = {
+            "EC flux": N_EC,
+            "EC flux [mol.m-2.s-1]": N_EC * flux_EC_scale,
+        }
+
+        return variables
 
 
     

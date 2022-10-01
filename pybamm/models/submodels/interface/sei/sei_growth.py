@@ -118,7 +118,7 @@ class SEIGrowth(BaseModel):
         c_ec_neg = variables["Negative EC concentration [mol.m-3]"]
 
         # Mark Ruihe block start
-        if self.options["solvent diffusion"] == "EC": 
+        if self.options["solvent diffusion"] in ["EC w refill","EC wo refill"]: 
             c_ec_relative = c_ec_neg / param.c_ec_typ # Mark Ruihe change from initial EC concentration to typical EC concentration, but actually they are the same in most cases 
         elif self.options["solvent diffusion"] == "none":
             c_ec_relative = param.c_ec_0_dim / param.c_ec_typ 
