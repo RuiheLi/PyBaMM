@@ -1,3 +1,4 @@
 from .base_solvent_diffusion import BaseSolventDiffusion
-from .one_solvent_diffusion import OneSolventDiffusion
+from .one_solvent_diffusion_w_Re import OneSolventDiffusion_w_Refill
+from .one_solvent_diffusion_wo_Re import OneSolventDiffusion_wo_Refill
 from .no_solvent_diffusion import NoSolventDiffusion

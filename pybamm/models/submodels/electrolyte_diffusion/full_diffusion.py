@@ -78,7 +78,7 @@ class Full(BaseElectrolyteDiffusion):
 
         if self.options["solvent diffusion"] == "none":
             N_e = N_e_diffusion + N_e_migration + N_e_convection
-        elif self.options["solvent diffusion"] == "EC":
+        elif self.options["solvent diffusion"] in ["EC w refill","EC wo refill"]:
             N_e = N_e_diffusion + N_cross_diffusion + N_e_migration
 
         variables.update(self._get_standard_flux_variables(N_e))
@@ -89,7 +89,6 @@ class Full(BaseElectrolyteDiffusion):
     def set_rhs(self, variables):
 
         param = self.param
-
 
         # Mark Ruihe block start
         sign_2_n = pybamm.FullBroadcast(
@@ -135,6 +134,7 @@ class Full(BaseElectrolyteDiffusion):
                 eps_c_e: -pybamm.div(N_e) / param.C_e + source_terms - c_e * div_Vbox
             }
         elif self.options["solvent diffusion"] == "EC w refill":
+            print('using EC w refill for Li+')
             self.rhs = {
             eps_c_e: -pybamm.div(N_e) / param.C_e + source_terms 
             - c_e * div_Vbox
@@ -152,6 +152,7 @@ class Full(BaseElectrolyteDiffusion):
             #    ) * a * j_sign_SEI     ) 
             } 
         elif self.options["solvent diffusion"] == "EC wo refill":
+            print('using EC wo refill for Li+')
             self.rhs = {
             eps_c_e: -pybamm.div(N_e) / param.C_e + source_terms 
             - c_e * div_Vbox
