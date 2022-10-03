@@ -88,7 +88,8 @@ class OneSolventDiffusion_wo_Refill(BaseSolventDiffusion):
 
         #N_EC = c_EC* 122333    ###     need to write an expression for EC flux, but give up for now
 
-        variables.update(self._get_standard_EC_flux_variables(N_EC))
+        variables.update(self._get_standard_EC_flux_variables(
+            N_EC,N_EC_diffusion,N_EC_migration,N_cross_diffusion))
         variables.update(
             self._get_total_EC_concentration_electrolyte(eps_c_EC,Q_sei))
 
@@ -133,7 +134,7 @@ class OneSolventDiffusion_wo_Refill(BaseSolventDiffusion):
         ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
         ratio_ec_li  = 1 ; 
        
-        print('using EC wO refill for EC')
+        #print('using EC wO refill for EC')
         self.rhs = {
             eps_c_EC: - param.tau_discharge / param.tau_ec_Rio * pybamm.div(N_EC) 
             # source term due to SEI

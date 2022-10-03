@@ -464,7 +464,7 @@ class ElectrolyteConcentrationTests(BaseOutputTest):
         self.c_e_p_av = solution["X-averaged positive electrolyte concentration"]
         self.c_e_tot = solution["Total lithium in electrolyte [mol]"]
 
-        self.N_e_hat = solution["Electrolyte flux"]
+        self.N_e_hat = solution["Li+ flux"] # Mark Ruihe 
         # self.N_e_hat = solution["Reduced cation flux"]
 
     def test_concentration_limit(self):

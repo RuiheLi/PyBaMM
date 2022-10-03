@@ -81,7 +81,8 @@ class Full(BaseElectrolyteDiffusion):
         elif self.options["solvent diffusion"] in ["EC w refill","EC wo refill"]:
             N_e = N_e_diffusion + N_cross_diffusion + N_e_migration
 
-        variables.update(self._get_standard_flux_variables(N_e))
+        variables.update(self._get_standard_flux_variables(
+            N_e,N_e_diffusion,N_e_migration,N_cross_diffusion))
         variables.update(self._get_total_concentration_electrolyte(eps_c_e))
 
         return variables
@@ -113,7 +114,7 @@ class Full(BaseElectrolyteDiffusion):
         eps_c_e = variables["Porosity times concentration"]
         c_e = variables["Electrolyte concentration"]
         c_EC  = variables["EC concentration"]
-        N_e = variables["Electrolyte flux"]
+        N_e = variables["Li+ flux"]
         tor = variables["Electrolyte transport efficiency"]
         T = variables["Cell temperature"]
         j_inner =  variables["Inner SEI interfacial current density"]

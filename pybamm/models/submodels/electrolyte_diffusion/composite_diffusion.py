@@ -64,7 +64,7 @@ class Composite(BaseElectrolyteDiffusion):
         eps_0 = variables["Leading-order porosity"]
         deps_0_dt = variables["Leading-order porosity change"]
         c_e = variables["Electrolyte concentration"]
-        N_e = variables["Electrolyte flux"]
+        N_e = variables["Li+ flux"]
         if self.extended is False:
             sum_s_j = variables[
                 "Leading-order sum of electrolyte reaction source terms"

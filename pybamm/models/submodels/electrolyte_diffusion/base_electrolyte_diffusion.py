@@ -102,7 +102,8 @@ class BaseElectrolyteDiffusion(pybamm.BaseSubModel):
             )
         return variables
 
-    def _get_standard_flux_variables(self, N_e):
+    def _get_standard_flux_variables(self, N_e,
+        N_e_diffusion,N_e_migration,N_cross_diffusion):
         """
         A private function to obtain the standard variables which
         can be derived from the mass flux in the electrolyte.
@@ -123,8 +124,14 @@ class BaseElectrolyteDiffusion(pybamm.BaseSubModel):
         flux_scale = param.D_e_typ * param.c_e_typ / param.L_x
 
         variables = {
-            "Electrolyte flux": N_e,
-            "Electrolyte flux [mol.m-2.s-1]": N_e * flux_scale,
+            "Li+ flux": N_e,
+            "Li+ flux [mol.m-2.s-1]": N_e * flux_scale,
+            "Li+ flux by diffusion": N_e_diffusion,
+            "Li+ flux by diffusion [mol.m-2.s-1]": N_e_diffusion * flux_scale,
+            "Li+ flux by migration": N_e_migration,
+            "Li+ flux by migration [mol.m-2.s-1]": N_e_migration * flux_scale,
+            "Li+ flux by solvent": N_cross_diffusion,
+            "Li+ flux by solvent [mol.m-2.s-1]": N_cross_diffusion * flux_scale,
         }
 
         return variables

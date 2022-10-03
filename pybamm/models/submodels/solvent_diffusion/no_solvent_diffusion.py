@@ -35,7 +35,7 @@ class NoSolventDiffusion(BaseSolventDiffusion):
             "current collector")
         variables=self._get_standard_EC_concentration_variables(
             c_EC_typ_n,c_EC_typ_s,c_EC_typ_p)
-        print("have you come here?")
+        #print("have you come here?")
 
         param = self.param
 
@@ -67,7 +67,7 @@ class NoSolventDiffusion(BaseSolventDiffusion):
             "current collector") 
         N_EC = pybamm.concatenation(N_EC_n, N_EC_s, N_EC_p )
 
-        variables.update(self._get_standard_EC_flux_variables(N_EC))
+        variables.update(self._get_standard_EC_flux_variables(N_EC,N_EC,N_EC,N_EC))
 
         variables.update(
             self._get_total_EC_concentration_electrolyte(eps_c_EC,0))
