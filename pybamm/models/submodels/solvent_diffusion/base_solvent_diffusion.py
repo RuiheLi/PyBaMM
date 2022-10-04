@@ -55,7 +55,7 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
         c_EC_p_av = pybamm.x_average(c_EC_p)
 
         sign_2_n = pybamm.FullBroadcast(
-                pybamm.Scalar(1), "negative electrode", 
+                pybamm.Scalar(0), "negative electrode", 
                 auxiliary_domains={"secondary": "current collector"}
             )
         sign_2_s = pybamm.FullBroadcast(
@@ -102,7 +102,8 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
         return variables
     
     def _get_standard_EC_flux_variables(self, 
-        N_EC,N_EC_diffusion,N_EC_migration,N_cross_diffusion):
+        N_EC,N_EC_diffusion,N_EC_migration,N_cross_diffusion,
+        source_terms_ec,source_terms_refill):
         """
         A private function to obtain the standard variables which
         can be derived from the mass flux of EC in the electrolyte.
@@ -124,12 +125,18 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
 
         variables = {
             "EC flux": N_EC,
+            "Minus div EC flux": - pybamm.div(N_EC) * param.tau_discharge / param.tau_ec_Rio ,
+            "EC source term (SEI)": source_terms_ec,
+            "EC source term refill": source_terms_refill,
             "EC flux [mol.m-2.s-1]": N_EC * flux_EC_scale,
             "EC flux by diffusion": N_EC_diffusion,
+            "Minus div EC flux by diffusion": - pybamm.div(N_EC_diffusion) * param.tau_discharge / param.tau_ec_Rio  ,
             "EC flux by diffusion [mol.m-2.s-1]": N_EC_diffusion * flux_EC_scale,
             "EC flux by migration": N_EC_migration,
+            "Minus div EC flux by migration": - pybamm.div(N_EC_migration) * param.tau_discharge / param.tau_ec_Rio  ,
             "EC flux by migration [mol.m-2.s-1]": N_EC_migration * flux_EC_scale,
             "EC flux by Li+": N_cross_diffusion,
+            "Minus div EC flux by Li+": - pybamm.div(N_cross_diffusion) * param.tau_discharge / param.tau_ec_Rio  ,
             "EC flux by Li+ [mol.m-2.s-1]": N_cross_diffusion * flux_EC_scale,
         }
 

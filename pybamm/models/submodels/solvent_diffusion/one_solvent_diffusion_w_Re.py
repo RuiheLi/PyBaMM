@@ -65,6 +65,20 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
         i_e = variables["Electrolyte current density"]
         T = variables["Cell temperature"]
 
+        sign_2_n = pybamm.FullBroadcast(
+                pybamm.Scalar(0), "negative electrode", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2_s = pybamm.FullBroadcast(
+                pybamm.Scalar(0), "separator", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2_p = pybamm.FullBroadcast(
+                pybamm.Scalar(0), "positive electrode", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2 = pybamm.concatenation(sign_2_n, sign_2_s, sign_2_p )
+
 
         
         c_EC  = variables["EC concentration"]
@@ -85,10 +99,37 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
 
         N_EC = N_EC_diffusion + N_cross_diffusion + N_EC_migration
 
-        #N_EC = c_EC* 122333    ###     need to write an expression for EC flux, but give up for now
+        a_p = variables["Positive electrode surface area to volume ratio"]
+        a_n = variables["Negative electrode surface area to volume ratio"]
+        zero_s = pybamm.FullBroadcast(0, "separator", "current collector")
+        a = pybamm.concatenation(a_n, zero_s, a_p)
 
+        j_inner =  variables["Inner SEI interfacial current density"]
+        j_outer =  variables["Outer SEI interfacial current density"]
+        j_SEI = j_inner + j_outer
+        j_sign_SEI = pybamm.concatenation(j_SEI, sign_2_s, sign_2_p )
+
+        sum_s_j = variables["Sum of electrolyte reaction source terms"]
+        sum_s_j.print_name = "a"
+        source_terms = sum_s_j / self.param.gamma_e
+
+        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
+        ratio_ec_li  = 1 ; 
+
+        source_terms_ec =(
+            a * j_sign_SEI / param.gamma_e 
+            / param.gamma_e_ec_Rio * ratio_ec_li)
+        source_terms_refill = (
+            a * j_sign_SEI / param.gamma_e / param.gamma_e_ec_Rio 
+            * param.c_ec_0_dim * (
+                ratio_ec_li * param.Vmolar_ec 
+                +ratio_sei_li * param.Vmolar_CH2OCO2Li2)
+            + source_terms / param.gamma_e_ec_Rio 
+            * param.c_ec_0_dim * param.Vmolar_Li )
+        
         variables.update(self._get_standard_EC_flux_variables(
-            N_EC,N_EC_diffusion,N_EC_migration,N_cross_diffusion))
+            N_EC,N_EC_diffusion,N_EC_migration,N_cross_diffusion,
+            source_terms_ec,source_terms_refill))
         variables.update(
             self._get_total_EC_concentration_electrolyte(eps_c_EC,Q_sei))
 
@@ -98,7 +139,7 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
 
         param = self.param
         sign_2_n = pybamm.FullBroadcast(
-                pybamm.Scalar(1), "negative electrode", 
+                pybamm.Scalar(0), "negative electrode", 
                 auxiliary_domains={"secondary": "current collector"}
             )
         sign_2_s = pybamm.FullBroadcast(
@@ -121,30 +162,16 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
         T = variables["Cell temperature"]
         N_EC = variables["EC flux"]
         div_Vbox = variables["Transverse volume-averaged acceleration"]
-        j_inner =  variables["Inner SEI interfacial current density"]
-        j_outer =  variables["Outer SEI interfacial current density"]
-        j_SEI = j_inner + j_outer
-        j_sign_SEI = pybamm.concatenation(j_SEI, sign_2_s, sign_2_p )
-
-        sum_s_j = variables["Sum of electrolyte reaction source terms"]
-        sum_s_j.print_name = "a"
-        source_terms = sum_s_j / self.param.gamma_e
-
-        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
-        ratio_ec_li  = 1 ; 
+        source_terms_ec =  variables["EC source term (SEI)"]
+        source_terms_refill = variables["EC source term refill"]
 
         #print('using EC w refill for EC')
         self.rhs = {
-            eps_c_EC: - param.tau_discharge / param.tau_ec_Rio * pybamm.div(N_EC) 
+            eps_c_EC: - pybamm.div(N_EC) * param.tau_discharge / param.tau_ec_Rio 
             # source term due to SEI
-            + a * j_sign_SEI / param.gamma_e / param.gamma_e_ec_Rio * ratio_ec_li
+            + source_terms_ec
             # source term due to replenishment 
-            + a * j_sign_SEI / param.gamma_e / param.gamma_e_ec_Rio 
-            * param.c_ec_0_dim * (
-                ratio_ec_li * param.Vmolar_ec 
-                +ratio_sei_li * param.Vmolar_CH2OCO2Li2)
-            + source_terms / param.gamma_e_ec_Rio 
-            * param.c_ec_0_dim * param.Vmolar_Li 
+            + source_terms_refill
 
             #(   old ones:
             #    param.EC_ratio_Rio / param.gamma_e_ec_Rio * param.tau_discharge  / 

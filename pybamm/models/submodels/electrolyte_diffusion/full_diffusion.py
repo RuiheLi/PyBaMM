@@ -81,19 +81,9 @@ class Full(BaseElectrolyteDiffusion):
         elif self.options["solvent diffusion"] in ["EC w refill","EC wo refill"]:
             N_e = N_e_diffusion + N_cross_diffusion + N_e_migration
 
-        variables.update(self._get_standard_flux_variables(
-            N_e,N_e_diffusion,N_e_migration,N_cross_diffusion))
-        variables.update(self._get_total_concentration_electrolyte(eps_c_e))
-
-        return variables
-
-    def set_rhs(self, variables):
-
-        param = self.param
-
         # Mark Ruihe block start
         sign_2_n = pybamm.FullBroadcast(
-                pybamm.Scalar(1), "negative electrode", 
+                pybamm.Scalar(0), "negative electrode", 
                 auxiliary_domains={"secondary": "current collector"}
             )
         sign_2_s = pybamm.FullBroadcast(
@@ -111,24 +101,46 @@ class Full(BaseElectrolyteDiffusion):
         zero_s = pybamm.FullBroadcast(0, "separator", "current collector")
         a = pybamm.concatenation(a_n, zero_s, a_p)
 
-        eps_c_e = variables["Porosity times concentration"]
-        c_e = variables["Electrolyte concentration"]
-        c_EC  = variables["EC concentration"]
-        N_e = variables["Li+ flux"]
-        tor = variables["Electrolyte transport efficiency"]
-        T = variables["Cell temperature"]
         j_inner =  variables["Inner SEI interfacial current density"]
         j_outer =  variables["Outer SEI interfacial current density"]
         j_SEI = j_inner + j_outer
         j_sign_SEI = pybamm.concatenation(j_SEI, sign_2_s, sign_2_p )
-        div_Vbox = variables["Transverse volume-averaged acceleration"]
+
+        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
+        ratio_ec_li  = 1 ; 
 
         sum_s_j = variables["Sum of electrolyte reaction source terms"]
         sum_s_j.print_name = "a"
         source_terms = sum_s_j / self.param.gamma_e
+        if self.options["solvent diffusion"] in ["none","EC wo refill"]:
+            source_terms_refill = sign_2
+        elif self.options["solvent diffusion"] == "EC w refill":
+            source_terms_refill = - (
+                    source_terms * param.Vmolar_Li * param.c_e_init_dimensional  +
+                    a * j_sign_SEI / param.gamma_e * param.c_e_init_dimensional * (
+                        param.Vmolar_ec*ratio_ec_li +param.Vmolar_CH2OCO2Li2*ratio_sei_li
+            ))
+        
+        variables.update(self._get_standard_flux_variables(
+            N_e,N_e_diffusion,N_e_migration,N_cross_diffusion,
+            source_terms,source_terms_refill))
+        variables.update(self._get_total_concentration_electrolyte(eps_c_e))
 
-        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
-        ratio_ec_li  = 1 ; 
+        return variables
+
+    def set_rhs(self, variables):
+
+        param = self.param
+
+        eps_c_e = variables["Porosity times concentration"]
+        c_e = variables["Electrolyte concentration"]
+        c_EC  = variables["EC concentration"]
+        N_e   = variables["Li+ flux"]
+        div_Vbox = variables["Transverse volume-averaged acceleration"]
+
+        source_terms = variables["Li+ source term"]
+        source_terms_refill = variables["Li+ source term refill"]
+
 
         if self.options["solvent diffusion"] == "none":
             self.rhs = {
@@ -140,12 +152,7 @@ class Full(BaseElectrolyteDiffusion):
             eps_c_e: -pybamm.div(N_e) / param.C_e + source_terms 
             - c_e * div_Vbox
             # source term due to replenishment
-            - (
-                source_terms * param.Vmolar_Li * param.c_e_init_dimensional  +
-                a * j_sign_SEI / param.gamma_e * param.c_e_init_dimensional * (
-                    param.Vmolar_ec*ratio_ec_li +param.Vmolar_CH2OCO2Li2*ratio_sei_li
-                )
-            )
+            + source_terms_refill
             #-  (    
             #    param.c_e_init_dimensional / param.gamma_e * 
             #    (param.Vmolar_ec - 
@@ -159,7 +166,6 @@ class Full(BaseElectrolyteDiffusion):
             - c_e * div_Vbox
             } 
         
-        # Mark Ruihe block start
 
     def set_initial_conditions(self, variables):
 

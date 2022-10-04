@@ -66,14 +66,31 @@ class OneSolventDiffusion_wo_Refill(BaseSolventDiffusion):
         i_e = variables["Electrolyte current density"]
         T = variables["Cell temperature"]
 
+        sign_2_n = pybamm.FullBroadcast(
+                pybamm.Scalar(0), "negative electrode", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2_s = pybamm.FullBroadcast(
+                pybamm.Scalar(0), "separator", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2_p = pybamm.FullBroadcast(
+                pybamm.Scalar(0), "positive electrode", 
+                auxiliary_domains={"secondary": "current collector"}
+            )
+        sign_2 = pybamm.concatenation(sign_2_n, sign_2_s, sign_2_p )
 
-        
+
         c_EC  = variables["EC concentration"]
         c_e = variables["Electrolyte concentration"]
 
         eps_c_EC = variables["Porosity times EC concentration"]
 
         Q_sei = variables["Loss of lithium to SEI [mol]"]
+        a_p = variables["Positive electrode surface area to volume ratio"]
+        a_n = variables["Negative electrode surface area to volume ratio"]
+        zero_s = pybamm.FullBroadcast(0, "separator", "current collector")
+        a = pybamm.concatenation(a_n, zero_s, a_p)
 
         N_EC_diffusion = -tor * param.D_ec * pybamm.grad(c_EC)
         N_cross_diffusion = -(
@@ -86,10 +103,23 @@ class OneSolventDiffusion_wo_Refill(BaseSolventDiffusion):
 
         N_EC = N_EC_diffusion + N_cross_diffusion + N_EC_migration
 
+        j_inner =  variables["Inner SEI interfacial current density"]
+        j_outer =  variables["Outer SEI interfacial current density"]
+        j_SEI = j_inner + j_outer
+        j_sign_SEI = pybamm.concatenation(j_SEI, sign_2_s, sign_2_p )
+
+        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
+        ratio_ec_li  = 1 ; 
+
+        source_terms_ec = (
+            a * j_sign_SEI / param.gamma_e 
+            / param.gamma_e_ec_Rio * ratio_ec_li)
+
         #N_EC = c_EC* 122333    ###     need to write an expression for EC flux, but give up for now
 
         variables.update(self._get_standard_EC_flux_variables(
-            N_EC,N_EC_diffusion,N_EC_migration,N_cross_diffusion))
+            N_EC,N_EC_diffusion,N_EC_migration,N_cross_diffusion,
+            source_terms_ec,sign_2))
         variables.update(
             self._get_total_EC_concentration_electrolyte(eps_c_EC,Q_sei))
 
@@ -98,23 +128,7 @@ class OneSolventDiffusion_wo_Refill(BaseSolventDiffusion):
     def set_rhs(self, variables):   # Mark Ruihe Li modify  ? can we have more than one variables in this file?
 
         param = self.param
-        sign_2_n = pybamm.FullBroadcast(
-                pybamm.Scalar(1), "negative electrode", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
-        sign_2_s = pybamm.FullBroadcast(
-                pybamm.Scalar(0), "separator", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
-        sign_2_p = pybamm.FullBroadcast(
-                pybamm.Scalar(0), "positive electrode", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
-
-        a_p = variables["Positive electrode surface area to volume ratio"]
-        a_n = variables["Negative electrode surface area to volume ratio"]
-        zero_s = pybamm.FullBroadcast(0, "separator", "current collector")
-        a = pybamm.concatenation(a_n, zero_s, a_p)
+    
         c_e = variables["Electrolyte concentration"]
         c_EC  = variables["EC concentration"]
         eps_c_EC = variables["Porosity times EC concentration"]
@@ -122,23 +136,14 @@ class OneSolventDiffusion_wo_Refill(BaseSolventDiffusion):
         T = variables["Cell temperature"]
         N_EC = variables["EC flux"]
         div_Vbox = variables["Transverse volume-averaged acceleration"]
-        j_inner =  variables["Inner SEI interfacial current density"]
-        j_outer =  variables["Outer SEI interfacial current density"]
-        j_SEI = j_inner + j_outer
-        j_sign_SEI = pybamm.concatenation(j_SEI, sign_2_s, sign_2_p )
+        source_terms_ec =  variables["EC source term (SEI)"]
+        
 
-        sum_s_j = variables["Sum of electrolyte reaction source terms"]
-        sum_s_j.print_name = "a"
-        source_terms = sum_s_j / self.param.gamma_e
-
-        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
-        ratio_ec_li  = 1 ; 
-       
         #print('using EC wO refill for EC')
         self.rhs = {
-            eps_c_EC: - param.tau_discharge / param.tau_ec_Rio * pybamm.div(N_EC) 
+            eps_c_EC: - pybamm.div(N_EC) * param.tau_discharge / param.tau_ec_Rio  
             # source term due to SEI
-            + a * j_sign_SEI / param.gamma_e / param.gamma_e_ec_Rio * ratio_ec_li
+            + source_terms_ec
         } 
 
 
