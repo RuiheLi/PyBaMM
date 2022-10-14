@@ -112,8 +112,9 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
         sum_s_j = variables["Sum of electrolyte reaction source terms"]
         sum_s_j.print_name = "a"
         source_terms = sum_s_j / self.param.gamma_e
+        ## EC:lithium:SEI=2:2:1    ; change to EC:lithium:SEI=2:1:1 for now
 
-        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
+        ratio_sei_li = - 1/param.z_sei  ; # change to 1 for now , initially is 0.5
         ratio_ec_li  = 1 ; 
 
         source_terms_ec =(

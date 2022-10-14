@@ -29,8 +29,10 @@ for interstitial-diffusion limited:
 
 further add-on: more data plot?
 """
-import pybamm as pb;import pandas as pd   ;import numpy as np;import os;import matplotlib.pyplot as plt;import os;#import imageio
-from scipy.io import savemat,loadmat;from pybamm import constants,exp;import matplotlib as mpl; fs=17; # or we can set import matplotlib.pyplot as plt then say 'mpl.rc...'
+import pybamm as pb;import pandas as pd   ;import numpy as np;import os;
+import matplotlib.pyplot as plt;import os;#import imageio
+from scipy.io import savemat,loadmat;from pybamm import constants,exp;
+import matplotlib as mpl; fs=17; # or we can set import matplotlib.pyplot as plt then say 'mpl.rc...'
 for k in range(0,1):
     mpl.rcParams["axes.labelsize"] = fs
     mpl.rcParams["axes.titlesize"] = fs
@@ -348,11 +350,14 @@ def Run_Model_Base_On_Last_Solution(
     var = pb.standard_spatial_vars  
     var_pts = {var.x_n: 20,  var.x_s: 10,  var.x_p: 20,  var.r_n: int(mesh_par),  var.r_p: int(mesh_par),  }
     submesh_types = Model.default_submesh_types
-    particle_mesh = pb.MeshGenerator(
-        pb.Exponential1DSubMesh, 
-        submesh_params={"side": "right", "stretch": submesh_strech})
-    submesh_types["negative particle"] = particle_mesh
-    submesh_types["positive particle"] = particle_mesh
+    if submesh_strech == "nan":
+            pass
+    else:
+        particle_mesh = pb.MeshGenerator(
+            pb.Exponential1DSubMesh, 
+            submesh_params={"side": "right", "stretch": int(submesh_strech)})
+        submesh_types["negative particle"] = particle_mesh
+        submesh_types["positive particle"] = particle_mesh 
 
     Simnew = pb.Simulation(
         Model_new,
@@ -405,11 +410,14 @@ def Run_Model_Base_On_Last_Solution_RPT(
     var = pb.standard_spatial_vars  
     var_pts = {var.x_n: 20,  var.x_s: 10,  var.x_p: 20,  var.r_n: int(mesh_par),  var.r_p: int(mesh_par),  }
     submesh_types = Model.default_submesh_types
-    particle_mesh = pb.MeshGenerator(
-        pb.Exponential1DSubMesh, 
-        submesh_params={"side": "right", "stretch": submesh_strech})
-    submesh_types["negative particle"] = particle_mesh
-    submesh_types["positive particle"] = particle_mesh
+    if submesh_strech == "nan":
+            pass
+    else:
+        particle_mesh = pb.MeshGenerator(
+            pb.Exponential1DSubMesh, 
+            submesh_params={"side": "right", "stretch": int(submesh_strech)})
+        submesh_types["negative particle"] = particle_mesh
+        submesh_types["positive particle"] = particle_mesh 
     Simnew = pb.Simulation(
         Model_new,
         experiment = ModelExperiment, 
@@ -501,43 +509,67 @@ def recursive_scan(mylist,kvs, key_list, acc):
 
 # this function is to initialize the para with a known dict
 def Para_init(Para_dict):
-    ChemistryChen=getattr(pb.parameter_sets,Para_dict["Para_Set"]) 
-    Para_dict.pop("Para_Set")
-    if Para_dict.__contains__("electrolyte"):
-        ChemistryChen["electrolyte"] = Para_dict["electrolyte"]  
-        Para_dict.pop("electrolyte")
-    if Para_dict.__contains__("Total ageing cycles"):
-        Total_Cycles = Para_dict["Total ageing cycles"]  
-        Para_dict.pop("Total ageing cycles")
-    if Para_dict.__contains__("Ageing cycles between RPT"):
-        Cycle_bt_RPT = Para_dict["Ageing cycles between RPT"]  
-        Para_dict.pop("Ageing cycles between RPT")
-    if Para_dict.__contains__("Update cycles for ageing"):
-        Update_Cycles = Para_dict["Update cycles for ageing"]  
-        Para_dict.pop("Update cycles for ageing")
-    if Para_dict.__contains__("Cycles within RPT"):
-        RPT_Cycles = Para_dict["Cycles within RPT"]  
-        Para_dict.pop("Cycles within RPT")
-    if Para_dict.__contains__("Ageing temperature"):
-        Temper_i = Para_dict["Ageing temperature"]  
-        Para_dict.pop("Ageing temperature")
-    if Para_dict.__contains__("RPT temperature"):
-        Temper_RPT = Para_dict["RPT temperature"]  
-        Para_dict.pop("RPT temperature")
-    if Para_dict.__contains__("Particle mesh points"):
-        mesh_par = Para_dict["Particle mesh points"]  
-        Para_dict.pop("Particle mesh points")
-    if Para_dict.__contains__("Exponential mesh stretch"):
-        submesh_strech = Para_dict["Exponential mesh stretch"]  
-        Para_dict.pop("Exponential mesh stretch")
-    if Para_dict.__contains__("Model option"):
-        model_options = Para_dict["Model option"]  
-        Para_dict.pop("Model option")
+    Para_dict_used = Para_dict.copy();
+    Chemistry=getattr(pb.parameter_sets,Para_dict_used["Para_Set"]) 
+    Para_0=pb.ParameterValues(chemistry=Chemistry)
+    Para_dict_used.pop("Para_Set")
+    if Para_dict_used.__contains__("electrolyte"):
+        Chemistry["electrolyte"] = Para_dict_used["electrolyte"]  
+        Para_dict_used.pop("electrolyte")
+    if Para_dict_used.__contains__("sei"):
+        Chemistry["sei"] = Para_dict_used["sei"]  
+        Para_dict_used.pop("sei")
+    if Para_dict_used.__contains__("Total ageing cycles"):
+        Total_Cycles = Para_dict_used["Total ageing cycles"]  
+        Para_dict_used.pop("Total ageing cycles")
+    if Para_dict_used.__contains__("Ageing cycles between RPT"):
+        Cycle_bt_RPT = Para_dict_used["Ageing cycles between RPT"]  
+        Para_dict_used.pop("Ageing cycles between RPT")
+    if Para_dict_used.__contains__("Update cycles for ageing"):
+        Update_Cycles = Para_dict_used["Update cycles for ageing"]  
+        Para_dict_used.pop("Update cycles for ageing")
+    if Para_dict_used.__contains__("Cycles within RPT"):
+        RPT_Cycles = Para_dict_used["Cycles within RPT"]  
+        Para_dict_used.pop("Cycles within RPT")
+    if Para_dict_used.__contains__("Ageing temperature"):
+        Temper_i = Para_dict_used["Ageing temperature"]  
+        Para_dict_used.pop("Ageing temperature")
+    if Para_dict_used.__contains__("RPT temperature"):
+        Temper_RPT = Para_dict_used["RPT temperature"]  
+        Para_dict_used.pop("RPT temperature")
+    if Para_dict_used.__contains__("Particle mesh points"):
+        mesh_par = Para_dict_used["Particle mesh points"]  
+        Para_dict_used.pop("Particle mesh points")
+    if Para_dict_used.__contains__("Exponential mesh stretch"):
+        submesh_strech = Para_dict_used["Exponential mesh stretch"]  
+        Para_dict_used.pop("Exponential mesh stretch")
+    else:
+        submesh_strech = "nan";
+    if Para_dict_used.__contains__("Model option"):
+        model_options = Para_dict_used["Model option"]  
+        Para_dict_used.pop("Model option")
+    if Para_dict_used.__contains__("Initial Neg SOC"):
+        c_Neg1SOC_in = (
+            Para_0["Maximum concentration in negative electrode [mol.m-3]"]
+            *Para_dict_used["Initial Neg SOC"]  )
+        Para_0.update(
+            {"Initial concentration in negative electrode [mol.m-3]":
+            c_Neg1SOC_in})
+        Para_dict_used.pop("Initial Neg SOC")
+    if Para_dict_used.__contains__("Initial Pos SOC"):    
+        c_Pos1SOC_in = (
+            Para_0["Maximum concentration in positive electrode [mol.m-3]"]
+            *Para_dict_used["Initial Pos SOC"]  )
+        Para_0.update(
+            {"Initial concentration in positive electrode [mol.m-3]":
+            c_Pos1SOC_in})
+        Para_dict_used.pop("Initial Pos SOC")
+
     CyclePack = [ 
         Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
         Temper_i,Temper_RPT,mesh_par,submesh_strech,model_options];
-    Para_0=pb.ParameterValues(chemistry=ChemistryChen)
-    for key, value in Para_dict.items():
+    
+    for key, value in Para_dict_used.items():
         # risk: will update parameter that doesn't exist, so need to make sure the name is right 
         Para_0.update({key: value},check_already_exists=False)
     return CyclePack,Para_0
@@ -558,7 +590,7 @@ def GetSol_dict (my_dict, keys_all, Sol,
                     -
                     Sol.cycles[cycle_no].steps[step_no][key[3:]].entries[0])
             else:
-                print("Solve up to Step",step_no)
+                #print("Solve up to Step",step_no)
                 my_dict[key].append  (
                     Sol.cycles[cycle_no].steps[step_no][key[3:]].entries)
     # get cycle_step_based variables:
@@ -598,12 +630,144 @@ def GetSol_dict (my_dict, keys_all, Sol,
                     my_dict[key].append  (
                         Sol.cycles[cycle_no].steps[step_no][key[6:]].entries[:,-1])
     return my_dict                              
-                      
+
+
+############## Get initial cap ############## 
+# Input: just parameter set
+# Output: 0% and 100% SOC of neg/pos; cap at last RPT cycle
+# Simply run RPT cycle for 3 times
+def Get_initial_cap(Para_dict_i,Neg1SOC_in,Pos1SOC_in,):
+    # Para_dict_i contains all global settings
+    CyclePack,Para_0 = Para_init(Para_dict_i)
+    [
+        Total_Cycles,Cycle_bt_RPT,Update_Cycles,
+        RPT_Cycles,Temper_i,Temper_RPT,
+        mesh_par,submesh_strech,
+        model_options] = CyclePack;
+
+    # define experiment
+    V_max = 4.2;        
+    V_min = 2.5; 
+    exp_RPT_text = [ (
+        f"Discharge at 0.1C until {V_min} V",  
+        "Rest for 1 hours",  
+        f"Charge at 0.1C until {V_max} V" ) ] # (5 minute period)
+    Experiment_RPT    = pb.Experiment( exp_RPT_text * RPT_Cycles     ) 
+
+    Model_0 = pb.lithium_ion.DFN(options=model_options ) 
+
+    var = pb.standard_spatial_vars  
+    var_pts = {
+        var.x_n: 20,  
+        var.x_s: 10,  
+        var.x_p: 20,  
+        var.r_n: int(mesh_par),  
+        var.r_p: int(mesh_par),  }       
+    submesh_types = Model_0.default_submesh_types
+    if submesh_strech == "nan":
+        pass
+    else:
+        particle_mesh = pb.MeshGenerator(
+            pb.Exponential1DSubMesh, 
+            submesh_params={"side": "right", "stretch": submesh_strech})
+        submesh_types["negative particle"] = particle_mesh
+        submesh_types["positive particle"] = particle_mesh 
+    
+    c_Neg1SOC_in = (
+        Para_0["Maximum concentration in negative electrode [mol.m-3]"]
+        *Neg1SOC_in)
+    c_Pos1SOC_in = (
+        Para_0["Maximum concentration in positive electrode [mol.m-3]"]
+        *Pos1SOC_in)
+    Para_0.update(
+        {"Initial concentration in negative electrode [mol.m-3]":
+        c_Neg1SOC_in})
+    Para_0.update(
+        {"Initial concentration in positive electrode [mol.m-3]":
+        c_Pos1SOC_in})
+    Sim_0    = pb.Simulation(
+            Model_0,        experiment = Experiment_RPT,
+            parameter_values = Para_0,
+            solver = pb.CasadiSolver(),
+            var_pts=var_pts,
+            submesh_types=submesh_types) #mode="safe"
+    Sol_0    = Sim_0.solve(calc_esoh=False)
+
+    Cap = [];  Neg1SOC=[]; Pos1SOC = [];
+
+    for i in range(0,RPT_Cycles):
+        Cap.append(
+            Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[-1] - 
+            Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[0]) 
+        Neg1SOC.append(
+            Sol_0.cycles[i].steps[0]["Negative electrode SOC"].entries[0]) 
+        Pos1SOC.append(
+            Sol_0.cycles[i].steps[0]["Positive electrode SOC"].entries[0]) 
+        
+    return Sol_0, Cap, Neg1SOC, Pos1SOC
+
+def Get_initial_cap2(Para_dict_i):
+    # Para_dict_i contains all global settings
+    CyclePack,Para_0 = Para_init(Para_dict_i)
+    [
+        Total_Cycles,Cycle_bt_RPT,Update_Cycles,
+        RPT_Cycles,Temper_i,Temper_RPT,
+        mesh_par,submesh_strech,
+        model_options] = CyclePack;
+
+    # define experiment
+    V_max = 4.2;        
+    V_min = 2.5; 
+    exp_RPT_text = [ (
+        f"Discharge at 0.1C until {V_min} V",  
+        "Rest for 1 hours",  
+        f"Charge at 0.1C until {V_max} V" ) ] # (5 minute period)
+    Experiment_RPT    = pb.Experiment( exp_RPT_text * RPT_Cycles     ) 
+
+    Model_0 = pb.lithium_ion.DFN(options=model_options ) 
+
+    var = pb.standard_spatial_vars  
+    var_pts = {
+        var.x_n: 20,  
+        var.x_s: 10,  
+        var.x_p: 20,  
+        var.r_n: int(mesh_par),  
+        var.r_p: int(mesh_par),  }       
+    submesh_types = Model_0.default_submesh_types
+    if submesh_strech == "nan":
+        pass
+    else:
+        particle_mesh = pb.MeshGenerator(
+            pb.Exponential1DSubMesh, 
+            submesh_params={"side": "right", "stretch": submesh_strech})
+        submesh_types["negative particle"] = particle_mesh
+        submesh_types["positive particle"] = particle_mesh 
+
+    Sim_0    = pb.Simulation(
+            Model_0,        experiment = Experiment_RPT,
+            parameter_values = Para_0,
+            solver = pb.CasadiSolver(),
+            var_pts=var_pts,
+            submesh_types=submesh_types) #mode="safe"
+    Sol_0    = Sim_0.solve(calc_esoh=False)
+
+    Cap = [];  Neg1SOC=[]; Pos1SOC = [];
+
+    for i in range(0,RPT_Cycles):
+        Cap.append(
+            Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[-1] - 
+            Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[0]) 
+        Neg1SOC.append(
+            Sol_0.cycles[i].steps[0]["Negative electrode SOC"].entries[0]) 
+        Pos1SOC.append(
+            Sol_0.cycles[i].steps[0]["Positive electrode SOC"].entries[0]) 
+        
+    return Sol_0,Cap, Neg1SOC, Pos1SOC
 
 # Run model with electrolyte dry out
 def Run_model_wwo_dry_out(
       index_xlsx, Para_dict_i,   Path_pack , 
-      keys_all,   exp_text_list, exp_index_pack , DryOut,):
+      keys_all,   exp_text_list, exp_index_pack , Niall_data ):
 
     ModelTimer = pb.Timer()
     Para_dict_old = Para_dict_i.copy();
@@ -645,10 +809,30 @@ def Run_model_wwo_dry_out(
     for keys in keys_all_AGE:
         for key in keys:
             my_dict_AGE[key]=[];
-
+            
+    # update 2209-24: merge DryOut and Int_ElelyExces_Ratio
+    temp_Int_ElelyExces_Ratio =  Para_0["Initial electrolyte excessive amount ratio"] 
+    if temp_Int_ElelyExces_Ratio < 1:
+        Int_ElelyExces_Ratio = -1;
+        DryOut = "Off";
+    else:
+        Int_ElelyExces_Ratio = temp_Int_ElelyExces_Ratio;
+        DryOut = "On";
+    print(DryOut)
     try:             
         # define the model and run break-in cycle
         Model_0 = pb.lithium_ion.DFN(options=model_options ) #
+
+        # update 220926 - add diffusivity and conductivity as variables:
+        c_e = Model_0.variables["Electrolyte concentration [mol.m-3]"]
+        T = Model_0.variables["Cell temperature [K]"]
+        parameter_set = pb.ParameterValues("Marquis2019")
+        D_e = parameter_set["Electrolyte diffusivity [m2.s-1]"]
+        sigma_e = parameter_set["Electrolyte conductivity [S.m-1]"]
+        Model_0.variables["Electrolyte diffusivity [m2.s-1]"] = D_e(c_e, T)
+        Model_0.variables["Electrolyte conductivity [S.m-1]"] = sigma_e(c_e, T)
+
+
         var = pb.standard_spatial_vars  
         var_pts = {
             var.x_n: 20,  
@@ -657,11 +841,14 @@ def Run_model_wwo_dry_out(
             var.r_n: int(mesh_par),  
             var.r_p: int(mesh_par),  }       
         submesh_types = Model_0.default_submesh_types
-        particle_mesh = pb.MeshGenerator(
-            pb.Exponential1DSubMesh, 
-            submesh_params={"side": "right", "stretch": submesh_strech})
-        submesh_types["negative particle"] = particle_mesh
-        submesh_types["positive particle"] = particle_mesh 
+        if submesh_strech == "nan":
+            pass
+        else:
+            particle_mesh = pb.MeshGenerator(
+                pb.Exponential1DSubMesh, 
+                submesh_params={"side": "right", "stretch": submesh_strech})
+            submesh_types["negative particle"] = particle_mesh
+            submesh_types["positive particle"] = particle_mesh 
         Sim_0    = pb.Simulation(
             Model_0,        experiment = Experiment_Breakin,
             parameter_values = Para_0,
@@ -691,7 +878,7 @@ def Run_model_wwo_dry_out(
             L_z                  =  Para_0["Electrode height [m]"]
             Para_0.update({'Initial Electrode height [m]':L_z}, check_already_exists=False)
             L_z_0                =  Para_0["Initial Electrode height [m]"]
-            Int_ElelyExces_Ratio =  Para_0["Initial electrolyte excessive amount ratio"] 
+            
             Vol_Elely_Tot        =  ( L_n*Porosity_Neg_0 +  L_p*Porosity_Pos_0  +  L_s*Porosity_Sep_0  )  * L_y_0 * L_z_0 * Int_ElelyExces_Ratio # Set initial electrolyte amount [L] 
             Vol_Elely_JR         =  ( L_n*Porosity_Neg_0 +  L_p*Porosity_Pos_0  +  L_s*Porosity_Sep_0  )  * L_y_0 * L_z_0
             Vol_Pore_tot         =  ( L_n*Porosity_Neg_0 +  L_p*Porosity_Pos_0  +  L_s*Porosity_Sep_0  )  * L_y_0 * L_z_0
@@ -822,15 +1009,18 @@ def Run_model_wwo_dry_out(
             Sol_Dry_old = Sol_Dry_i    ;   del Paraupdate,Model_Dry_i,Sol_Dry_i
             k += 1;    cycles2 =Index_update_all; 
     except:
-        data = openpyxl.load_workbook(BasicPath + Target + book_name_xlsx)   
+        #data = openpyxl.load_workbook(BasicPath + Target + book_name_xlsx)   
         str_error = traceback.format_exc()      
-        table = data.get_sheet_by_name(sheet_name_xlsx)
-        nrows = table.max_row  # 获得行数
-        ncolumns = table.max_column  # 获得列数
-        values = list(Para_dict_old.values())
-        values.insert(0,count_i);
+        #table = data.get_sheet_by_name(sheet_name_xlsx)
+        #nrows = table.max_row  # 获得行数
+        #ncolumns = table.max_column  # 获得列数
+        value_list_temp = list(Para_dict_old.values())
+        values = []
+        for value_list_temp_i in value_list_temp:
+            values.append(str(value_list_temp_i))
+        values.insert(0,str(count_i));
         values.insert(1,DryOut);
-        values.extend([str_model_options,
+        values.extend([
             str_exp_AGE_text,
             str_exp_RPT_text,
             "nan","nan",
@@ -839,18 +1029,23 @@ def Run_model_wwo_dry_out(
             "nan","nan",
             "nan",str_error])
         values = [values,]     # add a list bracket to ensure proper write
-        for i in range(1, len(values)+1):
+        """ for i in range(1, len(values)+1):
             for j in range(1, len(values[i-1])+1):
                 table.cell(nrows+i, j).value = values[i-1][j-1]     
-        data.save(BasicPath + Target + book_name_xlsx)
+        data.save(BasicPath + Target + book_name_xlsx)  """
         print(str_error)
         print("Fail in {}".format(ModelTimer.time())) 
+        book_name_xlsx_seperate =   str(count_i)+ '_' + book_name_xlsx;
+        sheet_name_xlsx =  str(count_i);
+        write_excel_xlsx(
+            BasicPath + Target+book_name_xlsx_seperate, 
+            sheet_name_xlsx, values)
     else:
         # Finish everything, try to write into excel with real results or 
-        data = openpyxl.load_workbook(BasicPath + Target+ book_name_xlsx)         
+        """ data = openpyxl.load_workbook(BasicPath + Target+ book_name_xlsx)         
         table = data.get_sheet_by_name('Results')
         nrows = table.max_row  # 获得行数
-        ncolumns = table.max_column  # 获得列数
+        ncolumns = table.max_column  # 获得列数 """
         if model_options.__contains__("SEI on cracks"):
             LossCap_seioncrack = my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"][-1]
         else:
@@ -871,37 +1066,36 @@ def Run_model_wwo_dry_out(
             Vol_Elely_Tot_All_final = "nan"
             Vol_Elely_JR_All_final  = "nan"
             Width_all_final         = "nan"
-        values = list(Para_dict_old.values())
-        values.insert(0,count_i);
+        value_list_temp = list(Para_dict_old.values())
+        values = []
+        for value_list_temp_i in value_list_temp:
+            values.append(str(value_list_temp_i))
+        values.insert(0,str(count_i));
         values.insert(1,DryOut);
-        values.extend([str_model_options,
+        values.extend([
             str_exp_AGE_text,
             str_exp_RPT_text,
-            (my_dict_RPT["Discharge capacity [A.h]"][0] 
+            str(my_dict_RPT["Discharge capacity [A.h]"][0] 
             - 
             my_dict_RPT["Discharge capacity [A.h]"][-1]),
 
-            LossCap_LiP,
-            LossCap_SEI,
-            LossCap_seioncrack,
+            str(LossCap_LiP),
+            str(LossCap_SEI),
+            str(LossCap_seioncrack),
 
-            (my_dict_RPT["CDend Negative electrode capacity [A.h]"][0] 
+            str(my_dict_RPT["CDend Negative electrode capacity [A.h]"][0] 
             - 
             my_dict_RPT["CDend Negative electrode capacity [A.h]"][-1]),
 
-            (my_dict_RPT["CDend Positive electrode capacity [A.h]"][0] 
+            str(my_dict_RPT["CDend Positive electrode capacity [A.h]"][0] 
             - 
             my_dict_RPT["CDend Positive electrode capacity [A.h]"][-1]),
 
-            Vol_Elely_Tot_All_final, 
-            Vol_Elely_JR_All_final,
-            Width_all_final,
+            str(Vol_Elely_Tot_All_final), 
+            str(Vol_Elely_JR_All_final),
+            str(Width_all_final),
             ])
-        values = [values,]
-        for i in range(1, len(values)+1):
-            for j in range(1, len(values[i-1])+1):
-                table.cell(nrows+i, j).value = values[i-1][j-1]     
-        data.save(BasicPath + Target+ book_name_xlsx)
+        
         print("Succeed in {}".format(ModelTimer.time()))
         print('This is the ', count_i, ' scan')
         if not os.path.exists(BasicPath + Target + str(count_i)):
@@ -909,23 +1103,55 @@ def Run_model_wwo_dry_out(
         
         # Newly add (220517): save plots, not just a single line in excel file:     
         # Fig. 1 how much capacity is loss, how much is due to SEI and LiP?
+        # Niall_data = loadmat( 'Extracted_all_cell.mat')
         for mm in range(0,1):
-            fs=17;Num_subplot = 2;
-            fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
+            fs=17;Num_subplot = 3;
+            fig, axs = plt.subplots(1,Num_subplot, figsize=(18,4.8),tight_layout=True)
             axs[0].plot(cycles, my_dict_RPT["Discharge capacity [A.h]"],     '-o', label="Scan=" + str(count_i) )
+            if Temper_i  == 40:       
+                axs[0].plot(Niall_data['F_Cap_all'][:,2],Niall_data['F_Cap_all'][:,5]/1e3, '-^',  label='Cell F' )
+                axs[0].plot(Niall_data['G_Cap_all'][:,2],Niall_data['G_Cap_all'][:,5]/1e3, '-^',  label='Cell G' )
+                axs[0].plot(Niall_data['H_Cap_all'][:,2],Niall_data['H_Cap_all'][:,5]/1e3, '-^',  label='Cell H' )
+            elif Temper_i  == 25: 
+                axs[0].plot(Niall_data['D_Cap_all'][:,2],Niall_data['D_Cap_all'][:,5]/1e3, '-^',  label='Cell D' )
+                axs[0].plot(Niall_data['E_Cap_all'][:,2],Niall_data['E_Cap_all'][:,5]/1e3, '-^',  label='Cell E' )
+            elif Temper_i  == 10: 
+                axs[0].plot(Niall_data['A_Cap_all'][:,2],Niall_data['A_Cap_all'][:,5]/1e3, '-^',  label='Cell A' )
+                axs[0].plot(Niall_data['B_Cap_all'][:,2],Niall_data['B_Cap_all'][:,5]/1e3, '-^',  label='Cell B' )
+                axs[0].plot(Niall_data['C_Cap_all'][:,2],Niall_data['C_Cap_all'][:,5]/1e3, '-^',  label='Cell C' )
+            else:
+                pass
             if model_options.__contains__("lithium plating"):
                 axs[1].plot(cycles, my_dict_RPT["CDend Loss of capacity to lithium plating [A.h]"],'-o', label="LiP - Scan=" + str(count_i) )
             if model_options.__contains__("SEI"):
                 axs[1].plot(cycles, my_dict_RPT["CDend Loss of capacity to SEI [A.h]"] ,'-o', label="SEI - Scan" + str(count_i) )
             if model_options.__contains__("SEI on cracks"):
                 axs[1].plot(cycles, my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"] ,'-o', label="sei-on-cracks - Scan" + str(count_i) )
+            axs[2].plot(
+                my_dict_RPT["CDend Throughput capacity [A.h]"], 
+                my_dict_RPT["Discharge capacity [A.h]"],     
+                '-o', label="Scan=" + str(count_i) )
+            if Temper_i  == 40:       
+                axs[2].plot(Niall_data['F_Cap_all'][:,3],Niall_data['F_Cap_all'][:,5]/1e3, '-^',  label='Cell F' )
+                axs[2].plot(Niall_data['G_Cap_all'][:,3],Niall_data['G_Cap_all'][:,5]/1e3, '-^',  label='Cell G' )
+                axs[2].plot(Niall_data['H_Cap_all'][:,3],Niall_data['H_Cap_all'][:,5]/1e3, '-^',  label='Cell H' )
+            elif Temper_i  == 25: 
+                axs[2].plot(Niall_data['D_Cap_all'][:,3],Niall_data['D_Cap_all'][:,5]/1e3, '-^',  label='Cell D' )
+                axs[2].plot(Niall_data['E_Cap_all'][:,3],Niall_data['E_Cap_all'][:,5]/1e3, '-^',  label='Cell E' )
+            elif Temper_i  == 10: 
+                axs[2].plot(Niall_data['A_Cap_all'][:,3],Niall_data['A_Cap_all'][:,5]/1e3, '-^',  label='Cell A' )
+                axs[2].plot(Niall_data['B_Cap_all'][:,3],Niall_data['B_Cap_all'][:,5]/1e3, '-^',  label='Cell B' )
+                axs[2].plot(Niall_data['C_Cap_all'][:,3],Niall_data['C_Cap_all'][:,5]/1e3, '-^',  label='Cell C' )
+            else:
+                pass
             for i in range(0,Num_subplot):
                 axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
                 axs[i].set_ylabel("Capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})
                 labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
                 axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
                 axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
-            axs[0].set_title("Discharge capacity",   fontdict={'family':'DejaVu Sans','size':fs+1})
+                axs[i].set_title("Discharge capacity",   fontdict={'family':'DejaVu Sans','size':fs+1})
+            axs[2].set_xlabel("Throughput capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})   
             axs[1].set_title("Capacity loss to LiP and SEI",   fontdict={'family':'DejaVu Sans','size':fs+1})
             plt.savefig(BasicPath + Target+ str(count_i)+"/Cap-LLI.png", dpi=100)
 
@@ -1046,6 +1272,24 @@ def Run_model_wwo_dry_out(
                 axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
             plt.savefig(BasicPath + Target+ str(count_i)+"/Electrolyte concentration and potential.png", dpi=100)
             
+            Num_subplot = 2;
+            fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
+            axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte diffusivity [m2.s-1]"][0],'-o',label="First")
+            axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte diffusivity [m2.s-1]"][-1],'-^',label="Last"  )
+            axs[1].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte conductivity [S.m-1]"][0],'-o',label="First" )
+            axs[1].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte conductivity [S.m-1]"][-1],'-^',label="Last" )
+            axs[0].set_title("Electrolyte diffusivity",   fontdict={'family':'DejaVu Sans','size':fs+1})
+            axs[1].set_title("Electrolyte conductivity",   fontdict={'family':'DejaVu Sans','size':fs+1})
+            axs[0].set_ylabel("Diffusivity [m2.s-1]",   fontdict={'family':'DejaVu Sans','size':fs})
+            axs[1].set_ylabel("Conductivity [S.m-1]",   fontdict={'family':'DejaVu Sans','size':fs})
+            for i in range(0,2):
+                axs[i].set_xlabel("Dimensional Cell thickness",   fontdict={'family':'DejaVu Sans','size':fs})
+                labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
+                axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
+                axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
+            plt.savefig(BasicPath + Target+ str(count_i)+"/Electrolyte diffusivity and conductivity.png", dpi=100)
+            
+
             if DryOut == "On":
                 Num_subplot = 3;
                 fig, axs = plt.subplots(1,Num_subplot, figsize=(18,4.8),tight_layout=True)
@@ -1062,6 +1306,7 @@ def Run_model_wwo_dry_out(
                 axs[2].set_title("Dry out ratio",   fontdict={'family':'DejaVu Sans','size':fs+1})
                 for i in range(0,2):
                     axs[i].set_xlabel("Cycle number",   fontdict={'family':'DejaVu Sans','size':fs})
+                    axs[i].set_ylabel("Volume [mL]",   fontdict={'family':'DejaVu Sans','size':fs})
                     axs[i].set_title("Volume",   fontdict={'family':'DejaVu Sans','size':fs+1})
                     labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
                     axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
@@ -1069,7 +1314,7 @@ def Run_model_wwo_dry_out(
                 plt.savefig(BasicPath + Target+ str(count_i)+"/Volume_total.png", dpi=100)
         
         # Newly add (220706): save data, not just a single line in excel file:
-        Bulk_Sol_Con_i = Para_0['EC initial concentration in electrolyte [mol.m-3]']
+        Bulk_Sol_Con_i = Para_0_Dry_old['EC initial concentration in electrolyte [mol.m-3]']
         mdic_cycles = {
             "cycles": cycles,
             "cycles2":cycles2,
@@ -1106,7 +1351,18 @@ def Run_model_wwo_dry_out(
 
         savemat(BasicPath + Target+ str(count_i) + '/' + str(count_i)+ '-StructDara_for_Mat.mat',midc_merge)   
         savemat(BasicPath + Target+ str(count_i) + '/' + str(count_i)+ '-for_AGE_only.mat',my_dict_AGE)   
-            
+
+        values = [values,]
+        """ 
+        for i in range(1, len(values)+1):
+            for j in range(1, len(values[i-1])+1):
+                table.cell(nrows+i, j).value = values[i-1][j-1]     
+        data.save(BasicPath + Target+ book_name_xlsx)     """
+        book_name_xlsx_seperate =   str(count_i)+ '_' + book_name_xlsx;
+        sheet_name_xlsx =  str(count_i);
+        write_excel_xlsx(
+            BasicPath + Target+book_name_xlsx_seperate, 
+            sheet_name_xlsx, values)
 
         
 # Run model without electrolyte NonDry out

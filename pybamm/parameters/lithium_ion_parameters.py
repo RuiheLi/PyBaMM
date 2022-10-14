@@ -415,7 +415,8 @@ class LithiumIonParameters(BaseParameters):
         self.C_sei_solvent = (
             self.n.j_scale
             * self.L_sei_0_dim
-            / (self.c_ec_0_dim * self.F * self.D_sol_dimensional)
+            / (self.c_ec_0_dim * self.F * self.D_ec_sei_dim) 
+            # Mark Ruihe : change from D_sol_dimensional to D_ec_sei_dim
         )
         # Mark Simon block end
 

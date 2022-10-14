@@ -108,8 +108,9 @@ class OneSolventDiffusion_wo_Refill(BaseSolventDiffusion):
         j_SEI = j_inner + j_outer
         j_sign_SEI = pybamm.concatenation(j_SEI, sign_2_s, sign_2_p )
 
-        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
+        ratio_sei_li = - 1/param.z_sei  ; # change to 1 for now , initially is 0.5
         ratio_ec_li  = 1 ; 
+
 
         source_terms_ec = (
             a * j_sign_SEI / param.gamma_e 
