@@ -279,6 +279,19 @@ OKane2022 = {
     "citation": ["OKane2022", "Chen2020"],
 }
 
+OKane2023 = {
+    "chemistry": "lithium_ion",
+    "cell": "LGM50_ORegan2022",
+    "negative electrode": "graphite_ORegan2022",
+    "separator": "separator_ORegan2022",
+    "positive electrode": "nmc_ORegan2022",
+    "electrolyte": "lipf6_Valoen2005",
+    "experiment": "1C_discharge_from_full_ORegan2022",
+    "sei": "example",
+    "lithium plating": "okane2022_Li_plating",
+    "citation": ["OKane2022", "ORegan2022", "Chen2020"],
+}
+
 #
 # Lead-acid
 #
