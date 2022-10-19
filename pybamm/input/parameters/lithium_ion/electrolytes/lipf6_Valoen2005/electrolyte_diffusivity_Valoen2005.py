@@ -1,4 +1,4 @@
-def electrolyte_diffusivity_Valoen2005(c_e, T):
+def electrolyte_diffusivity_Valoen2005(c_e,c_EC, T):
     """
     Diffusivity of LiPF6 in EC:DMC as a function of ion concentration, from [1] (eqn 14)
 

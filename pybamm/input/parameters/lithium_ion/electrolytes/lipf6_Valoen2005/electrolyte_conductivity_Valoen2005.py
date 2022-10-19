@@ -1,4 +1,4 @@
-def electrolyte_conductivity_Valoen2005(c_e, T):
+def electrolyte_conductivity_Valoen2005(c_e,c_EC, T):
     """
     Conductivity of LiPF6 in EC:DMC as a function of ion concentration, from [1]
     (eqn 17)

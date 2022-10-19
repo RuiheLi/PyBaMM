@@ -1,9 +1,10 @@
-
-c_e = Model.variables["Electrolyte concentration [mol.m-3]"]
-T = Model.variables["Cell temperature [K]"]
-c_EC = Model.variables["EC concentration [mol.m-3]"]
-Model.variables["c(EC) over c(Li+)"] = c_EC / c_e
-Model.variables["Electrolyte conductivity [S.m-1]"] =(
-    Para_0['Electrolyte conductivity [S.m-1]'](c_e,c_EC, T))
-Model.variables["Electrolyte diffusivity [m2.s-1]"] =(
-    Para_0['Electrolyte diffusivity [m2.s-1]'](c_e,c_EC, T))
+sol_dre = Sol[0]; cycle_no_dre = [0,49,99,149] # 49, 99, 149, 199, 249, 299 
+my_dict_dre = {}; 
+for keys in keys_all_RPT:
+    for key in keys:
+        my_dict_dre[key]=[];
+for cycle_i in cycle_no_dre:
+    my_dict_dre_old = my_dict_dre; del my_dict_dre
+    my_dict_dre = GetSol_dict (my_dict_dre_old,keys_all_RPT, sol_dre = Sol[0]; cycle_no_dre = [0,49,99,149] # 49, 99, 149, 199, 249, 299 
+, 
+        cycle_i, step_CD , step_CC , -1, step_CV   )
