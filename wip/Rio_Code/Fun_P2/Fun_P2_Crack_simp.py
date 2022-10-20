@@ -574,6 +574,59 @@ def Para_init(Para_dict):
         Para_0.update({key: value},check_already_exists=False)
     return CyclePack,Para_0
 
+# Plot a pair of loc dependent varibles - different cycles
+def Plot_Loc_Var( key_all, my_dict,colormap ): # for my_dict only
+    Num_subplot = len(key_all); # must have 2+ keys
+    fig, axs = plt.subplots(1,Num_subplot, figsize=(7*Num_subplot,5),tight_layout=True)
+    for i in range(0,Num_subplot):
+        cmap_i = mpl.cm.get_cmap(colormap, len(my_dict[ key_all[i]] ) ) 
+        if 'Negative' in key_all[i] or 'negative' in key_all[i]:
+            x_loc = "x_n [m]";
+        elif 'Positive' in key_all[i] or 'positive' in key_all[i]:
+            x_loc = "x_p [m]";
+        elif 'Seperator' in key_all[i] or 'seperator' in key_all[i]:
+            x_loc = "x_s [m]";
+        else:
+            x_loc = "x [m]";
+        for j in range(0,len(my_dict[ key_all[i] ])):
+            axs[i].plot(
+                my_dict[x_loc], 
+                my_dict[ key_all[i] ][j],'-',
+                color=cmap_i(j),)
+            axs[i].set_title(key_all[i] ,   fontdict={'family':'DejaVu Sans','size':fs-1})
+            #axs[1].set_ylabel("Potential [V]",   fontdict={'family':'DejaVu Sans','size':fs})
+            axs[i].set_xlabel(x_loc,   fontdict={'family':'DejaVu Sans','size':fs})
+            
+            labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
+            
+            axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
+            axs[i].ticklabel_format( axis='x', style='sci',scilimits=[-0.01,0.01], useOffset=None, useLocale=None, useMathText=None)
+            #axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)  
+    return fig, axs 
+
+# Plot a pair of loc dependent varibles - within one step
+def Plot_Loc_Var_sol( sol,x_loc_all, key_all, cycle, step,colormap  ): # for initial solution object
+    Num_subplot = len(key_all); # must have 2+ keys
+    fig, axs = plt.subplots(1,Num_subplot, figsize=(7*Num_subplot,5),tight_layout=True)
+    for i in range(0,Num_subplot):
+        x_loc=x_loc_all[i]; key=key_all[i];
+        LinesNmum = len(sol.cycles[cycle].steps[step][key].entries[0,:] )
+        cmap_i = mpl.cm.get_cmap(colormap, LinesNmum) 
+        for j in range(0,LinesNmum):
+            axs[i].plot(
+                sol.cycles[cycle].steps[step][x_loc].entries[:,0], 
+                sol.cycles[cycle].steps[step][key].entries[:,j], '-',
+                color=cmap_i(j),)
+            axs[i].set_title(key ,   fontdict={'family':'DejaVu Sans','size':fs-1})
+            #axs[1].set_ylabel("Potential [V]",   fontdict={'family':'DejaVu Sans','size':fs})
+            axs[i].set_xlabel(x_loc,   fontdict={'family':'DejaVu Sans','size':fs})
+            
+            labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
+            
+            axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
+            axs[i].ticklabel_format( axis='x', style='sci',scilimits=[-0.01,0.01], useOffset=None, useLocale=None, useMathText=None)
+            #axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)  
+    return  fig, axs 
 
 # Add 220808 - to simplify the post-processing
 def GetSol_dict (my_dict, keys_all, Sol, 
