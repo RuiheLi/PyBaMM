@@ -5,7 +5,6 @@ import casadi
 import pybamm
 import numpy as np
 import os
-import pandas as pd
 import unittest
 
 
@@ -394,16 +393,12 @@ class TestSimulationExperiment(unittest.TestCase):
             "input",
             "parameters",
             "lithium_ion",
-            "negative_electrodes",
-            "graphite_Chen2020",
+            "data",
             "graphite_LGM50_ocp_Chen2020.csv",
         )
-        function_name = "graphite_Chen2020"
-        filename = pybamm.get_parameters_filepath(filename)
-        data = pd.read_csv(
-            filename, comment="#", skip_blank_lines=True, header=None
-        ).to_numpy()
-        param["Negative electrode OCP [V]"] = (function_name, data)
+        param["Negative electrode OCP [V]"] = pybamm.parameters.process_1D_data(
+            filename
+        )
 
         # Load positive electrode OCP data
         filename = os.path.join(
@@ -412,16 +407,12 @@ class TestSimulationExperiment(unittest.TestCase):
             "input",
             "parameters",
             "lithium_ion",
-            "positive_electrodes",
-            "nmc_Chen2020",
+            "data",
             "nmc_LGM50_ocp_Chen2020.csv",
         )
-        function_name = "nmc_LGM50_ocp_Chen2020.csv"
-        filename = pybamm.get_parameters_filepath(filename)
-        data = pd.read_csv(
-            filename, comment="#", skip_blank_lines=True, header=None
-        ).to_numpy()
-        param["Positive electrode OCP [V]"] = (function_name, data)
+        param["Positive electrode OCP [V]"] = pybamm.parameters.process_1D_data(
+            filename
+        )
 
         sim = pybamm.Simulation(model, experiment=experiment, parameter_values=param)
         sim.solve(solver=pybamm.CasadiSolver("safe"), save_at_cycles=2)
@@ -485,11 +476,11 @@ class TestSimulationExperiment(unittest.TestCase):
             model, parameter_values=parameter_values, experiment=experiment2
         )
         sol2 = sim2.solve()
-        np.testing.assert_array_equal(
+        np.testing.assert_array_almost_equal(
             sol["Terminal voltage [V]"].data, sol2["Terminal voltage [V]"].data
         )
         for idx1, idx2 in [(1, 0), (2, 1), (4, 2)]:
-            np.testing.assert_array_equal(
+            np.testing.assert_array_almost_equal(
                 sol.cycles[0].steps[idx1]["Terminal voltage [V]"].data,
                 sol2.cycles[0].steps[idx2]["Terminal voltage [V]"].data,
             )

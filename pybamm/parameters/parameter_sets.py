@@ -1,9 +1,5 @@
-#
-# Parameter sets from papers
-#
 """
-Parameter sets from papers. The 'citation' entry provides a reference to the appropriate
-paper in the file "pybamm/CITATIONS.txt". To see which parameter sets have been used in
+Parameter sets from papers. To see which parameter sets have been used in
 your simulation, add the line "pybamm.print_citations()" to your script.
 
 Lead-acid parameter sets
@@ -76,6 +72,11 @@ Lithium-ion parameter sets
          Dhammika Widanage, and Emma Kendrick. Development of Experimental Techniques
          for Parameterization of Multi-scale Lithium-ion Battery Models. Journal of The
          Electrochemical Society, 167(8):080534, 2020. doi:10.1149/1945-7111/ab9050.
+       - Simon E. J. O'Kane, Ian D. Campbell, Mohamed W. J. Marzook, Gregory J. Offer,
+         and Monica Marinescu. Physical origin of the differential voltage minimum
+         associated with lithium plating in li-ion batteries. Journal of The
+         Electrochemical Society, 167(9):090540, may 2020. URL:
+         https://doi.org/10.1149/1945-7111/ab90ac, doi:10.1149/1945-7111/ab90ac.
        - Simon E. J. O'Kane, Weilong Ai, Ganesh Madabattula, Diego Alonso-Alvarez,
          Robert Timms, Valentin Sulzer, Jacqueline Sophie Edge, Billy Wu, Gregory J.
          Offer, and Monica Marinescu. Lithium-ion battery degradation: how to model it.
@@ -98,6 +99,9 @@ Lithium-ion parameter sets
        - Michael J. Lain, James Brandon, and Emma Kendrick. Design strategies for high
          power vs. high energy lithium ion cells. Batteries, 5(4):64, 2019.
          doi:10.3390/batteries5040064.
+       - Andreas Nyman, Mårten Behm, and Göran Lindbergh. Electrochemical
+         characterisation and modelling of the mass transport phenomena in lipf6–ec–emc
+         electrolyte. Electrochimica Acta, 53(22):6356–6365, 2008.
        - Eric Prada, D. Di Domenico, Y. Creff, J. Bernard, Valérie Sauvant-Moynot, and
          François Huet. A simplified electrochemical and thermal aging model of
          LiFePO4-graphite Li-ion batteries: power and capacity fade simulations. Journal
@@ -108,11 +112,15 @@ Lithium-ion parameter sets
          Journal of the Electrochemical Society, 151(2):A196, 2004.
          doi:10.1149/1.1634273.
     * Xu2019 :
+       - Lars Ole Valøen and Jan N Reimers. Transport properties of lipf6-based li-ion
+         battery electrolytes. Journal of The Electrochemical Society, 152(5):A882,
+         2005.
        - Shanshan Xu, Kuan-Hung Chen, Neil P Dasgupta, Jason B Siegel, and Anna G
          Stefanopoulou. Evolution of dead lithium growth in lithium metal batteries:
          experimentally validated model of the apparent capacity loss. Journal of The
          Electrochemical Society, 166(14):A3456, 2019.
 """
+<<<<<<< HEAD
 
 #
 # Lithium-ion
@@ -306,3 +314,52 @@ Sulzer2019 = {
     "experiment": "1C_discharge_from_full",
     "citation": "Sulzer2019physical",
 }
+=======
+import warnings
+
+
+class ParameterSets:
+    def __init__(self):
+        self.all_parameter_sets = {
+            "lead_acid": ["Sulzer2019"],
+            "lithium_ion": [
+                "Ai2020",
+                "Chen2020",
+                "Chen2020_composite",
+                "Ecker2015",
+                "Marquis2019",
+                "Mohtat2020",
+                "NCA_Kim2011",
+                "OKane2022",
+                "ORegan2022",
+                "Prada2013",
+                "Ramadass2004",
+                "Xu2019",
+            ],
+        }
+        self.all_parameter_sets_list = [
+            *self.all_parameter_sets["lead_acid"],
+            *self.all_parameter_sets["lithium_ion"],
+        ]
+
+    def __getattribute__(self, name):
+        try:
+            return super().__getattribute__(name)
+        except AttributeError as error:
+            # For backwards compatibility, parameter sets that used to be defined in
+            # this file now return the name as a string, which will load the same
+            # parameter set as before when passed to `ParameterValues`
+            if name in self.all_parameter_sets_list:
+                out = name
+            else:
+                raise error
+            warnings.warn(
+                f"Parameter sets should be called directly by their name ({name}), "
+                f"instead of via pybamm.parameter_sets (pybamm.parameter_sets.{name}).",
+                DeprecationWarning,
+            )
+            return out
+
+
+parameter_sets = ParameterSets()
+>>>>>>> d0bed316f9389bdaa48ff361666f38992d8e9180
