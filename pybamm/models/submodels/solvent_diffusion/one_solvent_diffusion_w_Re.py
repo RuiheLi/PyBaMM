@@ -93,7 +93,9 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
             param.tau_ec_Rio  * param.EC_ratio_Rio / 
             param.tau_cross_Rio /param.gamma_e_ec_Rio* 
             tor * param.D_ec_Li_cross * pybamm.grad(c_e) )
-        N_EC_migration = param.C_e* param.Xi * i_e / param.gamma_e *(
+        # Mark Ruihe: most important correction that change again everything... update 221021
+        #there should be a minus here!
+        N_EC_migration = - param.C_e* param.Xi * i_e / param.gamma_e *(
             param.tau_ec_Rio / param.gamma_e_ec_Rio / param.tau_diffusion_e
         )
 

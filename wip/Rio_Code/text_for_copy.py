@@ -1,10 +1,21 @@
-sol_dre = Sol[0]; cycle_no_dre = [0,49,99,149] # 49, 99, 149, 199, 249, 299 
-my_dict_dre = {}; 
-for keys in keys_all_RPT:
-    for key in keys:
-        my_dict_dre[key]=[];
-for cycle_i in cycle_no_dre:
-    my_dict_dre_old = my_dict_dre; del my_dict_dre
-    my_dict_dre = GetSol_dict (my_dict_dre_old,keys_all_RPT, sol_dre = Sol[0]; cycle_no_dre = [0,49,99,149] # 49, 99, 149, 199, 249, 299 
-, 
-        cycle_i, step_CD , step_CC , -1, step_CV   )
+model_2 = pybamm.lithium_ion.DFN()
+c_e = model_2.variables["Electrolyte concentration [mol.m-3]"]
+T = model_2.variables["Cell temperature [K]"]
+model_2.variables["Electrolyte conductivity [S.m-1]"] =(
+    Para_0['Electrolyte conductivity [S.m-1]'](c_e, T))
+model_2.variables["Electrolyte diffusivity [m2.s-1]"] =(
+    Para_0['Electrolyte diffusivity [m2.s-1]'](c_e, T))
+
+sim_2 = pybamm.sim_2ulation(
+    model_2, experiment = Experiment_Long,
+    parameter_values = Para_0,
+    solver = pybamm.CasadiSolver(),
+    var_pts=var_pts,)  
+try:
+    sol_2 = sim_2.solve(save_at_cycles=save_at_cycles,);
+    print(sol_2.cycles[-1].steps[-1]);  # a way to check whether the solution is finalized 
+except:
+    print('Fail for electrolyte: Exp')
+else:
+    Sol.append(sol_2)   
+    print('Succeed for electrolyte: Exp')
