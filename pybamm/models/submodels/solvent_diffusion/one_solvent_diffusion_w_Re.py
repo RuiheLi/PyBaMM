@@ -122,12 +122,14 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
         source_terms_ec =(
             a * j_sign_SEI / param.gamma_e 
             / param.gamma_e_ec_Rio * ratio_ec_li)
+        # Mark Ruihe update 221021 - ignore Li+ (de-)intercalation to 
+        # avoid differences between w and wo refill when there are no SEI 
         source_terms_refill = (
             a * j_sign_SEI / param.gamma_e / param.gamma_e_ec_Rio 
             * param.c_ec_0_dim * (
                 ratio_ec_li * param.Vmolar_ec 
                 +ratio_sei_li * param.Vmolar_CH2OCO2Li2)
-            + source_terms / param.gamma_e_ec_Rio 
+            + a * j_sign_SEI / param.gamma_e  / param.gamma_e_ec_Rio 
             * param.c_ec_0_dim * param.Vmolar_Li )
         
         variables.update(self._get_standard_EC_flux_variables(

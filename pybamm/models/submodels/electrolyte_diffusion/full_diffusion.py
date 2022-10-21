@@ -114,9 +114,11 @@ class Full(BaseElectrolyteDiffusion):
         source_terms = sum_s_j / self.param.gamma_e
         if self.options["solvent diffusion"] in ["none","EC wo refill"]:
             source_terms_refill = sign_2
+        # Mark Ruihe update 221021 - ignore Li+ (de-)intercalation to 
+        # avoid differences between w and wo refill when there are no SEI 
         elif self.options["solvent diffusion"] == "EC w refill":
             source_terms_refill = - (
-                    source_terms * param.Vmolar_Li * param.c_e_init_dimensional  +
+                    a * j_sign_SEI / param.gamma_e * param.Vmolar_Li * param.c_e_init_dimensional  +
                     a * j_sign_SEI / param.gamma_e * param.c_e_init_dimensional * (
                         param.Vmolar_ec*ratio_ec_li +param.Vmolar_CH2OCO2Li2*ratio_sei_li
             ))
