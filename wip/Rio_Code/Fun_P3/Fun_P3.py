@@ -196,3 +196,18 @@ def Plot_Single_Static(Sol,str,cycle, step, Para_scan,BasicPath , Target,Save,co
         else:
             pass
     return
+
+
+import random
+'''
+有一定概率出错的函数
+'''
+def may_cause_error():
+	if (random.random() > 0.8):
+	    return 1 / 0
+	else:
+	    return 0
+
+
+
+	
