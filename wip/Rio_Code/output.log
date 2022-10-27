@@ -1,0 +1,2 @@
+2022-10-26 15:21:14.026 - [NOTICE] callbacks.on_cycle_start(174): Cycle 1/3 (24.400 us elapsed) --------------------
+2022-10-26 15:21:14.026 - [NOTICE] callbacks.on_step_start(182): Cycle 1/3, step 1/3: Discharge at C/5 for 10 hours or until 3.3 V
