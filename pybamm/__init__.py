@@ -37,13 +37,22 @@ PARAMETER_PATH = [
 # Utility classes and methods
 #
 from .util import Timer, TimerTime, FuzzyDict
-from .util import root_dir, load_function, rmse, get_infinite_nested_dict, load
+from .util import (
+    root_dir,
+    load_function,
+    rmse,
+    get_infinite_nested_dict,
+    load,
+    is_constant_and_can_evaluate,
+    tree_search,
+)
 from .util import (
     get_parameters_filepath,
     have_jax,
     install_jax,
     is_jax_compatible,
     have_julia,
+    get_git_commit_info,
 )
 from .logger import logger, set_logging_level
 from .logger import logger, set_logging_level, get_new_logger
@@ -162,7 +171,8 @@ from .parameters.thermal_parameters import thermal_parameters, ThermalParameters
 from .parameters.lithium_ion_parameters import LithiumIonParameters
 from .parameters.lead_acid_parameters import LeadAcidParameters
 from .parameters.size_distribution_parameters import *
-from .parameters import parameter_sets
+from .parameters.parameter_sets import parameter_sets
+from .parameters_cli import add_parameter, remove_parameter, edit_parameter
 
 #
 # Mesh and Discretisation classes
@@ -199,9 +209,8 @@ from .spatial_methods.scikit_finite_element import ScikitFiniteElement
 #
 # Solver classes
 #
-from .solvers.solution import Solution, make_cycle_solution
+from .solvers.solution import Solution, EmptySolution, make_cycle_solution
 from .solvers.processed_variable import ProcessedVariable
-from .solvers.processed_symbolic_variable import ProcessedSymbolicVariable
 from .solvers.base_solver import BaseSolver
 from .solvers.dummy_solver import DummySolver
 from .solvers.algebraic_solver import AlgebraicSolver

@@ -284,7 +284,7 @@ class Symbol:
                 # accounting for empty domains
                 or {k: v for k, v in self._domains.items() if v != []} == domains
             ):
-                return None  # no change
+                return  # no change
         except AttributeError:
             # self._domains has not been set yet
             pass
@@ -293,7 +293,7 @@ class Symbol:
         if domains == {"primary": []}:
             self._domains = EMPTY_DOMAINS
             self.set_id()
-            return None
+            return
 
         # Set default domains
         domains = {**EMPTY_DOMAINS, **domains}
@@ -811,14 +811,16 @@ class Symbol:
                 return None
             elif error.args[0] == "StateVectorDot cannot evaluate input 'y_dot=None'":
                 return None
-            else:
+            else:  # pragma: no cover
                 raise error
-        except ValueError as e:
+        except ValueError as error:
             # return None if specific ValueError is raised
             # (there is a e.g. Time in the tree)
-            if e.args[0] == "t must be provided":
+            if error.args[0] == "t must be provided":
                 return None
-            raise pybamm.ShapeError("Cannot find shape (original error: {})".format(e))
+            raise pybamm.ShapeError(
+                f"Cannot find shape (original error: {error})"
+            )  # pragma: no cover
         return result
 
     def evaluates_to_number(self):
@@ -891,7 +893,7 @@ class Symbol:
         """
         raise NotImplementedError(
             """method self.new_copy() not implemented
-               for symbol {!s} of type {}""".format(
+            for symbol {!s} of type {}""".format(
                 self, type(self)
             )
         )
