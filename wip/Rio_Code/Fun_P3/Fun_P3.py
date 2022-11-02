@@ -138,6 +138,8 @@ def PlotDynamics(Sol,str,Para_scan,BasicPath , Target,Save,fs):
 
 # Plot a pair of loc dependent varibles - different cycles
 def Plot_Loc_Var( key_all, my_dict,colormap ,fs): # for my_dict only
+    font = {'family' : 'DejaVu Sans','size': fs}
+    mpl.rc('font', **font)
     Num_subplot = len(key_all); # must have 2+ keys
     fig, axs = plt.subplots(1,Num_subplot, figsize=(7*Num_subplot,5),tight_layout=True)
     for i in range(0,Num_subplot):
@@ -168,6 +170,8 @@ def Plot_Loc_Var( key_all, my_dict,colormap ,fs): # for my_dict only
 
 # Plot a pair of loc dependent varibles - within one step
 def Plot_Loc_Var_sol( sol,x_loc_all, key_all, cycle, step,colormap,fs): # for initial solution object
+    font = {'family' : 'DejaVu Sans','size': fs}
+    mpl.rc('font', **font)
     Num_subplot = len(key_all); # must have 2+ keys
     fig, axs = plt.subplots(1,Num_subplot, figsize=(4*Num_subplot,5),tight_layout=True)
     for i in range(0,Num_subplot):
@@ -265,6 +269,8 @@ def Plot_Loc_Var_sol_6( sol,x_loc_all, key_all, cycle, step,colormap,fs): # for 
 # Fig. 1
 def Plot_Fig_1(Full_cycle,my_dict_AGE,
     BasicPath, Target,   Scan_i,  fs,  dpi):
+    font = {'family' : 'DejaVu Sans','size': fs}
+    mpl.rc('font', **font)
     fig, axs = plt.subplots(2,3, figsize=(15,8.5),tight_layout=True)
     axs[0,0].plot(Full_cycle, my_dict_AGE["Discharge capacity [A.h]"] ,'-o',)
     axs[0,0].set_ylabel("Capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})
@@ -307,6 +313,8 @@ def Plot_Fig_1(Full_cycle,my_dict_AGE,
 
         
 def Plot_Loc_Var_2( Full_cycle, key_all, my_dict,fs): # for my_dict only
+    font = {'family' : 'DejaVu Sans','size': fs}
+    mpl.rc('font', **font)
     Num_subplot = len(key_all); # must have 2+ keys
     fig, axs = plt.subplots(3,3, figsize=(15,12),tight_layout=True)
     count_i = 0; 
@@ -343,6 +351,9 @@ def Plot_Loc_Var_2( Full_cycle, key_all, my_dict,fs): # for my_dict only
 def Plot_Last_Single_Step(
     sol,cycle,step,BasicPath, Target,Scan_i,
     index_cyc,Save,colormap,fs,dpi):
+
+    font = {'family' : 'DejaVu Sans','size': fs}
+    mpl.rc('font', **font)
     # 1st plot Li+ and flux
     i =Scan_i;
     fig, axs= Plot_Loc_Var_sol_6(
@@ -407,6 +418,9 @@ def Plot_Last_Single_Step(
 
 def Plot_Single_Static(Sol,str,cycle, step, 
     Para_scan,BasicPath , Target,Save,colormap,fs,dpi):
+
+    font = {'family' : 'DejaVu Sans','size': fs}
+    mpl.rc('font', **font)
     for sol, Para_i in zip(Sol,Para_scan):
         # 1st plot
         fig, axs= Plot_Loc_Var_sol(
@@ -498,15 +512,9 @@ def recursive_scan(mylist,kvs, key_list, acc):
 # this function is to initialize the para with a known dict
 def Para_init(Para_dict):
     Para_dict_used = Para_dict.copy();
-    Chemistry=getattr(pybamm.parameter_sets,Para_dict_used["Para_Set"]) 
-    Para_0=pybamm.ParameterValues(chemistry=Chemistry)
+    Para_0=pybamm.ParameterValues(Para_dict_used["Para_Set"]  )
     Para_dict_used.pop("Para_Set")
-    if Para_dict_used.__contains__("electrolyte"):
-        Chemistry["electrolyte"] = Para_dict_used["electrolyte"]  
-        Para_dict_used.pop("electrolyte")
-    if Para_dict_used.__contains__("sei"):
-        Chemistry["sei"] = Para_dict_used["sei"]  
-        Para_dict_used.pop("sei")
+
     if Para_dict_used.__contains__("Total ageing cycles"):
         Total_Cycles = Para_dict_used["Total ageing cycles"]  
         Para_dict_used.pop("Total ageing cycles")
