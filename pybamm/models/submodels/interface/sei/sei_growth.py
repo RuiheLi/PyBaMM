@@ -102,14 +102,17 @@ class SEIGrowth(BaseModel):
         prefactor = 1 / (1 + self.param.Theta * T)
 
         # Bulk EC concentration relative to initial condition
-        c_ec_neg = variables["Negative EC concentration [mol.m-3]"]
+        c_ec_neg = variables["Negative EC concentration [mol.m-3]"] 
+        # Mark Ruihe Note: may need to include other domains
 
         # Mark Ruihe block start
-        if self.options["solvent diffusion"] in ["EC w refill","EC wo refill"]: 
-            c_ec_relative = c_ec_neg / param.c_ec_typ # Mark Ruihe change from initial EC concentration to typical EC concentration, but actually they are the same in most cases 
+        """ if self.options["solvent diffusion"] in ["double spatial consume w refill","double spatial consume wo refill"]: 
+            c_ec_relative = c_ec_neg / self.param.c_ec_typ # Mark Ruihe change from initial EC concentration to typical EC concentration, but actually they are the same in most cases 
         elif self.options["solvent diffusion"] == "none":
-            c_ec_relative = param.c_ec_0_dim / param.c_ec_typ 
-            # change for standalone solvent consumption model in 1st paper 
+            c_ec_relative = self.param.c_ec_0_dim / self.param.c_ec_typ  """
+        # change for standalone solvent consumption model in 1st paper 
+        # Now c_ec is a varriable even in none diffusion so need to change that
+        c_ec_relative = c_ec_neg / self.param.c_ec_typ 
         # Mark Ruihe block end
 
 
@@ -148,7 +151,7 @@ class SEIGrowth(BaseModel):
             j_sei = -C_sei_exp * c_ec_surf
 
             # Get variables related to the concentration
-            c_ec_av = pybamm.x_average(c_ec)
+            c_ec_av = pybamm.x_average(c_ec_surf)
             c_ec_scale = phase_param.c_ec_0_dim
 
             if self.reaction == "SEI on cracks":
@@ -157,15 +160,15 @@ class SEIGrowth(BaseModel):
                 name = "EC surface concentration"
             variables.update(
                 {
-                    name: c_ec,
-                    f"{name} [mol.m-3]": c_ec * c_ec_scale,
+                    name: c_ec_surf,
+                    f"{name} [mol.m-3]": c_ec_surf * c_ec_scale,
                     f"X-averaged {name}": c_ec_av,
                     f"X-averaged {name} [mol.m-3]": c_ec_av * c_ec_scale,
                 }
             )
 
         # All SEI growth mechanisms assumed to have Arrhenius dependence
-        Arrhenius = pybamm.exp(param.E_over_RT_sei * (1 - prefactor))
+        Arrhenius = pybamm.exp(phase_param.E_over_RT_sei * (1 - prefactor))
 
         # Put everything together
         if self.options["SEI"] == "ec reaction limited":

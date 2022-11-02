@@ -6,7 +6,7 @@ import numpy as np
 from .base_solvent_diffusion import BaseSolventDiffusion
 
 
-class NoSolventDiffusion(BaseSolventDiffusion):
+class Single_NoConsume_wo_refill(BaseSolventDiffusion):
     """Class for constant EC concentration of electrolyte
 
     Parameters
@@ -23,6 +23,10 @@ class NoSolventDiffusion(BaseSolventDiffusion):
         super().__init__(param, options=options)
 
     def get_fundamental_variables(self):
+
+        # will it be possible to have variable whose a rhs is not dependent on 
+        # x (no domain) then FullBroadcast this variable to here?
+        # such as d_c_EC_bulk_dt =  ..., then ...
         c_EC_dict = {
             domain: pybamm.FullBroadcast(1, domain, "current collector")
             for domain in self.options.whole_cell_domains

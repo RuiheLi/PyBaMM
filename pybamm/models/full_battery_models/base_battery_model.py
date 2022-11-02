@@ -50,7 +50,9 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 Can be "default" (default), "full", "leading order", "composite" or
                 "integrated".
             * "solvent diffusion" : str    # Mark Ruihe Li add
-                Can be "EC w refill", "EC wo refill", or "none" (default).
+                Can be "double spatial consume w refill", "double spatial consume wo refill", 
+                "single spatial consume w refill", "single spatial consume wo refill",  
+                or "single no consume wo refill", (default).
             * "external submodels" : list
                 A list of the submodels that you would like to supply an external
                 variable for instead of solving in PyBaMM. The entries of the lists
@@ -208,7 +210,10 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 "composite",
                 "integrated",
             ],
-            "solvent diffusion": ["none","EC w refill","EC wo refill"],  # Mark Ruihe Li add
+            "solvent diffusion": [
+                "double spatial consume w refill", "double spatial consume wo refill", 
+                "single spatial consume w refill", "single spatial consume wo refill", 
+                "single no consume wo refill"],  # Mark Ruihe Li add
             "hydrolysis": ["false", "true"],
             "intercalation kinetics": [
                 "symmetric Butler-Volmer",

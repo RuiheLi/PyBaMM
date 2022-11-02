@@ -58,8 +58,8 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
             c_EC_k_av = pybamm.x_average(c_EC_k)
             variables.update(
                 {
-                    f"{Domain} electrolyte concentration": c_EC_k,
-                    f"X-averaged {domain} electrolyte concentration": c_EC_k_av,
+                    f"{Domain} EC concentration": c_EC_k,
+                    f"X-averaged {domain} EC concentration": c_EC_k_av,
                 }
             )
 

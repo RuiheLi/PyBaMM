@@ -828,6 +828,8 @@ class BaseModel:
         extra_variables = extra_variables_in_equations.difference(external_vars)
 
         if extra_variables:
+            #print(dir(extra_variables)) # Mark Ruihe add to debug
+            #print(extra_variables)      # Mark Ruihe add to debug
             raise pybamm.ModelError("model is underdetermined (too many variables)")
 
     def check_algebraic_equations(self, post_discretisation):

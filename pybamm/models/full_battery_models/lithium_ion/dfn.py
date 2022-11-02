@@ -144,16 +144,24 @@ class DFN(BaseModel):
 
     # Mark Ruihe block start
     def set_solvent_diffusion_submodel(self): # Mark Ruihe Li modify
-        if self.options["solvent diffusion"] == "EC w refill":
+        if self.options["solvent diffusion"] == "double spatial consume w refill":
             self.submodels[
                 "solvent diffusion"
-            ] = pybamm.solvent_diffusion.OneSolventDiffusion_w_Refill(self.param, self.options)
-        elif self.options["solvent diffusion"] == "EC wo refill":
+            ] = pybamm.solvent_diffusion.Double_SpatialConsume_w_refill(self.param, self.options)
+        elif self.options["solvent diffusion"] == "double spatial consume wo refill":
             self.submodels[
                 "solvent diffusion"
-            ] = pybamm.solvent_diffusion.OneSolventDiffusion_wo_Refill(self.param, self.options)
-        elif self.options["solvent diffusion"] == "none":
+            ] = pybamm.solvent_diffusion.Double_SpatialConsume_wo_refill(self.param, self.options)
+        elif self.options["solvent diffusion"] == "single no consume wo refill":
             self.submodels[
                 "solvent diffusion"
-            ] = pybamm.solvent_diffusion.NoSolventDiffusion(self.param, self.options)
+            ] = pybamm.solvent_diffusion.Single_NoConsume_wo_refill(self.param, self.options)
+        elif self.options["solvent diffusion"] == "single spatial consume w refill":
+            self.submodels[
+                "solvent diffusion"
+            ] = pybamm.solvent_diffusion.Single_SpatialConsume_w_refill(self.param, self.options)
+        elif self.options["solvent diffusion"] == "single spatial consume wo refill":
+            self.submodels[
+                "solvent diffusion"
+            ] = pybamm.solvent_diffusion.Single_SpatialConsume_wo_refill(self.param, self.options)
     # Mark Ruihe block end

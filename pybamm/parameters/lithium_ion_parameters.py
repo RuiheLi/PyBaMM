@@ -65,6 +65,15 @@ class LithiumIonParameters(BaseParameters):
         """Defines the dimensional parameters"""
         # Physical constants
         self.R = pybamm.constants.R
+
+        # Mark Ruihe block start
+        self.z_sei = pybamm.Parameter( # Move from ParticleLithiumIonParameters 
+            "Ratio of lithium moles to SEI moles")
+        self.c_ec_0_dim = pybamm.Parameter(# Move from ParticleLithiumIonParameters 
+            "EC initial concentration in electrolyte [mol.m-3]")  
+        
+        # print("Have you come here? Did you see c_ec_0_dim?")
+
         self.F = pybamm.constants.F
         self.k_b = pybamm.constants.k_b
         self.q_e = pybamm.constants.q_e
@@ -142,11 +151,8 @@ class LithiumIonParameters(BaseParameters):
         self.ocv_ref = self.p.U_ref - self.n.U_ref
         self.ocv_init_dim = self.p.prim.U_init_dim - self.n.prim.U_init_dim
 
-        # Mark Ruihe block start
         self.Xi = pybamm.Parameter(
             "EC transference number") 
-        """ self.c_ec_0_dim = pybamm.Parameter(
-            "EC initial concentration in electrolyte [mol.m-3]")  """
         self.c_ec_typ = pybamm.Parameter("Typical EC concentration [mol.m-3]") 
         self.D_ec_Li_cross_dim = pybamm.Parameter(
             "EC Lithium ion cross diffusivity [m2.s-1]")
@@ -156,8 +162,7 @@ class LithiumIonParameters(BaseParameters):
             "EC diffusivity in electrolyte [m2.s-1]") #may want to be a function in the future
         self.D_ec_typ = pybamm.Parameter(
             "Typical EC diffusivity in electrolyte [m2.s-1]")
-        
-        self.Xi = pybamm.Parameter("EC transference number") 
+
         self.Vmolar_ec = pybamm.Parameter(
             "EC partial molar volume [m3.mol-1]")
         self.Vmolar_Li = pybamm.Parameter(
@@ -166,6 +171,8 @@ class LithiumIonParameters(BaseParameters):
             "CH2OCO2Li2 partial molar volume [m3.mol-1]")
         # Total electrolyte concentration [mol.m-3] - just for double diffusion
         self.ce_tot = self.c_e_typ *2 + self.c_ec_typ
+
+        
         # Mark Ruihe block end
 
     def D_e_dimensional(self, c_e, c_EC , T):
@@ -291,6 +298,8 @@ class LithiumIonParameters(BaseParameters):
         self.tau_ec_Rio = self.L_x *  self.L_x / self.D_ec_typ
         self.EC_ratio_Rio = self.c_ec_typ / self.ce_tot
         self.e_ratio_Rio = self.c_e_typ / self.ce_tot  
+        # Move from ParticleLithiumIonParameters 
+        self.c_ec_init = self.c_ec_0_dim / self.c_ec_typ   # Mark Ruihe Li add 
         # Mark Ruihe block end
 
         # Electrical
@@ -706,10 +715,8 @@ class ParticleLithiumIonParameters(BaseParameters):
         self.alpha_bv = pybamm.Parameter(
             f"{pref}{Domain} electrode Butler-Volmer transfer coefficient"
         )
-
-        self.c_ec_0_dim = pybamm.Parameter(
-                f"{pref}EC initial concentration in electrolyte [mol.m-3]"
-            )
+        # Mark Ruihe change: add here as well
+        self.c_ec_0_dim = main.c_ec_0_dim
 
         if self.domain == "negative":
             # SEI parameters
@@ -723,6 +730,13 @@ class ParticleLithiumIonParameters(BaseParameters):
             self.m_sei_dimensional = pybamm.Parameter(
                 f"{pref}SEI reaction exchange current density [A.m-2]"
             )
+
+            # Mark Ruihe block start change - delete : 
+            # for c_ec_0_dim no phase dependent
+            #self.c_ec_0_dim = main.c_ec_0_dim
+            #    pybamm.Parameter(
+            #       f"{pref} EC initial concentration in electrolyte [mol.m-3]")  
+            # Mark Ruihe block end
 
             self.R_sei_dimensional = pybamm.Parameter(f"{pref}SEI resistivity [Ohm.m]")
             self.D_sol_dimensional = pybamm.Parameter(
@@ -955,7 +969,7 @@ class ParticleLithiumIonParameters(BaseParameters):
         main = self.main_param
         domain_param = self.domain_param
         pref = self.phase_prefactor
-
+        # Li2CO3; (CH2CO3Li2)2
         # Intercalation kinetics
         self.mhc_lambda = self.mhc_lambda_dimensional / main.potential_scale_eV
 
@@ -964,8 +978,8 @@ class ParticleLithiumIonParameters(BaseParameters):
             self.inner_sei_proportion = pybamm.Parameter(
                 f"{pref}Inner SEI reaction proportion"
             )
-
-            self.z_sei = pybamm.Parameter(f"{pref}Ratio of lithium moles to SEI moles")
+            # Mark: Ruihe change, not compatible for 2+ phases
+            self.z_sei = main.z_sei
 
             self.E_over_RT_sei = self.E_sei_dimensional / main.R / main.T_ref
 
@@ -1061,7 +1075,7 @@ class ParticleLithiumIonParameters(BaseParameters):
                 self.U_init_dim - self.domain_param.U_ref
             ) / main.potential_scale
         
-        self.c_ec_init = self.c_ec_0_dim / main.c_ec_typ   # Mark Ruihe Li add 
+        
 
         # Timescale ratios
         self.C_diff = self.tau_diffusion / main.timescale
