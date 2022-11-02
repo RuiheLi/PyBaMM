@@ -20,20 +20,15 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
     def __init__(self, param, options=None):
         super().__init__(param, options=options)
 
-
-    def _get_standard_EC_concentration_variables(self, c_EC_n, c_EC_s, c_EC_p):
+    def _get_standard_EC_concentration_variables(self, c_EC_dict):
         """
         A private function to obtain the standard variables which
         can be derived from the concentration in the EC.
 
         Parameters
         ----------
-        c_EC_n : :class:`pybamm.Symbol`
-            The EC concentration in the negative electrode.
-        c_EC_s : :class:`pybamm.Symbol`
-            The EC concentration in the separator.
-        c_EC_p : :class:`pybamm.Symbol`
-            The EC concentration in the positive electrode.
+        c_EC_dict : dict of :class:`pybamm.Symbol`
+            EC concentrations in the various domains
 
         Returns
         -------
@@ -43,64 +38,58 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
         """
 
         c_ec_typ = self.param.c_ec_typ
-        c_EC = pybamm.concatenation(c_EC_n, c_EC_s, c_EC_p)
-
-        if self.half_cell:
-            # overwrite c_EC_n to be the boundary value of c_EC_s
-            c_EC_n = pybamm.boundary_value(c_EC_s, "left")
-
-        c_EC_n_av = pybamm.x_average(c_EC_n)
-        c_EC_av = pybamm.x_average(c_EC)
-        c_EC_s_av = pybamm.x_average(c_EC_s)
-        c_EC_p_av = pybamm.x_average(c_EC_p)
-
-        sign_2_n = pybamm.FullBroadcast(
-                pybamm.Scalar(0), "negative electrode", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
-        sign_2_s = pybamm.FullBroadcast(
-                pybamm.Scalar(0), "separator", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
-        sign_2_p = pybamm.FullBroadcast(
-                pybamm.Scalar(0), "positive electrode", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
-        sign_2 = pybamm.concatenation(sign_2_n, sign_2_s, sign_2_p )
- 
-        variables = {
-            "EC concentration": c_EC,
-            "EC concentration [mol.m-3]": c_ec_typ * c_EC,
-            "EC concentration [Molar]": c_ec_typ * c_EC / 1000,
-            "X-averaged EC concentration": c_EC_av,
-            "X-averaged EC concentration [mol.m-3]": c_ec_typ * c_EC_av,
-            "X-averaged EC concentration [Molar]": c_ec_typ * c_EC_av / 1000,
-            "Negative EC concentration": c_EC_n,
-            "Negative EC concentration [mol.m-3]": c_ec_typ * c_EC_n,
-            "Negative EC concentration [Molar]": c_ec_typ * c_EC_n / 1000,
-            "Separator EC concentration": c_EC_s,
-            "Separator EC concentration [mol.m-3]": c_ec_typ * c_EC_s,
-            "Separator EC concentration [Molar]": c_ec_typ * c_EC_s / 1000,
-            "Positive EC concentration": c_EC_p,
-            "Positive EC concentration [mol.m-3]": c_ec_typ * c_EC_p,
-            "Positive EC concentration [Molar]": c_ec_typ * c_EC_p / 1000,
-            "X-averaged negative EC concentration": c_EC_n_av,
-            "X-averaged negative EC concentration [mol.m-3]": c_ec_typ
-            * c_EC_n_av,
-            "X-averaged separator EC concentration": c_EC_s_av,
-            "X-averaged separator EC concentration [mol.m-3]": c_ec_typ
-            * c_EC_s_av,
-            "X-averaged positive EC concentration": c_EC_p_av,
-            "X-averaged positive EC concentration [mol.m-3]": c_ec_typ
-            * c_EC_p_av,
-            
-        }
-
+        c_EC = pybamm.concatenation(*c_EC_dict.values())
         # Override print_name
         c_EC.print_name = "c_EC"
 
+        variables = {
+            "EC concentration": c_EC,
+            "X-averaged EC concentration": pybamm.x_average(c_EC),
+        }
+
+        # Case where an electrode is not included (half-cell)
+        if "negative electrode" not in self.options.whole_cell_domains:
+            c_EC_s = c_EC_dict["separator"]
+            c_EC_dict["negative electrode"] = pybamm.boundary_value(c_EC_s, "left")
+ 
+        for domain, c_EC_k in c_EC_dict.items():
+            domain = domain.split()[0]
+            Domain = domain.capitalize()
+            c_EC_k_av = pybamm.x_average(c_EC_k)
+            variables.update(
+                {
+                    f"{Domain} electrolyte concentration": c_EC_k,
+                    f"X-averaged {domain} electrolyte concentration": c_EC_k_av,
+                }
+            )
+
+        # Calculate dimensional variables
+        variables_nondim = variables.copy()
+        for name, var in variables_nondim.items():
+            variables.update(
+                {
+                    f"{name} [mol.m-3]": c_ec_typ * var,
+                    f"{name} [Molar]": c_ec_typ * var / 1000,
+                }
+            )
+
         return variables
     
+    def _get_standard_porosity_times_EC_concentration_variables(self, eps_c_EC_dict):
+        eps_c_EC = pybamm.concatenation(*eps_c_EC_dict.values())
+        variables = {"Porosity times EC concentration": eps_c_EC}
+
+        for domain, eps_c_EC_k in eps_c_EC_dict.items():
+            Domain = domain.capitalize()
+            variables[f"{Domain} porosity times EC concentration"] = eps_c_EC_k
+
+        # Total lithium concentration in electrolyte
+        # Mark: Ruihe change, need to add Q_sei
+        # variables.update(self._get_total_EC_concentration_electrolyte(eps_c_e))
+
+        return variables
+
+
     def _get_standard_EC_flux_variables(self, 
         N_EC,N_EC_diffusion,N_EC_migration,N_cross_diffusion,
         source_terms_ec,source_terms_refill):
@@ -144,22 +133,7 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
 
 
     
-    def _get_standard_porosity_times_EC_concentration_variables(
-        self, eps_c_EC_n, eps_c_EC_s, eps_c_EC_p
-    ):
-        eps_c_EC = pybamm.concatenation(eps_c_EC_n, eps_c_EC_s, eps_c_EC_p)
-
-        variables = {
-            "Porosity times EC concentration": eps_c_EC,
-            "Separator porosity times EC concentration": eps_c_EC_s,
-            "Positive electrode porosity times EC concentration": eps_c_EC_p,
-        }
-
-        if not self.half_cell:
-            variables.update(
-                {"Negative electrode porosity times EC concentration": eps_c_EC_n}
-            )
-        return variables
+    
 
     def _get_total_EC_concentration_electrolyte(self, eps_c_EC,Q_sei):
         """

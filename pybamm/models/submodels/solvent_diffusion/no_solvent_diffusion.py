@@ -7,8 +7,7 @@ from .base_solvent_diffusion import BaseSolventDiffusion
 
 
 class NoSolventDiffusion(BaseSolventDiffusion):
-    """
-    Submodel for no convection in transverse directions
+    """Class for constant EC concentration of electrolyte
 
     Parameters
     ----------
@@ -24,55 +23,51 @@ class NoSolventDiffusion(BaseSolventDiffusion):
         super().__init__(param, options=options)
 
     def get_fundamental_variables(self):
-        c_EC_typ_n = pybamm.FullBroadcast(
-            1.0, "negative electrode",
-            "current collector") # 
-        c_EC_typ_s = pybamm.FullBroadcast(
-            1.0, "separator",
-            "current collector")
-        c_EC_typ_p = pybamm.FullBroadcast(
-            1.0, "positive electrode",
-            "current collector")
-        variables=self._get_standard_EC_concentration_variables(
-            c_EC_typ_n,c_EC_typ_s,c_EC_typ_p)
+        c_EC_dict = {
+            domain: pybamm.FullBroadcast(1, domain, "current collector")
+            for domain in self.options.whole_cell_domains
+        }
+        variables=self._get_standard_EC_concentration_variables(c_EC_dict)
         #print("have you come here?")
+        N_EC = pybamm.FullBroadcastToEdges(
+            0,
+            [domain for domain in self.options.whole_cell_domains],
+            "current collector",)
+        
+        variables.update(self._get_standard_EC_flux_variables(
+            N_EC,N_EC,N_EC,N_EC,N_EC,N_EC))
 
-        param = self.param
+        return variables
 
-        param.s.epsilon_init
-
+    def get_coupled_variables(self, variables):
+        eps_c_EC_dict = {}
+        for domain in self.options.whole_cell_domains:
+            Domain = domain.capitalize()
+            eps_k = variables[f"{Domain} porosity"]
+            c_EC_k = variables[f"{Domain.split()[0]} EC concentration"]
+            eps_c_EC_dict[domain] = eps_k * c_EC_k
         variables.update(
-            self._get_standard_porosity_times_EC_concentration_variables(
-            param.n.epsilon_init,
-            param.s.epsilon_init,
-            param.p.epsilon_init)
+            self._get_standard_porosity_times_EC_concentration_variables(eps_c_EC_dict)
         )
 
         return variables
 
+    def set_boundary_conditions(self, variables):
+        """
+        We provide boundary conditions even though the concentration is constant
+        so that the gradient of the concentration has the correct shape after
+        discretisation.
+        """
 
-    def get_coupled_variables(self, variables):
-        
-        eps_c_EC = variables["Porosity times EC concentration"]
-        #Q_sei = variables["Loss of lithium to SEI [mol]"]
+        c_EC = variables["EC concentration"]
 
-        N_EC_n = pybamm.FullBroadcast(
-            0.0, "negative electrode",
-            "current collector") 
-        N_EC_s = pybamm.FullBroadcast(
-            0.0, "separator",
-            "current collector")  
-        N_EC_p = pybamm.FullBroadcast(
-            0.0, "positive electrode",
-            "current collector") 
-        N_EC = pybamm.concatenation(N_EC_n, N_EC_s, N_EC_p )
+        self.boundary_conditions = {
+            c_EC: {
+                "left": (pybamm.Scalar(0), "Neumann"),
+                "right": (pybamm.Scalar(0), "Neumann"),
+            }
+        }
 
-        variables.update(self._get_standard_EC_flux_variables(
-            pybamm.grad(N_EC),pybamm.grad(N_EC),
-            pybamm.grad(N_EC),pybamm.grad(N_EC),
-            pybamm.grad(N_EC),pybamm.grad(N_EC)))
-
-        variables.update(
-            self._get_total_EC_concentration_electrolyte(eps_c_EC,0))
-
-        return variables
+    def set_events(self, variables):
+        # No event since the concentration is constant
+        pass

@@ -8,7 +8,8 @@ from .base_solvent_diffusion import BaseSolventDiffusion
 
 class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
     """Class for conservation of solvent in the electrolyte employing the
-    Stefan-Maxwell constitutive equations. and consider diffusion of both solvent and lithium ion 
+    Stefan-Maxwell constitutive equations. and 
+    consider diffusion of both solvent and lithium ion 
 
     Parameters
     ----------
@@ -24,69 +25,56 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
         super().__init__(param, options)
 
     def get_fundamental_variables(self):
-        if self.half_cell:
-            eps_c_EC_n    = None 
-        else:
-            eps_c_EC_n    = pybamm.standard_variables.eps_c_EC_n     
-        eps_c_EC_s    = pybamm.standard_variables.eps_c_EC_s         
-        eps_c_EC_p    = pybamm.standard_variables.eps_c_EC_p         
+        eps_c_EC_dict = {}
+        for domain in self.options.whole_cell_domains:
+            Domain = domain.capitalize()
+            eps_c_EC_k = pybamm.Variable(
+                f"{Domain} porosity times EC concentration",
+                domain=domain,
+                auxiliary_domains={"secondary": "current collector"},
+                bounds=(0, np.inf),
+            )
+            eps_c_EC_k.print_name = f"eps_c_EC_{domain[0]}"
+            eps_c_EC_dict[domain] = eps_c_EC_k
 
-        variables = self._get_standard_porosity_times_EC_concentration_variables( 
-            eps_c_EC_n, eps_c_EC_s, eps_c_EC_p
+        variables = self._get_standard_porosity_times_EC_concentration_variables(
+            eps_c_EC_dict
         )
+
         return variables
 
     def get_coupled_variables(self, variables):
 
-        param = self.param
-
-        if self.half_cell:   # Mark Ruihe Li comment
-            c_EC_n    = None 
-        else:
-            eps_n = variables["Negative electrode porosity"]
-            eps_c_EC_n= variables["Negative electrode porosity times EC concentration"]
-            c_EC_n = eps_c_EC_n / eps_n 
-
-        eps_n = variables["Negative electrode porosity"]
-        eps_c_EC_n= variables["Negative electrode porosity times EC concentration"]
-        c_EC_n = eps_c_EC_n / eps_n
-
-        eps_s = variables["Separator porosity"]
-        eps_p = variables["Positive electrode porosity"]
-        eps_c_EC_s = variables["Separator porosity times EC concentration"]
-        eps_c_EC_p = variables["Positive electrode porosity times EC concentration"]
-        c_EC_s = eps_c_EC_s / eps_s
-        c_EC_p = eps_c_EC_p / eps_p
-        variables.update(
-            self._get_standard_EC_concentration_variables(c_EC_n, c_EC_s, c_EC_p) 
-        )
-
-        tor = variables["Electrolyte transport efficiency"]
-        i_e = variables["Electrolyte current density"]
-        T = variables["Cell temperature"]
+        c_EC_dict = {}
+        for domain in self.options.whole_cell_domains:
+            Domain = domain.capitalize()
+            eps_k = variables[f"{Domain} porosity"]
+            eps_c_EC_k = variables[f"{Domain} porosity times concentration"]
+            c_EC_k = eps_c_EC_k / eps_k
+            c_EC_dict[domain] = c_EC_k
+        variables.update(self._get_standard_EC_concentration_variables(c_EC_dict))
 
         sign_2_n = pybamm.FullBroadcast(
                 pybamm.Scalar(0), "negative electrode", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
+                auxiliary_domains={"secondary": "current collector"})
         sign_2_s = pybamm.FullBroadcast(
                 pybamm.Scalar(0), "separator", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
+                auxiliary_domains={"secondary": "current collector"})
         sign_2_p = pybamm.FullBroadcast(
                 pybamm.Scalar(0), "positive electrode", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
+                auxiliary_domains={"secondary": "current collector"})
         sign_2 = pybamm.concatenation(sign_2_n, sign_2_s, sign_2_p )
 
-
-        
-        c_EC  = variables["EC concentration"]
-        c_e = variables["Electrolyte concentration"]
-
         eps_c_EC = variables["Porosity times EC concentration"]
-
+        c_e = variables["Electrolyte concentration"]
+        tor = variables["Electrolyte transport efficiency"]
+        i_e = variables["Electrolyte current density"]
+        v_box = variables["Volume-averaged velocity"]
+        T = variables["Cell temperature"]
+        c_EC  = variables["EC concentration"]
         Q_sei = variables["Loss of lithium to SEI [mol]"]
+
+        param = self.param
 
         N_EC_diffusion = -tor * param.D_ec * pybamm.grad(c_EC)
         N_cross_diffusion = -(
@@ -96,8 +84,7 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
         # Mark Ruihe: most important correction that change again everything... update 221021
         #there should be a minus here!
         N_EC_migration = - param.C_e* param.Xi * i_e / param.gamma_e *(
-            param.tau_ec_Rio / param.gamma_e_ec_Rio / param.tau_diffusion_e
-        )
+            param.tau_ec_Rio / param.gamma_e_ec_Rio / param.tau_diffusion_e)
 
         N_EC = N_EC_diffusion + N_cross_diffusion + N_EC_migration
 
@@ -111,12 +98,8 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
         j_SEI = j_inner + j_outer
         j_sign_SEI = pybamm.concatenation(j_SEI, sign_2_s, sign_2_p )
 
-        sum_s_j = variables["Sum of electrolyte reaction source terms"]
-        sum_s_j.print_name = "a"
-        source_terms = sum_s_j / self.param.gamma_e
         ## EC:lithium:SEI=2:2:1    ; change to EC:lithium:SEI=2:1:1 for now
-
-        ratio_sei_li = - 1/param.z_sei  ; # change to 1 for now , initially is 0.5
+        ratio_sei_li = - 1/self.phase_param.z_sei  ; # change to 1 for now , initially is 0.5
         ratio_ec_li  = 1 ; 
 
         source_terms_ec =(
@@ -143,23 +126,7 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
     def set_rhs(self, variables):   # Mark Ruihe Li modify  ? can we have more than one variables in this file?
 
         param = self.param
-        sign_2_n = pybamm.FullBroadcast(
-                pybamm.Scalar(0), "negative electrode", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
-        sign_2_s = pybamm.FullBroadcast(
-                pybamm.Scalar(0), "separator", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
-        sign_2_p = pybamm.FullBroadcast(
-                pybamm.Scalar(0), "positive electrode", 
-                auxiliary_domains={"secondary": "current collector"}
-            )
 
-        a_p = variables["Positive electrode surface area to volume ratio"]
-        a_n = variables["Negative electrode surface area to volume ratio"]
-        zero_s = pybamm.FullBroadcast(0, "separator", "current collector")
-        a = pybamm.concatenation(a_n, zero_s, a_p)
         c_e = variables["Electrolyte concentration"]
         c_EC  = variables["EC concentration"]
         eps_c_EC = variables["Porosity times EC concentration"]
@@ -177,23 +144,6 @@ class OneSolventDiffusion_w_Refill(BaseSolventDiffusion):
             + source_terms_ec
             # source term due to replenishment 
             + source_terms_refill
-
-            #(   old ones:
-            #    param.EC_ratio_Rio / param.gamma_e_ec_Rio * param.tau_discharge  / 
-            #    param.tau_cross_Rio * pybamm.div(tor * param.D_ec_Li_cross * pybamm.grad(c_e))
-            #    )
-            #+ param.tau_discharge  / param.tau_ec_Rio * pybamm.div(tor * param.D_ec * pybamm.grad(c_EC))
-            ## source term due to migration:
-            #+    source_terms / param.gamma_e_ec_Rio * param.Xi   
-            
-            ## source term due to SEI
-            #+ a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio 
-            # source term due to replenishment
-            #- source_terms / param.gamma_e_ec_Rio * param.Vmolar_Li * param.c_ec_0_dim   # ignore volume of lithium
-            #+ (  
-            #a * j_sign_SEI /  param.gamma_e / param.gamma_e_ec_Rio *   
-            #(  ratio_sei_li*param.Vmolar_CH2OCO2Li2*param.c_ec_0_dim 
-            #- param.Vmolar_ec*param.c_ec_0_dim ) ) 
         } 
 
 

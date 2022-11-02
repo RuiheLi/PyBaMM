@@ -142,6 +142,7 @@ class ParameterSets:
                 "Prada2013",
                 "Ramadass2004",
                 "Xu2019",
+                "Li2023_ECdrag",
             ],
         }
         self.all_parameter_sets_list = [

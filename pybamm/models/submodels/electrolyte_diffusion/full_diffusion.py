@@ -103,7 +103,7 @@ class Full(BaseElectrolyteDiffusion):
         j_SEI = j_inner + j_outer
         j_sign_SEI = pybamm.concatenation(j_SEI, sign_2_s, sign_2_p )
 
-        ratio_sei_li = -0.5 ; # change to 1 for now , initially is 0.5
+        ratio_sei_li = - 1/param.z_sei  ;# change to 1 for now , initially is 0.5
         ratio_ec_li  = 1 ; 
 
         sum_s_j = variables["Sum of electrolyte reaction source terms"]
@@ -123,7 +123,7 @@ class Full(BaseElectrolyteDiffusion):
         variables.update(self._get_standard_flux_variables(
             N_e,N_e_diffusion,N_e_migration,N_cross_diffusion,
             source_terms,source_terms_refill))
-        variables.update(self._get_total_concentration_electrolyte(eps_c_e))
+
 
         return variables
 
