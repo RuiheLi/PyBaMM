@@ -7,6 +7,28 @@ import openpyxl
 import traceback
 
 from pybamm import tanh,exp,sqrt
+
+def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T): 
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    c_e_constant = 4500/1000
+
+    T_g = 229 + 5 * c_e
+    T_g_constant = 229 + 5 * c_e_constant
+    D_0 = -4.43 - 54 / (T - T_g)
+    D_0_constant = -4.43 - 54 / (T - T_g_constant)
+    D_1 = -0.22
+
+    D_final = (c_e <= 4500) * (
+        (10 ** (D_0 + D_1 * c_e)) * 1e-4
+    ) + (c_e > 4500) *  (
+        (10 ** (D_0_constant + D_1 * c_e_constant)) * 1e-4
+    )
+
+    # cm2/s to m2/s
+    # note, in the Valoen paper, ln means log10, so its inverse is 10^x
+    return D_final
+
 def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     # mol/m3 to molar
     c_e = c_e / 1000
@@ -31,7 +53,8 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     ))
     # mS/cm to S/m
     return sigma
-def electrolyte_conductivity_Valoen2005Constant_EC_Haya(c_e,c_EC, T):
+    
+def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
     # mol/m3 to molar
     c_e = c_e / 1000
     sigma = (c_e <= 4.5) * (

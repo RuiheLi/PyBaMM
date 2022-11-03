@@ -17,7 +17,7 @@ electrolyte_conductivity_Nyman2008Exp
 
 electrolyte_conductivity_Valoen2005
 electrolyte_conductivity_Valoen2005Constant
-electrolyte_conductivity_Valoen2005Constant_EC_Haya
+electrolyte_conductivity_Valoen2005Constant_wEC_Haya
 electrolyte_conductivity_Valoen2005Constant_ECtanh100_1
 electrolyte_conductivity_Valoen2005Constant_ECtanh500_1
 electrolyte_conductivity_Valoen2005Constant_ECtanh700_1
@@ -335,7 +335,7 @@ def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T):
     # note, in the Valoen paper, ln means log10, so its inverse is 10^x
     return D_final
 
-def electrolyte_conductivity_Valoen2005Constant_EC_Haya(c_e,c_EC, T):
+def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
     # mol/m3 to molar
     c_e = c_e / 1000
     sigma = (c_e <= 4.5) * (
@@ -604,7 +604,7 @@ def get_parameter_values():
         "Cation transference number": 0.2594,
         "1 + dlnf/dlnc": 1.0,
         "Electrolyte diffusivity [m2.s-1]": electrolyte_diffusivity_Valoen2005Constant,
-        "Electrolyte conductivity [S.m-1]": electrolyte_diffusivity_Valoen2005Constant,
+        "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Valoen2005Constant,
 
         # Mark Ruihe block start
         "EC transference number": -1.4  ,  # from Andrew": 
