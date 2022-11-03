@@ -6,7 +6,32 @@ import matplotlib as mpl; fs=17; # or we can set import matplotlib.pyplot as plt
 import openpyxl
 import traceback
 
-def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):# Mark Ruihe change
+from pybamm import tanh,exp,sqrt
+def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    sigma = (c_e <= 4.5) * (
+        (1e-3 / 1e-2) * (
+        c_e
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    )) + (c_e > 4.5) *  (
+        (1e-3 / 1e-2) * (
+        4.5
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + 4.5 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + 4.5 ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    ))
+    # mS/cm to S/m
+    return sigma
+def electrolyte_conductivity_Valoen2005Constant_EC_Haya(c_e,c_EC, T):
     # mol/m3 to molar
     c_e = c_e / 1000
     sigma = (c_e <= 4.5) * (
@@ -31,6 +56,31 @@ def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):# Mark Rui
     a=1.092; b=-6.497e-6; c=-0.7877; d=-0.0004808
     ratio= (
         a*exp(b*c_EC)+c*exp(d*c_EC) )
+    return sigma*ratio
+def electrolyte_conductivity_Valoen2005Constant_ECtanh500_1(c_e,c_EC, T):# Mark Ruihe change
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    sigma = (c_e <= 4.5) * (
+        (1e-3 / 1e-2) * (
+        c_e
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    )) + (c_e > 4.5) *  (
+        (1e-3 / 1e-2) * (
+        4.5
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + 4.5 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + 4.5 ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    ))
+    coff = 1
+    ratio = ( (1-coff)+ coff/2 + coff/2 *  tanh((c_EC-4500*0.5)/500))
     return sigma*ratio
 
 
