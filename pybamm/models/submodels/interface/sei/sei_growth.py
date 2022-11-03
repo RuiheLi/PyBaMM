@@ -174,6 +174,8 @@ class SEIGrowth(BaseModel):
         if self.options["SEI"] == "ec reaction limited":
             j_inner = 0
             j_outer = Arrhenius * j_sei
+            inner_sei_proportion = 0 # Mark: Ruihe add because otherwise will 
+            #          have "local variable 'inner_sei_proportion' referenced before assignment"
         else:
             inner_sei_proportion = phase_param.inner_sei_proportion
 
