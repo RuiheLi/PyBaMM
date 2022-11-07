@@ -93,7 +93,7 @@ class Single_SpatialConsume_w_refill(BaseSolventDiffusion):
             / param.gamma_e_ec_Rio * ratio_ec_li)
         # Mark Ruihe update 221021 - ignore Li+ (de-)intercalation to 
         # avoid differences between w and wo refill when there are no SEI 
-        source_terms_refill = (
+        source_terms_refill = - (
             a * j_sign_SEI / param.gamma_e / param.gamma_e_ec_Rio 
             * param.c_ec_0_dim * (
                 ratio_ec_li * param.Vmolar_ec 

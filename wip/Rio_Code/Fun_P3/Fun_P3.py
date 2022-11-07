@@ -2,7 +2,7 @@ import pybamm;import pandas as pd   ;import numpy as np;import os;
 import matplotlib.pyplot as plt;import os;#import imageio
 from scipy.io import savemat,loadmat;from pybamm import constants,exp;
 import matplotlib as mpl; fs=17; # or we can set import matplotlib.pyplot as plt then say 'mpl.rc...'
-
+from textwrap import wrap
 import openpyxl
 import traceback
 
@@ -355,8 +355,11 @@ def Plot_Fig_1(Full_cycle,my_dict_AGE,
     BasicPath, Target,   Scan_i,  fs,  dpi):
     font = {'family' : 'DejaVu Sans','size': fs}
     mpl.rc('font', **font)
-    fig, axs = plt.subplots(2,3, figsize=(15,8.5),tight_layout=True)
-    axs[0,0].plot(Full_cycle, my_dict_AGE["Discharge capacity [A.h]"] ,'-o',)
+    fig, axs = plt.subplots(3,3, figsize=(15,12),tight_layout=True)
+    axs[0,0].plot(
+        Full_cycle, 
+        my_dict_AGE["Discharge capacity [A.h]"] ,
+        '-o',label=f"Scan = {Scan_i}")
     axs[0,0].set_ylabel("Capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})
     axs[0,0].set_title("Discharge capacity",   fontdict={'family':'DejaVu Sans','size':fs+1})
 
@@ -368,22 +371,56 @@ def Plot_Fig_1(Full_cycle,my_dict_AGE,
     axs[0,2].set_ylabel("Resistance [Ohm]",   fontdict={'family':'DejaVu Sans','size':fs})
     axs[0,2].set_title("Local ECM resistance",   fontdict={'family':'DejaVu Sans','size':fs+1})
 
-    axs[1,0].plot(Full_cycle, my_dict_AGE["CDsta Positive electrode SOC"] ,'-o',label="Start" )
-    axs[1,0].plot(Full_cycle, my_dict_AGE["CDend Positive electrode SOC"] ,'-^',label="End" )
-    axs[1,1].plot(Full_cycle, my_dict_AGE["CDsta Negative electrode SOC"],'-o',label="Start" )
-    axs[1,1].plot(Full_cycle, my_dict_AGE["CDend Negative electrode SOC"],'-^',label="End" )
+    axs[1,0].plot(Full_cycle, my_dict_AGE["CDcyc Positive SOC range"] ,'-o',label="Pos" )
+    axs[1,0].plot(Full_cycle, my_dict_AGE["CDcyc Negative SOC range"] ,'-^',label="Neg" )
+    axs[1,1].plot(
+        Full_cycle, 
+        my_dict_AGE["LLI to SEI in one Discharge step [A.h]"],
+        '-o',label="Discharge" )
+    axs[1,1].plot(
+        Full_cycle, 
+        my_dict_AGE["LLI to SEI in one Charge step [A.h]"],
+        '-^',label="Charge" )
+    axs[1,2].plot(
+        Full_cycle, 
+        my_dict_AGE["CDend Loss of active material in positive electrode [%]"],
+        '-o',label="Pos" )
+    axs[1,2].plot(
+        Full_cycle, 
+        my_dict_AGE["CDend Loss of active material in negative electrode [%]"],
+        '-^',label="Neg" )
     axs[1,0].set_ylabel("SOC",   fontdict={'family':'DejaVu Sans','size':fs})
-    axs[1,0].set_title("Pos SOC range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
-    axs[1,1].set_ylabel("SOC",   fontdict={'family':'DejaVu Sans','size':fs})
-    axs[1,1].set_title("Neg SOC range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
+    axs[1,0].set_title("SOC range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
+    axs[1,1].set_ylabel("Capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})
+    axs[1,1].set_title("LLI to SEI in one step",   fontdict={'family':'DejaVu Sans','size':fs+1})
+    axs[1,2].set_ylabel("LAM %",   fontdict={'family':'DejaVu Sans','size':fs})
+    axs[1,2].set_title("LAM",   fontdict={'family':'DejaVu Sans','size':fs+1})
+
+    axs[2,0].plot(
+        Full_cycle, 
+        my_dict_AGE["CDend Total EC in electrolyte [mol]"] ,
+        '-o',label="In elely" )
+    axs[2,0].plot(
+        Full_cycle, 
+        my_dict_AGE["CDend Total EC in electrolyte and SEI [mol]"] ,
+        '-^',label="In elely and SEI"  )
+    axs[2,1].plot(
+        Full_cycle, 
+        my_dict_AGE["CDend Total lithium in electrolyte [mol]"],
+        '-o', )
+    axs[2,2].plot(
+        Full_cycle, 
+        my_dict_AGE["CDend Total lithium in particles [mol]"],
+        '-o',)
+    axs[2,0].set_ylabel("Quantity [mol]",   fontdict={'family':'DejaVu Sans','size':fs})
+    axs[2,0].set_title("Total EC",   fontdict={'family':'DejaVu Sans','size':fs+1})
+    axs[2,1].set_ylabel("Quantity [mol]",   fontdict={'family':'DejaVu Sans','size':fs})
+    axs[2,1].set_title("Total lithium in electrolyte",   fontdict={'family':'DejaVu Sans','size':fs+1})
+    axs[2,2].set_ylabel("Quantity [mol]",   fontdict={'family':'DejaVu Sans','size':fs})
+    axs[2,2].set_title("Total lithium in particles",   fontdict={'family':'DejaVu Sans','size':fs+1})
 
 
-    axs[1,2].plot(Full_cycle, my_dict_AGE["CDend Negative electrode capacity [A.h]"],'-o',label="Neg" )
-    axs[1,2].plot(Full_cycle, my_dict_AGE["CDend Positive electrode capacity [A.h]"],'-^',label="Pos" )
-    axs[1,2].set_ylabel("Capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})
-    axs[1,2].set_title("Electrode capacity",   fontdict={'family':'DejaVu Sans','size':fs+1})
-
-    for i in range(0,2):
+    for i in range(0,3):
         for j in range(0,3):
             axs[i,j].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
             
@@ -393,7 +430,7 @@ def Plot_Fig_1(Full_cycle,my_dict_AGE,
             axs[i,j].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)     
     plt.savefig(
         BasicPath + Target+f"{Scan_i}th Scan/" + 
-        "Fig. 1 - Time based overall change.png", dpi=dpi)
+        "Fig. 1 - Cycle based overall change.png", dpi=dpi)
 
         
 def Plot_Loc_Var_2( Full_cycle, key_all, my_dict,fs): # for my_dict only
@@ -417,7 +454,9 @@ def Plot_Loc_Var_2( Full_cycle, key_all, my_dict,fs): # for my_dict only
             #print(x_loc,X_Len)
             axs[i,j].plot(my_dict[x_loc][0:X_Len], my_dict[ key_ij ][0][0:X_Len],'-o',label="1st cycle")
             axs[i,j].plot(my_dict[x_loc][0:X_Len], my_dict[ key_ij ][-1][0:X_Len],'-^',label=f"{Full_cycle[-1]}th cycle")
-            axs[i,j].set_title(key_ij ,   fontdict={'family':'DejaVu Sans','size':fs-3})
+            axs[i,j].set_title(
+                "\n".join(wrap(key_ij, 30)) # to be adjusted
+                ,   fontdict={'family':'DejaVu Sans','size':fs-3})
             #axs[1].set_ylabel("Potential [V]",   fontdict={'family':'DejaVu Sans','size':fs})
             axs[i,j].set_xlabel(x_loc,   fontdict={'family':'DejaVu Sans','size':fs})
             
@@ -571,16 +610,16 @@ def Plot_Single_Static(Sol,str,cycle, step,
     return
 
 
-import random
+
 '''
 有一定概率出错的函数
-'''
+import random
 def may_cause_error():
 	if (random.random() > 0.8):
 	    return 1 / 0
 	else:
 	    return 0
-
+'''
 def recursive_scan(mylist,kvs, key_list, acc):
     # 递归终止条件
     if len(key_list) == 0:
@@ -847,6 +886,209 @@ def Run_P3_model(
                 print('Finish last single step and Exit as no options left')
                 print('Finally finish %d cycles' % i)  
                 break
-    return Sol_All,Succ_Cyc
+    ###########################################        
+    #    Post-prosessing start from here:     #
+    ###########################################
+    if not os.path.exists(BasicPath + Target + f"{count_i}th Scan/"):
+            os.mkdir(BasicPath + Target+  f"{count_i}th Scan/")
+        
+    j=0;
+    while j <len(Sol_All):
+            if len(Sol_All[j].cycles[-1].steps)==1:
+                break
+            j += 1
+    if j < len(Sol_All):
+            print("Single step starts from %d" %j)
+    elif j==len(Sol_All):
+            print("No single step")
+    else:
+            pass
+    
+    Sol_all_i = Sol_All
+    # Plot for last steps
+    if j<len(Sol_all_i):
+        print("Not all solution has full cycles")
+        for j in range(j,len(Sol_all_i)):
+            index_cyc = Succ_Cyc_acc_i[j];
+            Plot_Last_Single_Step(
+                Sol_all_i[j],0,0,BasicPath, 
+                Target,count_i,index_cyc,"True","cool",17,200)
+
+    if j > 2 or j==len(Sol_All):   # normal post-proessing, 
+        step_RPT_RE = -1
+        ###########################################        
+        #    11111111111111111111111111111111     #
+        ###########################################        
+        my_dict_AGE = {}; 
+        for keys in keys_all_AGE:
+            for key in keys:
+                my_dict_AGE[key]=[];	
+        
+        Succ_Cyc_acc_i = np.cumsum(Succ_Cyc).tolist()
+        Full_cycle = []
+        # post-prosessing for full cycle range
+        # prosess for the 1st solution: how many cycles do you have?
+        if j<len(Sol_all_i):
+            print("Not all solution has full cycles")
+            for m in range(j,len(Sol_all_i)):
+                index_cyc = Succ_Cyc_acc_i[m];
+                Plot_Last_Single_Step(
+                    Sol_all_i[m],0,0,BasicPath, 
+                    Target,count_i,index_cyc,"True","cool",17,200)
+
+        for m in range(0,j):# post-prosess for normal full cycles
+            if m == 0 and Succ_Cyc_acc_i[m]>1: # first solution:
+                # get two solution
+                try:
+                    cycle_no=0
+                    Full_cycle.append(0)
+                    my_dict_AGE = GetSol_dict (
+                        my_dict_AGE,keys_all_AGE, Sol_all_i[m], 
+                        cycle_no, step_AGE_CD , step_AGE_CC , 
+                        step_RPT_RE, step_AGE_CV   ) 
+                        
+                    cycle_no=Succ_Cyc[m]-1
+                    Full_cycle.append(Succ_Cyc_acc_i[m])
+                    my_dict_AGE = GetSol_dict (
+                        my_dict_AGE,keys_all_AGE, Sol_all_i[m], 
+                        cycle_no, step_AGE_CD , step_AGE_CC , 
+                        step_RPT_RE, step_AGE_CV   ) 
+                except:
+                    pass
+                else:
+                    print("Seems no empty solution")     
+            else:
+                # get only one solution
+                cycle_no=Succ_Cyc[m]-1
+                Full_cycle.append(Succ_Cyc_acc_i[m])
+                try:  #   possibly have an empty solution in the middle!
+                    my_dict_AGE = GetSol_dict (
+                        my_dict_AGE,keys_all_AGE, Sol_all_i[m], 
+                        cycle_no, step_AGE_CD , step_AGE_CC , 
+                        step_RPT_RE, step_AGE_CV   ) 
+                except:
+                    pass
+                else:
+                    print("Seems no empty solution")        
+        # add a bit more to my_dict_AGE
+        my_dict_AGE["CDcyc Positive SOC range"]=(
+            abs(
+            np.array(my_dict_AGE["CDsta Positive electrode SOC"])-
+            np.array(my_dict_AGE["CDend Positive electrode SOC"])
+        )).tolist()
+        my_dict_AGE["CDcyc Negative SOC range"]=(
+            abs(
+            np.array(my_dict_AGE["CDsta Negative electrode SOC"])-
+            np.array(my_dict_AGE["CDend Negative electrode SOC"])
+        )
+        ).tolist()
+        my_dict_AGE["LLI to SEI in one Discharge step [A.h]"]=(
+            np.array(my_dict_AGE["CDend Loss of capacity to SEI [A.h]"])-
+            np.array(my_dict_AGE["CDsta Loss of capacity to SEI [A.h]"])
+        ).tolist()
+        my_dict_AGE["LLI to SEI in one Charge step [A.h]"]=(
+            np.array(my_dict_AGE["CCend Loss of capacity to SEI [A.h]"])-
+            np.array(my_dict_AGE["CCsta Loss of capacity to SEI [A.h]"])
+        ).tolist()
+        ###########################################        
+        #    11111111111111111111111111111111     #
+        ###########################################   
+        ###########################################        
+        #    22222222222222222222222222222222     #
+        ###########################################     
+        # Plot fig 1~3:
+        fs = 17;  dpi=200;
+        Plot_Fig_1(Full_cycle,my_dict_AGE,
+            BasicPath, Target,   count_i,  fs,  dpi)
+
+        key_all_CCend = [
+            "CCend Negative electrode porosity",
+            "CCend Electrolyte concentration [mol.m-3]",
+            "CCend EC concentration [mol.m-3]",
+            "CCend Electrolyte potential [V]",
+            "CCend Positive electrode potential [V]",
+            "CCend Electrolyte current density [A.m-2]",
+            "CCend Electrolyte diffusivity [m2.s-1]",
+            "CCend Electrolyte conductivity [S.m-1]",
+            "CCend Negative electrode SEI interfacial current density [A.m-2]",
+        ]
+        key_all_CDend = [
+            "CDend Negative electrode porosity",
+            "CDend Electrolyte concentration [mol.m-3]",
+            "CDend EC concentration [mol.m-3]",
+            "CDend Electrolyte potential [V]",
+            "CDend Positive electrode potential [V]",
+            "CDend Electrolyte current density [A.m-2]",
+            "CDend Electrolyte diffusivity [m2.s-1]",
+            "CDend Electrolyte conductivity [S.m-1]",
+            "CDend Negative electrode SEI interfacial current density [A.m-2]",
+        ]
+
+        fig, axs = Plot_Loc_Var_2(
+            Full_cycle,key_all_CCend,my_dict_AGE,fs)
+        plt.savefig(
+            BasicPath + Target+f"{count_i}th Scan/" +
+            "Fig. 2 - CCend Loc based overall.png", dpi=dpi)
+        fig, axs = Plot_Loc_Var_2(
+            Full_cycle,key_all_CDend,my_dict_AGE,fs)
+        plt.savefig(
+            BasicPath + Target+f"{count_i}th Scan/" +
+            "Fig. 3 - CDend Loc based overall.png", dpi=dpi)
+        ###########################################        
+        #    22222222222222222222222222222222     #
+        ###########################################   
+        ###########################################        
+        #    33333333333333333333333333333333     #
+        ###########################################   
+        # write into excel:
+        Para_dict_old = Para_dict_i
+        str_exp_AGE_text = str(exp_AGE)
+
+        value_list_temp = list(Para_dict_old.values())
+        values = []
+        for value_list_temp_i in value_list_temp:
+            values.append(str(value_list_temp_i))
+        values.insert(0,str(count_i));
+        #"Cap Loss","LLI to SEI",
+        #"LAM to Neg","LAM to Pos",
+        #"Error"])
+        values.extend([
+            str_exp_AGE_text,
+            str(my_dict_AGE["Discharge capacity [A.h]"][0] 
+            - 
+            my_dict_AGE["Discharge capacity [A.h]"][-1]),
+
+            str(my_dict_AGE["CDend Loss of capacity to SEI [A.h]"][-1]),
+            str(my_dict_AGE["CDend Negative electrode capacity [A.h]"][0] 
+            - 
+            my_dict_AGE["CDend Negative electrode capacity [A.h]"][-1]),
+
+            str(my_dict_AGE["CDend Positive electrode capacity [A.h]"][0] 
+            - 
+            my_dict_AGE["CDend Positive electrode capacity [A.h]"][-1]),
+        ])
+        values = [values,]
+        book_name_xlsx_seperate =   str(count_i)+ '_' + book_name_xlsx;
+        sheet_name_xlsx =  str(count_i);
+        write_excel_xlsx(
+            BasicPath + Target+   book_name_xlsx_seperate, 
+            sheet_name_xlsx, values)
+        
+        mdic_cycles = {
+            "Full_cycle": Full_cycle,
+        }
+        midc_merge = {**my_dict_AGE, **mdic_cycles}
+        savemat(BasicPath + Target+f"{count_i}th Scan/" +f"{count_i}th Scan" + '-for_AGE_only.mat',midc_merge)  
+
+        ###########################################        
+        #    33333333333333333333333333333333     #
+        ###########################################   
+        print(f"Scan No. {index_xlsx} succeed!")
+    else:
+        my_dict_AGE={};mdic_cycles={};
+        midc_merge = {**my_dict_AGE, **mdic_cycles}
+        print("Degrade too fast!")
+
+    return Sol_all_i,j,midc_merge
 
 

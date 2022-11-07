@@ -164,6 +164,9 @@ class SEIGrowth(BaseModel):
                     f"{name} [mol.m-3]": c_ec_surf * c_ec_scale,
                     f"X-averaged {name}": c_ec_av,
                     f"X-averaged {name} [mol.m-3]": c_ec_av * c_ec_scale,
+                    "C_sei_exp":C_sei_exp, # Mark Ruihe Li add
+                    "eta_SEI":eta_SEI,     # Mark Ruihe Li add
+
                 }
             )
 

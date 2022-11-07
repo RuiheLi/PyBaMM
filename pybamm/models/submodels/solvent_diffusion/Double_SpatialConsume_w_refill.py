@@ -114,13 +114,13 @@ class Double_SpatialConsume_w_refill(BaseSolventDiffusion):
                 +ratio_sei_li * param.Vmolar_CH2OCO2Li2)
             + a * j_sign_SEI / param.gamma_e  / param.gamma_e_ec_Rio 
             * param.c_ec_0_dim * param.Vmolar_Li ) """
-        source_terms_refill = (
+        source_terms_refill = - (
             a * j_sign_SEI / param.gamma_e / param.gamma_e_ec_Rio 
-            * 4541 * (
+            * param.c_ec_0_dim * (
                 ratio_ec_li * param.Vmolar_ec 
                 +ratio_sei_li * param.Vmolar_CH2OCO2Li2)
             + a * j_sign_SEI / param.gamma_e  / param.gamma_e_ec_Rio 
-            * 4541 * param.Vmolar_Li )
+            * param.c_ec_0_dim * param.Vmolar_Li )
         
         variables.update(self._get_standard_EC_flux_variables(
             N_EC,N_EC_diffusion,N_EC_migration,N_cross_diffusion,
