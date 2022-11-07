@@ -253,6 +253,7 @@ def Plot_Loc_Var( key_all, my_dict,colormap ,fs): # for my_dict only
     return fig, axs 
 
 # Plot a pair of loc dependent varibles - within one step
+from textwrap import wrap
 def Plot_Loc_Var_sol( sol,x_loc_all, key_all, cycle, step,colormap,fs): # for initial solution object
     font = {'family' : 'DejaVu Sans','size': fs}
     mpl.rc('font', **font)
@@ -267,7 +268,9 @@ def Plot_Loc_Var_sol( sol,x_loc_all, key_all, cycle, step,colormap,fs): # for in
                 sol.cycles[cycle].steps[step][x_loc].entries[:,0], 
                 sol.cycles[cycle].steps[step][key].entries[:,j], '-',
                 color=cmap_i(j),)
-            axs[i].set_title(key ,   fontdict={'family':'DejaVu Sans','size':fs-1})
+            axs[i].set_title(
+                "\n".join(wrap(key, 30)) # to be adjusted
+                ,   fontdict={'family':'DejaVu Sans','size':fs-1})
             #axs[1].set_ylabel("Potential [V]",   fontdict={'family':'DejaVu Sans','size':fs})
             axs[i].set_xlabel(x_loc,   fontdict={'family':'DejaVu Sans','size':fs})
             
@@ -375,12 +378,20 @@ def Plot_Fig_1(Full_cycle,my_dict_AGE,
     axs[1,0].plot(Full_cycle, my_dict_AGE["CDcyc Negative SOC range"] ,'-^',label="Neg" )
     axs[1,1].plot(
         Full_cycle, 
-        my_dict_AGE["LLI to SEI in one Discharge step [A.h]"],
-        '-o',label="Discharge" )
+        my_dict_AGE["LLI to SEI in one CC step [A.h]"],
+        '--^',label="CC" )
+    axs[1,1].plot(
+        Full_cycle, 
+        my_dict_AGE["LLI to SEI in one CV step [A.h]"],
+        '--^',label="CV" )
     axs[1,1].plot(
         Full_cycle, 
         my_dict_AGE["LLI to SEI in one Charge step [A.h]"],
-        '-^',label="Charge" )
+        '-s',label="Charge" )
+    axs[1,1].plot(
+        Full_cycle, 
+        my_dict_AGE["LLI to SEI in one CD step [A.h]"],
+        '-o',label="Discharge" )
     axs[1,2].plot(
         Full_cycle, 
         my_dict_AGE["CDend Loss of active material in positive electrode [%]"],
@@ -982,13 +993,21 @@ def Run_P3_model(
             np.array(my_dict_AGE["CDend Negative electrode SOC"])
         )
         ).tolist()
-        my_dict_AGE["LLI to SEI in one Discharge step [A.h]"]=(
+        my_dict_AGE["LLI to SEI in one CD step [A.h]"]=(
             np.array(my_dict_AGE["CDend Loss of capacity to SEI [A.h]"])-
             np.array(my_dict_AGE["CDsta Loss of capacity to SEI [A.h]"])
         ).tolist()
-        my_dict_AGE["LLI to SEI in one Charge step [A.h]"]=(
+        my_dict_AGE["LLI to SEI in one CC step [A.h]"]=(
             np.array(my_dict_AGE["CCend Loss of capacity to SEI [A.h]"])-
             np.array(my_dict_AGE["CCsta Loss of capacity to SEI [A.h]"])
+        ).tolist()
+        my_dict_AGE["LLI to SEI in one CV step [A.h]"]=(
+            np.array(my_dict_AGE["CVend Loss of capacity to SEI [A.h]"])-
+            np.array(my_dict_AGE["CVsta Loss of capacity to SEI [A.h]"])
+        ).tolist()
+        my_dict_AGE["LLI to SEI in one Charge step [A.h]"]=(
+            np.array(my_dict_AGE["LLI to SEI in one CV step [A.h]"]) +
+            np.array(my_dict_AGE["LLI to SEI in one CC step [A.h]"])
         ).tolist()
         ###########################################        
         #    11111111111111111111111111111111     #

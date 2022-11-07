@@ -30,13 +30,11 @@ from Fun_P3 import (
 )
 
 
-
-
 ########################  Input  ########################
 # all values here must be a list, even it is a single object
 Para_dict_All = {
-   "Total ageing cycles":[2000,],
-   "SaveAsList":[  [100,10,1,1,1,1],  ],
+   "Total ageing cycles":[3000,],
+   "SaveAsList":[  [200,20,1,1,1,1],  ],
    "Ageing temperature":[25,],
    #"Particle mesh points":[120,],
    #"Exponential mesh stretch":[2.3,],
@@ -44,22 +42,16 @@ Para_dict_All = {
     "Model option":[
         {
             "calculate discharge energy":"true",
-            "SEI":"ec reaction limited",          
+            "SEI":"ec reaction limited",              
             "SEI film resistance":"distributed",          
             "SEI porosity change":"true",     
             "solvent diffusion": "double spatial consume w refill"   },
-        {
-            "calculate discharge energy":"true",
-            "SEI":"ec reaction limited",          
-            "SEI film resistance":"distributed",          
-            "SEI porosity change":"true",     
-            "solvent diffusion": "single spatial consume w refill"    },
     ],
    # solvent diffusion parameters:
    "EC transference number":[-1.4,],
    "Cation transference number":[0.28,],
    "EC Lithium ion cross diffusivity [m2.s-1]":[3e-11,],
-   "EC diffusivity in electrolyte [m2.s-1]":[3.2e-10,5e-10,],
+   "EC diffusivity in electrolyte [m2.s-1]":[2e-10,5e-10,5e-5],
 
    # DFN parameter
    "Upper voltage cut-off [V]":[4.21,],
@@ -95,6 +87,8 @@ Para_dict_All = {
 }
 Para_dict_list = []
 recursive_scan(Para_dict_list,Para_dict_All, list(Para_dict_All.keys()), {})
+print(f"Total scan case is {len(Para_dict_list)}")
+
 
 keys_loc_AGE = [ # MAY WANT TO SELECT AGEING CYCLE later
     # Default output:
@@ -139,7 +133,12 @@ keys_tim_AGE = [
 ]
 keys_cyc_AGE = [   # default: CDend
     "Discharge capacity [A.h]",
+    "CDsta Loss of capacity to SEI [A.h]",
     "CDend Loss of capacity to SEI [A.h]",
+    "CCsta Loss of capacity to SEI [A.h]",
+    "CCend Loss of capacity to SEI [A.h]",
+    "CVsta Loss of capacity to SEI [A.h]",
+    "CVend Loss of capacity to SEI [A.h]",
     "CDend Local ECM resistance [Ohm]",
     "CDsta Negative electrode SOC", 
     "CDend Negative electrode SOC",
@@ -147,9 +146,14 @@ keys_cyc_AGE = [   # default: CDend
     "CDend Positive electrode SOC",
     "CDend Negative electrode capacity [A.h]",
     "CDend Positive electrode capacity [A.h]",
+    "CDend Loss of active material in positive electrode [%]",
+    "CDend Loss of active material in negative electrode [%]",
+    "CDend Total EC in electrolyte [mol]",
+    "CDend Total EC in electrolyte and SEI [mol]",
+    "CDend Total lithium in electrolyte [mol]",
+    "CDend Total lithium in particles [mol]",
 ]
 keys_all_AGE = [keys_loc_AGE,keys_tim_AGE,keys_cyc_AGE];
-
 
 # define experiments and scan!
 V_max = 4.2;        V_min = 2.5; 
@@ -178,12 +182,12 @@ exp_index_pack = [
    cycle_no,step_AGE_CD,
    step_AGE_CC,step_AGE_CV,];
 # Path and save to excel
-# BasicPath = 'D:/OneDrive - Imperial College London/SimDataSave/P3R9/'; 
+#BasicPath = 'D:/OneDrive - Imperial College London/SimDataSave/P3R10/'; 
 BasicPath=os.getcwd() # for HPC
-Target  = 'c3_2_ec_scan_ddsd_ValoenCon3_1200cycles/' 
+Target  = 'a_2_ec_Dec=5e_20_scan_ddsd_elely/' # wip\Rio_Code\P3R10\.ipynb
 if not os.path.exists(BasicPath + Target):
    os.mkdir(BasicPath + Target);
-book_name_xlsx = 'c3_2_1200cycles.xlsx';sheet_name_xlsx = 'Results';
+book_name_xlsx = 'a_2_ec.xlsx';sheet_name_xlsx = 'Results';
 Path_pack = [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,];
 # Write the head for excel file:
 head_list = list(Para_dict_list[0].keys())
@@ -195,181 +199,28 @@ head_list.extend([ "exp_AGE_text",
 write_excel_xlsx(
     BasicPath + Target+book_name_xlsx, 
     sheet_name_xlsx, [head_list])
-# scan:
-index_xlsx = 0;      
-Sol_All_All = [];        Succ_Cyc_All = [];   
-Index_single_step = [];  Para_dict_succ = [];
-for Para_dict_i in Para_dict_list:
-   index_xlsx += 1;
-   print(f"Scan No. {index_xlsx} Start:")
-   Sol_All,Succ_Cyc = Run_P3_model(
-      index_xlsx, Para_dict_i,   Path_pack , 
-      keys_all_AGE,   Exp_AGE_List, exp_index_pack )
-   # can add judgement of single steps here, if single steps starts from 3 is fine
-   # only when Index_single_step[i]>3, add, 
-   #      otherwise, discard results and print("degrade too fast")
-   # add Para_dict_succ
-   j=0;
-   while j <len(Sol_All):
-        if len(Sol_All[j].cycles[-1].steps)==1:
-            break
-        j += 1
-   if j < len(Sol_All):
-        print("Single step starts from %d" %j)
-   elif j==len(Sol_All):
-        print("No single step")
-   else:
-        pass
-   if j > 2 or j==len(Sol_All):
-      Sol_All_All.append(Sol_All)
-      Succ_Cyc_All.append(Succ_Cyc)
-      Para_dict_succ.append(Para_dict_i)
-      Index_single_step.append(j)
-      print(f"Scan No. {index_xlsx} succeed!")
-   else:
-      print("Degrade too fast!")
 
-
-# Get dict and plot final single steps
-index_cyc_All = []; # for each scan!
-step_RPT_RE = -1
-my_dict_AGE_all = [];Full_cycle_all = []
-for i in range(0,len(Sol_All_All)):
-    my_dict_AGE = {}; 
-    for keys in keys_all_AGE:
-        for key in keys:
-            my_dict_AGE[key]=[];	
-    if not os.path.exists(BasicPath + Target + f"{i}th Scan/"):
-        os.mkdir(BasicPath + Target+  f"{i}th Scan/")
-    Sol_all_i = Sol_All_All[i]
-    Succ_Cyc_i = Succ_Cyc_All[i]
-    Succ_Cyc_acc_i = np.cumsum(Succ_Cyc_i).tolist()
-    Full_cycle = []
-    # post-prosessing for full cycle range
-    # prosess for the 1st solution: how many cycles do you have?
-    if Index_single_step[i]<len(Sol_all_i):
-        print("Not all solution has full cycles")
-        for j in range(Index_single_step[i],len(Sol_all_i)):
-            index_cyc = Succ_Cyc_acc_i[j];
-            Plot_Last_Single_Step(
-                Sol_all_i[j],0,0,BasicPath, 
-                Target,i,index_cyc,"True","cool",17,200)
-
-    for j in range(0,Index_single_step[i]):# post-prosess for normal full cycles
-        if j == 0 and Succ_Cyc_acc_i[j]>1: # first solution:
-            # get two solution
-            cycle_no=0
-            Full_cycle.append(0)
-            my_dict_AGE_old = my_dict_AGE; del my_dict_AGE
-            my_dict_AGE = GetSol_dict (
-                my_dict_AGE_old,keys_all_AGE, Sol_all_i[j], 
-                cycle_no, step_AGE_CD , step_AGE_CC , 
-                step_RPT_RE, step_AGE_CV   ) 
-                
-            cycle_no=Succ_Cyc_i[j]-1
-            Full_cycle.append(Succ_Cyc_acc_i[j])
-            my_dict_AGE_old = my_dict_AGE; del my_dict_AGE
-            my_dict_AGE = GetSol_dict (
-                my_dict_AGE_old,keys_all_AGE, Sol_all_i[j], 
-                cycle_no, step_AGE_CD , step_AGE_CC , 
-                step_RPT_RE, step_AGE_CV   ) 
-        else:
-            # get only one solution
-            cycle_no=Succ_Cyc_i[j]-1
-            Full_cycle.append(Succ_Cyc_acc_i[j])
-            my_dict_AGE_old = my_dict_AGE; del my_dict_AGE
-            try:  #   possibly have an empty solution in the middle!
-                my_dict_AGE = GetSol_dict (
-                    my_dict_AGE_old,keys_all_AGE, Sol_all_i[j], 
-                    cycle_no, step_AGE_CD , step_AGE_CC , 
-                    step_RPT_RE, step_AGE_CV   ) 
-            except:
-                pass
-            else:
-                my_dict_AGE_all.append(my_dict_AGE)
-                Full_cycle_all.append(Full_cycle)
-
-# Plot fig 1~3:
-for i in range(0,len(Sol_All_All)):
-    Plot_Fig_1(Full_cycle_all[i],my_dict_AGE_all[i],
-        BasicPath, Target,   i,  17,  200)
-
-key_all_CCend = [
-    "CCend Negative electrode porosity",
-    "CCend Electrolyte concentration [mol.m-3]",
-    "CCend EC concentration [mol.m-3]",
-    "CCend Electrolyte potential [V]",
-    "CCend Positive electrode potential [V]",
-    "CCend Electrolyte current density [A.m-2]",
-    "CCend Electrolyte diffusivity [m2.s-1]",
-    "CCend Electrolyte conductivity [S.m-1]",
-    "CCend Negative electrode SEI interfacial current density [A.m-2]",
-]
-key_all_CDend = [
-    "CDend Negative electrode porosity",
-    "CDend Electrolyte concentration [mol.m-3]",
-    "CDend EC concentration [mol.m-3]",
-    "CDend Electrolyte potential [V]",
-    "CDend Positive electrode potential [V]",
-    "CDend Electrolyte current density [A.m-2]",
-    "CDend Electrolyte diffusivity [m2.s-1]",
-    "CDend Electrolyte conductivity [S.m-1]",
-    "CDend Negative electrode SEI interfacial current density [A.m-2]",
-]
-for i in range(0,len(Sol_All_All)):
-    fig, axs = Plot_Loc_Var_2(
-        Full_cycle_all[i],key_all_CCend,my_dict_AGE_all[i],17)
-    plt.savefig(
-        BasicPath + Target+f"{i}th Scan/" +
-        "Fig. 2 - CCend Loc based overall.png", dpi=300)
-    fig, axs = Plot_Loc_Var_2(
-        Full_cycle_all[i],key_all_CDend,my_dict_AGE_all[i],17)
-    plt.savefig(
-        BasicPath + Target+f"{i}th Scan/" +
-        "Fig. 3 - CDend Loc based overall.png", dpi=300)
-
-
-# write into excel:
-for i in range(0,len(Sol_All_All)):
-    Para_dict_old = Para_dict_succ[i]
-    str_exp_AGE_text = str(exp_AGE)
-
-    value_list_temp = list(Para_dict_old.values())
-    values = []
-    for value_list_temp_i in value_list_temp:
-        values.append(str(value_list_temp_i))
-    values.insert(0,str(i));
-    #"Cap Loss","LLI to SEI",
-    #"LAM to Neg","LAM to Pos",
-    #"Error"])
-    values.extend([
-        str_exp_AGE_text,
-        str(my_dict_AGE_all[i]["Discharge capacity [A.h]"][0] 
-        - 
-        my_dict_AGE_all[i]["Discharge capacity [A.h]"][-1]),
-
-        str(my_dict_AGE_all[i]["CDend Loss of capacity to SEI [A.h]"][-1]),
-        str(my_dict_AGE_all[i]["CDend Negative electrode capacity [A.h]"][0] 
-        - 
-        my_dict_AGE_all[i]["CDend Negative electrode capacity [A.h]"][-1]),
-
-        str(my_dict_AGE_all[i]["CDend Positive electrode capacity [A.h]"][0] 
-        - 
-        my_dict_AGE_all[i]["CDend Positive electrode capacity [A.h]"][-1]),
-    ])
-    values = [values,]
-    book_name_xlsx_seperate =   str(i)+ '_' + book_name_xlsx;
-    sheet_name_xlsx =  str(i);
-    write_excel_xlsx(
-        BasicPath + Target+   book_name_xlsx_seperate, 
-        sheet_name_xlsx, values)
+###########################################        
+#                Scan                     #
+###########################################  
+Index = np.arange(1,len(Para_dict_list)+1)  
+if __name__ == "__main__":
+    pool = multiprocessing.Pool(9)
+    processes = [pool.apply_async(
+        Run_P3_model, 
+        args=(
+            index_i, Para_dict_i,   Path_pack , 
+            keys_all_AGE,   Exp_AGE_List, exp_index_pack 
+         )   ) 
+         for Para_dict_i,index_i in zip(Para_dict_list,Index)]
+    result = [p.get() for p in processes] 
 
 # Write all seperate excel files into a big file:
-for i in range(0,len(Sol_All_All)):
-    #print(index_list_i)
+for i in Index:
     old_book = str(i) + '_' + book_name_xlsx
     #print(old_book)
     #open excel:
+    try:   # use try just in case some cases fail
     data_old = openpyxl.load_workbook(BasicPath + Target + old_book)   
     data_tar = openpyxl.load_workbook(BasicPath + Target + book_name_xlsx) 
 
@@ -386,7 +237,7 @@ for i in range(0,len(Sol_All_All)):
     for i in range(1,nrows_old+1):
         for j in range(1,ncolumns_old+1):
             list_old.append(table_old.cell(row=i,column=j).value)
-    
+
     list_old = [list_old,]
     for i in range(1, len(list_old)+1):
             for j in range(1, len(list_old[i-1])+1):
@@ -394,13 +245,9 @@ for i in range(0,len(Sol_All_All)):
                 table_tar.cell(nrows_tar+i, j).value = list_old[i-1][j-1]     
     data_tar.save(BasicPath + Target + book_name_xlsx) 
     data_tar.close()
+    except:
+        print("Something goes wrong!")
+    else:
+        pass 
 
-
-
-
-
-
-
-
-
-
+   

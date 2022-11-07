@@ -131,8 +131,13 @@ class SEIGrowth(BaseModel):
             j_sei = -pybamm.exp(-prefactor * delta_phi) / (C_sei * L_sei_inner)
 
         elif self.options["SEI"] == "solvent-diffusion limited":
-            C_sei = phase_param.C_sei_solvent
+            C_sei = phase_param.C_sei_solvent * phase_param.c_ec_0_dim / c_ec_neg # Mark Ruihe add
             j_sei = -1 / (C_sei * L_sei_outer)
+            variables.update(
+                {
+                    "C_sei_sol":C_sei,     # Mark Ruihe Li add
+                }
+            )
 
         elif self.options["SEI"] == "ec reaction limited":
             C_sei_ec = phase_param.C_sei_ec
