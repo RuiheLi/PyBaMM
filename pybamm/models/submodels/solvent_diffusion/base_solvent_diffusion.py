@@ -159,7 +159,9 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
         variables = {
             "Total EC in electrolyte": eps_c_EC_av,
             "Total EC in electrolyte [mol]": c_ec_typ * L_x * A * eps_c_EC_av,
-            "Total EC in electrolyte and SEI [mol]": c_ec_typ * L_x * A * eps_c_EC_av + Q_sei,
+            "Total EC in electrolyte and SEI [mol]": (
+                c_ec_typ * L_x * A * eps_c_EC_av + Q_sei
+            ),
         }
 
         return variables

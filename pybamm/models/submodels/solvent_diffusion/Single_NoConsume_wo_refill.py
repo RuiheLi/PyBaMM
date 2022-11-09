@@ -54,6 +54,10 @@ class Single_NoConsume_wo_refill(BaseSolventDiffusion):
             self._get_standard_porosity_times_EC_concentration_variables(eps_c_EC_dict)
         )
 
+        eps_c_EC = variables["Porosity times EC concentration"]
+        variables.update(
+            self._get_total_EC_concentration_electrolyte(eps_c_EC,0))
+
         return variables
 
     def set_boundary_conditions(self, variables):

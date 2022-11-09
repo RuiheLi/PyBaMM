@@ -290,6 +290,11 @@ def Plot_Loc_Var_sol_6( sol,x_loc_all, key_all, cycle, step,colormap,fs): # for 
         for i in range(0,Num_subplot):
             x_loc=x_loc_all[i]; key=key_all[i];
             LinesNmum = len(sol.cycles[cycle].steps[step][key].entries[0,:] )
+            print(f"Total line number is: {temp_L_Num}")
+            if temp_L_Num > 26:
+                    xx = np.arange(0,temp_L_Num,int(np.rint(temp_L_Num/50)));
+            else:
+                xx = np.arange(0,temp_L_Num,1);
             cmap_i = mpl.cm.get_cmap(colormap, LinesNmum) 
             for j in range(0,LinesNmum):
                 axs[i].plot(
@@ -315,7 +320,11 @@ def Plot_Loc_Var_sol_6( sol,x_loc_all, key_all, cycle, step,colormap,fs): # for 
                 x_loc=x_loc_all[Plot_Count]; 
                 key=key_all[Plot_Count]; Plot_Count +=1;
                 temp_L_Num= len(sol.cycles[cycle].steps[step][key].entries[0,:] )
-                xx = np.arange(0,temp_L_Num,int(np.rint(temp_L_Num/100)));
+                print(f"Total line number is: {temp_L_Num}")
+                if temp_L_Num > 26:
+                    xx = np.arange(0,temp_L_Num,int(np.rint(temp_L_Num/50)));
+                else:
+                    xx = np.arange(0,temp_L_Num,1);
                 xx = xx.tolist()
                 if not xx[-1]==temp_L_Num-1:
                     xx.append(temp_L_Num-1)
@@ -916,6 +925,7 @@ def Run_P3_model(
             pass
     
     Sol_all_i = Sol_All
+    Succ_Cyc_acc_i = np.cumsum(Succ_Cyc).tolist()
     # Plot for last steps
     if j<len(Sol_all_i):
         print("Not all solution has full cycles")
@@ -935,7 +945,6 @@ def Run_P3_model(
             for key in keys:
                 my_dict_AGE[key]=[];	
         
-        Succ_Cyc_acc_i = np.cumsum(Succ_Cyc).tolist()
         Full_cycle = []
         # post-prosessing for full cycle range
         # prosess for the 1st solution: how many cycles do you have?
@@ -1060,10 +1069,8 @@ def Run_P3_model(
         #    33333333333333333333333333333333     #
         ###########################################   
         # write into excel:
-        Para_dict_old = Para_dict_i
         str_exp_AGE_text = str(exp_AGE)
-
-        value_list_temp = list(Para_dict_old.values())
+        value_list_temp = list(Para_dict_i.values())
         values = []
         for value_list_temp_i in value_list_temp:
             values.append(str(value_list_temp_i))
@@ -1106,7 +1113,28 @@ def Run_P3_model(
     else:
         my_dict_AGE={};mdic_cycles={};
         midc_merge = {**my_dict_AGE, **mdic_cycles}
-        print("Degrade too fast!")
+        str_exp_AGE_text = str(exp_AGE)
+        value_list_temp = list(Para_dict_i.values())
+        values = []
+        for value_list_temp_i in value_list_temp:
+            values.append(str(value_list_temp_i))
+        values.insert(0,str(count_i));
+        str_error = traceback.format_exc()      
+        values.extend([
+            str_exp_AGE_text,
+            "NaN",
+            "NaN",
+            "NaN",
+            "NaN",
+            str_error,
+        ])
+        values = [values,]
+        book_name_xlsx_seperate =   str(count_i)+ '_' + book_name_xlsx;
+        sheet_name_xlsx =  str(count_i);
+        write_excel_xlsx(
+            BasicPath + Target+   book_name_xlsx_seperate, 
+            sheet_name_xlsx, values)
+        print(f"Scan No. {index_xlsx} degrade too fast!" )
 
     return Sol_all_i,j,midc_merge
 
