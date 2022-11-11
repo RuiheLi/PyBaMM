@@ -5,6 +5,7 @@ import matplotlib as mpl; fs=17; # or we can set import matplotlib.pyplot as plt
 from textwrap import wrap
 import openpyxl
 import traceback
+import random;import time, signal
 
 from pybamm import tanh,exp,sqrt
 
@@ -148,6 +149,12 @@ def write_excel_xlsx(path, sheet_name, value):
             sheet.cell(row=i + 1, column=j + 1, value=str(value[i][j]))  # 行，列，值 这里是从1开始计数的
     workbook.save(path)  # 一定要保存
     print("Successfully create a excel file")
+
+# define to kill too long runs - Jianbo Huang kindly writes this
+class TimeoutError(Exception):
+	pass
+def handle_signal(signal_num, frame):
+	raise TimeoutError
 
 # valid only for single parameter scan:
 def PlotDynamics(Sol,str,Para_scan,BasicPath , Target,Save,fs):
@@ -844,6 +851,11 @@ def Run_P3_model(
     while (i < Total_Cycles):
         print('try to run %d cycles' % SaveAsList[step_switch])
         try:
+            Timelimit = 3600*4;
+            # the following turns on for HPC only!
+            #signal.signal(signal.SIGALRM, handle_signal)
+            #signal.alarm(Timelimit)
+            
             if i==0: # 1st time or never succeed, run from scratch:
                 rioCall = RioCallback()  # define callback
                 sim_0    = pybamm.Simulation(
@@ -877,7 +889,9 @@ def Run_P3_model(
             if rioCall.success == False:
                 1/0
         except:
-            print('Failed and shorten cycles')
+            # the following turns on for HPC only!
+            # except (TimeoutError,ZeroDivisionError) as e:
+            print('Failed or took too long, shorten cycles')
             step_switch += 1
             if (step_switch >= len(SaveAsList)):
                 print('Exit as no options left')
@@ -961,31 +975,31 @@ def Run_P3_model(
                 # get two solution
                 try:
                     cycle_no=0
-                    Full_cycle.append(0)
                     my_dict_AGE = GetSol_dict (
                         my_dict_AGE,keys_all_AGE, Sol_all_i[m], 
                         cycle_no, step_AGE_CD , step_AGE_CC , 
                         step_RPT_RE, step_AGE_CV   ) 
+                    Full_cycle.append(0)
                         
                     cycle_no=Succ_Cyc[m]-1
-                    Full_cycle.append(Succ_Cyc_acc_i[m])
                     my_dict_AGE = GetSol_dict (
                         my_dict_AGE,keys_all_AGE, Sol_all_i[m], 
                         cycle_no, step_AGE_CD , step_AGE_CC , 
                         step_RPT_RE, step_AGE_CV   ) 
+                    Full_cycle.append(Succ_Cyc_acc_i[m])
                 except:
                     pass
                 else:
                     print("Seems no empty solution")     
             else:
                 # get only one solution
-                cycle_no=Succ_Cyc[m]-1
-                Full_cycle.append(Succ_Cyc_acc_i[m])
+                cycle_no=Succ_Cyc[m]-1      
                 try:  #   possibly have an empty solution in the middle!
                     my_dict_AGE = GetSol_dict (
                         my_dict_AGE,keys_all_AGE, Sol_all_i[m], 
                         cycle_no, step_AGE_CD , step_AGE_CC , 
                         step_RPT_RE, step_AGE_CV   ) 
+                    Full_cycle.append(Succ_Cyc_acc_i[m])
                 except:
                     pass
                 else:
@@ -1026,9 +1040,6 @@ def Run_P3_model(
         ###########################################     
         # Plot fig 1~3:
         fs = 17;  dpi=200;
-        Plot_Fig_1(Full_cycle,my_dict_AGE,
-            BasicPath, Target,   count_i,  fs,  dpi)
-
         key_all_CCend = [
             "CCend Negative electrode porosity",
             "CCend Electrolyte concentration [mol.m-3]",
@@ -1052,16 +1063,23 @@ def Run_P3_model(
             "CDend Negative electrode SEI interfacial current density [A.m-2]",
         ]
 
-        fig, axs = Plot_Loc_Var_2(
-            Full_cycle,key_all_CCend,my_dict_AGE,fs)
-        plt.savefig(
-            BasicPath + Target+f"{count_i}th Scan/" +
-            "Fig. 2 - CCend Loc based overall.png", dpi=dpi)
-        fig, axs = Plot_Loc_Var_2(
-            Full_cycle,key_all_CDend,my_dict_AGE,fs)
-        plt.savefig(
-            BasicPath + Target+f"{count_i}th Scan/" +
-            "Fig. 3 - CDend Loc based overall.png", dpi=dpi)
+        try: 
+            Plot_Fig_1(Full_cycle,my_dict_AGE,
+                BasicPath, Target,   count_i,  fs,  dpi)
+            fig, axs = Plot_Loc_Var_2(
+                Full_cycle,key_all_CCend,my_dict_AGE,fs)
+            plt.savefig(
+                BasicPath + Target+f"{count_i}th Scan/" +
+                "Fig. 2 - CCend Loc based overall.png", dpi=dpi)
+            fig, axs = Plot_Loc_Var_2(
+                Full_cycle,key_all_CDend,my_dict_AGE,fs)
+            plt.savefig(
+                BasicPath + Target+f"{count_i}th Scan/" +
+                "Fig. 3 - CDend Loc based overall.png", dpi=dpi)
+        except:
+            print("Something went wrong during plotting Fig. 1~3 for scan {count_i}")
+        else:
+            pass
         ###########################################        
         #    22222222222222222222222222222222     #
         ###########################################   
@@ -1078,38 +1096,38 @@ def Run_P3_model(
         #"Cap Loss","LLI to SEI",
         #"LAM to Neg","LAM to Pos",
         #"Error"])
-        values.extend([
-            str_exp_AGE_text,
-            str(my_dict_AGE["Discharge capacity [A.h]"][0] 
-            - 
-            my_dict_AGE["Discharge capacity [A.h]"][-1]),
+        try: 
+            values.extend([
+                str_exp_AGE_text,
+                str(my_dict_AGE["Discharge capacity [A.h]"][0] 
+                - 
+                my_dict_AGE["Discharge capacity [A.h]"][-1]),
 
-            str(my_dict_AGE["CDend Loss of capacity to SEI [A.h]"][-1]),
-            str(my_dict_AGE["CDend Negative electrode capacity [A.h]"][0] 
-            - 
-            my_dict_AGE["CDend Negative electrode capacity [A.h]"][-1]),
+                str(my_dict_AGE["CDend Loss of capacity to SEI [A.h]"][-1]),
+                str(my_dict_AGE["CDend Negative electrode capacity [A.h]"][0] 
+                - 
+                my_dict_AGE["CDend Negative electrode capacity [A.h]"][-1]),
 
-            str(my_dict_AGE["CDend Positive electrode capacity [A.h]"][0] 
-            - 
-            my_dict_AGE["CDend Positive electrode capacity [A.h]"][-1]),
-        ])
-        values = [values,]
-        book_name_xlsx_seperate =   str(count_i)+ '_' + book_name_xlsx;
-        sheet_name_xlsx =  str(count_i);
-        write_excel_xlsx(
-            BasicPath + Target+   book_name_xlsx_seperate, 
-            sheet_name_xlsx, values)
-        
-        mdic_cycles = {
-            "Full_cycle": Full_cycle,
-        }
-        midc_merge = {**my_dict_AGE, **mdic_cycles}
-        savemat(BasicPath + Target+f"{count_i}th Scan/" +f"{count_i}th Scan" + '-for_AGE_only.mat',midc_merge)  
-
-        ###########################################        
-        #    33333333333333333333333333333333     #
-        ###########################################   
-        print(f"Scan No. {index_xlsx} succeed!")
+                str(my_dict_AGE["CDend Positive electrode capacity [A.h]"][0] 
+                - 
+                my_dict_AGE["CDend Positive electrode capacity [A.h]"][-1]),
+            ])
+            values = [values,]
+            book_name_xlsx_seperate =   str(count_i)+ '_' + book_name_xlsx;
+            sheet_name_xlsx =  str(count_i);
+            write_excel_xlsx(
+                BasicPath + Target+   book_name_xlsx_seperate, 
+                sheet_name_xlsx, values)
+            
+            mdic_cycles = {
+                "Full_cycle": Full_cycle,
+            }
+            midc_merge = {**my_dict_AGE, **mdic_cycles}
+            savemat(BasicPath + Target+f"{count_i}th Scan/" +f"{count_i}th Scan" + '-for_AGE_only.mat',midc_merge)  
+        except:
+            print("Something went wrong during saving .mat for scan {count_i}")
+        else: 
+            print(f"Scan No. {index_xlsx} succeed! Saving succeed as well!")
     else:
         my_dict_AGE={};mdic_cycles={};
         midc_merge = {**my_dict_AGE, **mdic_cycles}

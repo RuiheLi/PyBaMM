@@ -7,6 +7,7 @@ import traceback
 import multiprocessing
 font = {'family' : 'DejaVu Sans','size'   : fs}
 mpl.rc('font', **font)
+import random;import time, signal
 
 import sys  
 str_path_0 = os.path.abspath(os.path.join(pybamm.__path__[0],'..'))
@@ -27,6 +28,7 @@ from Fun_P3 import (
     Plot_Loc_Var_2,
     Plot_Fig_1,
     Plot_Loc_Var_sol_6,
+    handle_signal,
 )
 
 
