@@ -9,8 +9,19 @@ import random;import time, signal
 
 from pybamm import tanh,exp,sqrt
 
+def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
+    p00 =     -0.2524;
+    p10 =    0.001402;
+    p01 =   0.0001142 ;
+    p20 =  -5.379e-07  ;
+    p11 =  -1.399e-08 ;
+    p02 =  -8.137e-09  ;
+    kai  = p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y
+    return kai
+
 def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T): 
     # mol/m3 to molar
+    T = T + 273.15
     c_e = c_e / 1000
     c_e_constant = 4500/1000
 
@@ -32,6 +43,7 @@ def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T):
 
 def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     # mol/m3 to molar
+    T = T + 273.15
     c_e = c_e / 1000
     sigma = (c_e <= 4.5) * (
         (1e-3 / 1e-2) * (
@@ -58,6 +70,7 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
 def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
     # mol/m3 to molar
     c_e = c_e / 1000
+    T = T + 273.15
     sigma = (c_e <= 4.5) * (
         (1e-3 / 1e-2) * (
         c_e
@@ -84,6 +97,7 @@ def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
 def electrolyte_conductivity_Valoen2005Constant_ECtanh500_1(c_e,c_EC, T):# Mark Ruihe change
     # mol/m3 to molar
     c_e = c_e / 1000
+    T = T + 273.15
     sigma = (c_e <= 4.5) * (
         (1e-3 / 1e-2) * (
         c_e
@@ -798,6 +812,7 @@ def Run_P3_model(
     ModelTimer = pybamm.Timer()
     Para_dict_old = Para_dict_i.copy();
     count_i = int(index_xlsx);
+    print('Start Now! Scan %d.' % count_i)  
 
     # Un-pack data:
     [cycle_no,step_AGE_CD,
@@ -888,10 +903,17 @@ def Run_P3_model(
                     callbacks=rioCall)   
             if rioCall.success == False:
                 1/0
-        except:
+            #except:
             # the following turns on for HPC only!
-            # except (TimeoutError,ZeroDivisionError) as e:
+            """      except (
+            TimeoutError,
+            ZeroDivisionError,
+            pybamm.expression_tree.exceptions.ModelError,
+            pybamm.expression_tree.exceptions.SolverError
+            ) as e: """
+        except pybamm.expression_tree.exceptions.ModelError as e:
             print('Failed or took too long, shorten cycles')
+            print(e)
             step_switch += 1
             if (step_switch >= len(SaveAsList)):
                 print('Exit as no options left')
@@ -1125,12 +1147,14 @@ def Run_P3_model(
             midc_merge = {**my_dict_AGE, **mdic_cycles}
             savemat(BasicPath + Target+f"{count_i}th Scan/" +f"{count_i}th Scan" + '-for_AGE_only.mat',midc_merge)  
         except:
-            print("Something went wrong during saving .mat for scan {count_i}")
+            print(f"Something went wrong during saving .mat for scan {count_i}")
+            midc_merge = {}
         else: 
             print(f"Scan No. {index_xlsx} succeed! Saving succeed as well!")
+
     else:
         my_dict_AGE={};mdic_cycles={};
-        midc_merge = {**my_dict_AGE, **mdic_cycles}
+        midc_merge = {}
         str_exp_AGE_text = str(exp_AGE)
         value_list_temp = list(Para_dict_i.values())
         values = []
