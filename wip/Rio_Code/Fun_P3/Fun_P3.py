@@ -17,11 +17,13 @@ def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
     p11 =  -1.399e-08 ;
     p02 =  -8.137e-09  ;
     kai  = p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y
-    return kai
+    kai_final = (kai>0) * kai + (kai<=0) * 0
+
+    return kai_final
 
 def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T): 
     # mol/m3 to molar
-    T = T + 273.15
+    # T = T + 273.15
     c_e = c_e / 1000
     c_e_constant = 4500/1000
 
@@ -43,7 +45,7 @@ def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T):
 
 def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     # mol/m3 to molar
-    T = T + 273.15
+    # T = T + 273.15
     c_e = c_e / 1000
     sigma = (c_e <= 4.5) * (
         (1e-3 / 1e-2) * (
@@ -70,7 +72,7 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
 def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
     # mol/m3 to molar
     c_e = c_e / 1000
-    T = T + 273.15
+    # T = T + 273.15
     sigma = (c_e <= 4.5) * (
         (1e-3 / 1e-2) * (
         c_e
@@ -97,7 +99,7 @@ def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
 def electrolyte_conductivity_Valoen2005Constant_ECtanh500_1(c_e,c_EC, T):# Mark Ruihe change
     # mol/m3 to molar
     c_e = c_e / 1000
-    T = T + 273.15
+    # T = T + 273.15
     sigma = (c_e <= 4.5) * (
         (1e-3 / 1e-2) * (
         c_e
@@ -131,7 +133,9 @@ def electrolyte_conductivity_Ding2001(c_e, c_EC,  T):
     M_EMC = 104.104/1000 # kg/mol
     x_EC = 1 / (1+ ( rho_electrolyte - c_e*M_LiPF6 - c_EC*M_EC  )/M_EMC/c_EC   )
     kai = -3.37115 + 12.5608*c_e_kg - 7.89593*c_e_kg**2 + 3.51922*c_e_kg**3-1.15471*c_e_kg**4 +18.1863*x_EC - 6.22756*c_e_kg*x_EC - 13.6916*c_e_kg**2*x_EC +8.43904*c_e_kg**3*x_EC - 7.83732*x_EC**2 + 19.607*c_e_kg*x_EC**2  - 18.4529*c_e_kg**2*x_EC**2 -30.6369*x_EC**3 + 29.2*c_e_kg*x_EC**3 - 0.0429918*T + 0.180877*c_e_kg*T -0.0836202*c_e_kg**2*T + 0.0230098*c_e_kg**3*T + 0.195946*T*x_EC +0.0676686*c_e_kg*x_EC*T - 0.14134*c_e_kg**2*x_EC*T + 0.147429*x_EC**2*T  +0.173059*c_e_kg*x_EC**2*T - 0.51634*x_EC**3*T - 0.000223097*T**2 +0.000111233*c_e_kg*T**2 + 0.0000495286*c_e_kg**2*T**2  +0.000952777*x_EC*T**2 + 0.00117334 *c_e_kg*x_EC*T**2-0.000619157*x_EC**2*T**2 - 3.46897E-7*T**3 - 2.75041E-6*c_e_kg*T**3 -5.57653E-6*x_EC*T**3 
-    return kai / 10 
+    kai_final = (kai>0) * kai  + (kai<=0) * 0
+
+    return kai_final / 10
 
 # DEFINE my callback:
 class RioCallback(pybamm.callbacks.Callback):
@@ -695,10 +699,10 @@ def Para_init(Para_dict):
         RPT_Cycles = Para_dict_used["Cycles within RPT"]  
         Para_dict_used.pop("Cycles within RPT")
     if Para_dict_used.__contains__("Ageing temperature"):
-        Temper_i = Para_dict_used["Ageing temperature"]  
+        Temper_i = Para_dict_used["Ageing temperature"]  + 273.15
         Para_dict_used.pop("Ageing temperature")
     if Para_dict_used.__contains__("RPT temperature"):
-        Temper_RPT = Para_dict_used["RPT temperature"]  
+        Temper_RPT = Para_dict_used["RPT temperature"]   + 273.15
         Para_dict_used.pop("RPT temperature")
     if Para_dict_used.__contains__("Particle mesh points"):
         mesh_par = Para_dict_used["Particle mesh points"]  
@@ -911,7 +915,11 @@ def Run_P3_model(
             pybamm.expression_tree.exceptions.ModelError,
             pybamm.expression_tree.exceptions.SolverError
             ) as e: """
-        except pybamm.expression_tree.exceptions.ModelError as e:
+        except (
+            ZeroDivisionError,
+            pybamm.expression_tree.exceptions.ModelError,
+            pybamm.expression_tree.exceptions.SolverError
+            ) as e:
             print('Failed or took too long, shorten cycles')
             print(e)
             step_switch += 1

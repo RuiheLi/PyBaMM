@@ -53,7 +53,7 @@ Para_dict_All = {
    "EC transference number":[-1.4,],
    "Cation transference number":[0.28,],
    "EC Lithium ion cross diffusivity [m2.s-1]":[3e-11,],
-   "EC diffusivity in electrolyte [m2.s-1]":[2e-10,5e-10,5e-5],
+   "EC diffusivity in electrolyte [m2.s-1]":[5e-10,],
 
    # DFN parameter
    "Upper voltage cut-off [V]":[4.21,],
@@ -64,8 +64,8 @@ Para_dict_All = {
    #    if want a constant, delete Func
    # note!!!: Constant will overwrite Func
    "Func Electrolyte conductivity [S.m-1]":[
-        "electrolyte_conductivity_Valoen2005Constant",
-        "electrolyte_conductivity_Valoen2005Constant_wEC_Haya",
+        "electrolyte_conductivity_Andrew2022",
+        "electrolyte_conductivity_Ding2001",
         "electrolyte_conductivity_Valoen2005Constant_ECtanh500_1",
         ],
     "Func Electrolyte diffusivity [m2.s-1]":[
@@ -223,30 +223,30 @@ for i in Index:
     #print(old_book)
     #open excel:
     try:   # use try just in case some cases fail
-    data_old = openpyxl.load_workbook(BasicPath + Target + old_book)   
-    data_tar = openpyxl.load_workbook(BasicPath + Target + book_name_xlsx) 
+        data_old = openpyxl.load_workbook(BasicPath + Target + old_book)   
+        data_tar = openpyxl.load_workbook(BasicPath + Target + book_name_xlsx) 
 
-    table_old = data_old.get_sheet_by_name(str(i))
-    nrows_old = table_old.max_row  # 获得行数
-    ncolumns_old = table_old.max_column  # 获得列数
+        table_old = data_old.get_sheet_by_name(str(i))
+        nrows_old = table_old.max_row  # 获得行数
+        ncolumns_old = table_old.max_column  # 获得列数
 
-    tar_sheet_name_xlsx = 'Results';
-    table_tar = data_tar.get_sheet_by_name(tar_sheet_name_xlsx)
-    nrows_tar = table_tar.max_row  # 获得行数
-    ncolumns_old = table_old.max_column  # 获得列数
-    list_old = [];
-    #print(nrows_old,nrows_tar)
-    for i in range(1,nrows_old+1):
-        for j in range(1,ncolumns_old+1):
-            list_old.append(table_old.cell(row=i,column=j).value)
+        tar_sheet_name_xlsx = 'Results';
+        table_tar = data_tar.get_sheet_by_name(tar_sheet_name_xlsx)
+        nrows_tar = table_tar.max_row  # 获得行数
+        ncolumns_old = table_old.max_column  # 获得列数
+        list_old = [];
+        #print(nrows_old,nrows_tar)
+        for i in range(1,nrows_old+1):
+            for j in range(1,ncolumns_old+1):
+                list_old.append(table_old.cell(row=i,column=j).value)
 
-    list_old = [list_old,]
-    for i in range(1, len(list_old)+1):
-            for j in range(1, len(list_old[i-1])+1):
-                #print(i,j,list_old[i-1][j-1]    )
-                table_tar.cell(nrows_tar+i, j).value = list_old[i-1][j-1]     
-    data_tar.save(BasicPath + Target + book_name_xlsx) 
-    data_tar.close()
+        list_old = [list_old,]
+        for i in range(1, len(list_old)+1):
+                for j in range(1, len(list_old[i-1])+1):
+                    #print(i,j,list_old[i-1][j-1]    )
+                    table_tar.cell(nrows_tar+i, j).value = list_old[i-1][j-1]     
+        data_tar.save(BasicPath + Target + book_name_xlsx) 
+        data_tar.close()
     except:
         print("Something goes wrong!")
     else:

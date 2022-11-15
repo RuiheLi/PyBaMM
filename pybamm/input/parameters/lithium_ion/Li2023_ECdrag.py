@@ -268,7 +268,7 @@ def electrolyte_diffusivity_Nyman2008Exp(c_e,c_EC, T):
     return D_c_e
 
 def electrolyte_conductivity_Valoen2005(c_e,c_EC, T):
-    T = T + 273.15
+    # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
     # mS/cm to S/m
@@ -282,7 +282,7 @@ def electrolyte_conductivity_Valoen2005(c_e,c_EC, T):
         ** 2
     )
 def electrolyte_diffusivity_Valoen2005(c_e,c_EC, T):
-    T = T + 273.15
+    # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
 
@@ -294,7 +294,7 @@ def electrolyte_diffusivity_Valoen2005(c_e,c_EC, T):
     # note, in the Valoen paper, ln means log10, so its inverse is 10^x
     return (10 ** (D_0 + D_1 * c_e)) * 1e-4
 def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
-    T = T + 273.15
+    # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
     sigma = (c_e <= 4.5) * (
@@ -319,7 +319,7 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     # mS/cm to S/m
     return sigma
 def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T): 
-    T = T + 273.15
+    # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
     c_e_constant = 4500/1000
@@ -341,7 +341,7 @@ def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T):
     return D_final
 
 def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
-    T = T + 273.15
+    # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
     sigma = (c_e <= 4.5) * (
@@ -370,7 +370,7 @@ def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
 
 
 def electrolyte_conductivity_Valoen2005Constant_ECtanh100_1(c_e,c_EC, T):# Mark Ruihe change
-    T = T + 273.15
+    # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
     sigma = (c_e <= 4.5) * (
@@ -397,7 +397,7 @@ def electrolyte_conductivity_Valoen2005Constant_ECtanh100_1(c_e,c_EC, T):# Mark 
     return sigma*ratio
 
 def electrolyte_conductivity_Valoen2005Constant_ECtanh500_1(c_e,c_EC, T):# Mark Ruihe change
-    T = T + 273.15
+    # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
     sigma = (c_e <= 4.5) * (
@@ -423,7 +423,7 @@ def electrolyte_conductivity_Valoen2005Constant_ECtanh500_1(c_e,c_EC, T):# Mark 
     ratio = ( (1-coff)+ coff/2 + coff/2 *  tanh((c_EC-4500*0.5)/500))
     return sigma*ratio
 def electrolyte_conductivity_Valoen2005Constant_ECtanh700_1(c_e,c_EC, T):# Mark Ruihe change
-    T = T + 273.15
+    # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
     sigma = (c_e <= 4.5) * (
@@ -460,6 +460,8 @@ def electrolyte_conductivity_Ding2001(c_e, c_EC,  T):
     M_EMC = 104.104/1000 # kg/mol
     x_EC = 1 / (1+ ( rho_electrolyte - c_e*M_LiPF6 - c_EC*M_EC  )/M_EMC/c_EC   )
     kai = -3.37115 + 12.5608*c_e_kg - 7.89593*c_e_kg**2 + 3.51922*c_e_kg**3-1.15471*c_e_kg**4 +18.1863*x_EC - 6.22756*c_e_kg*x_EC - 13.6916*c_e_kg**2*x_EC +8.43904*c_e_kg**3*x_EC - 7.83732*x_EC**2 + 19.607*c_e_kg*x_EC**2  - 18.4529*c_e_kg**2*x_EC**2 -30.6369*x_EC**3 + 29.2*c_e_kg*x_EC**3 - 0.0429918*T + 0.180877*c_e_kg*T -0.0836202*c_e_kg**2*T + 0.0230098*c_e_kg**3*T + 0.195946*T*x_EC +0.0676686*c_e_kg*x_EC*T - 0.14134*c_e_kg**2*x_EC*T + 0.147429*x_EC**2*T  +0.173059*c_e_kg*x_EC**2*T - 0.51634*x_EC**3*T - 0.000223097*T**2 +0.000111233*c_e_kg*T**2 + 0.0000495286*c_e_kg**2*T**2  +0.000952777*x_EC*T**2 + 0.00117334 *c_e_kg*x_EC*T**2-0.000619157*x_EC**2*T**2 - 3.46897E-7*T**3 - 2.75041E-6*c_e_kg*T**3 -5.57653E-6*x_EC*T**3 
+    if kai < 0:
+        kai = 0
     return kai / 10 
 
 def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
@@ -469,7 +471,13 @@ def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
     p20 =  -5.379e-07  ;
     p11 =  -1.399e-08 ;
     p02 =  -8.137e-09  ;
-    kai  = p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y
+    # kai  = p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y
+    kai  = (
+        (x > 0 and y >0)  * (
+        p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y)
+        + (x <= 0 and y <=0 ) * 0 )
+    if kai < 0:
+        kai = 0
     return kai
 # Mark Ruihe block end
 
