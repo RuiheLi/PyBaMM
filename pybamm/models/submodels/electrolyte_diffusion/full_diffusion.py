@@ -80,7 +80,7 @@ class Full(BaseElectrolyteDiffusion):
             N_cross_diffusion =  -   (
                 param.e_ratio_Rio * param.gamma_e_ec_Rio * 
                 param.tau_diffusion_e / param.tau_cross_Rio * 
-                tor * param.D_ec_Li_cross * pybamm.grad(c_EC) )
+                tor * param.D_ec_Li_cross(c_e, c_EC,T) * pybamm.grad(c_EC) )
         
         N_e = N_e_diffusion + N_cross_diffusion + N_e_migration + N_e_convection
 

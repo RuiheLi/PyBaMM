@@ -62,8 +62,7 @@ def graphite_LGM50_ocp_Chen2020(sto):
 
 
 def graphite_LGM50_electrolyte_exchange_current_density_Chen2020(
-    c_e, c_s_surf, c_s_max, T
-):
+    c_e, c_s_surf, c_s_max, T):
     """
     Exchange-current density for Butler-Volmer reactions between graphite and LiPF6 in
     EC:DMC.
@@ -281,6 +280,22 @@ def electrolyte_conductivity_Valoen2005(c_e,c_EC, T):
         )
         ** 2
     )
+def EC_diffusivity_5E_10(c_e, c_EC , T):
+    # Ruihe add: set Heaviside(c_EC) * 5e-10 
+    D_ec_dim = (
+        (c_EC >= 0 ) * 5e-10 
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_dim
+def Dimensional_EC_Lithium_ion_cross_diffusivity(c_e, c_EC , T):
+    # Ruihe add: set Heaviside(c_EC) * 1.5e-12
+    D_ec_Li_cross_dim = (
+        (c_EC >= 0 ) *  1.5e-12
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_Li_cross_dim
+
+
 def electrolyte_diffusivity_Valoen2005(c_e,c_EC, T):
     # T = T + 273.15
     # mol/m3 to molar
@@ -423,7 +438,7 @@ def electrolyte_conductivity_Valoen2005Constant_ECtanh500_1(c_e,c_EC, T):# Mark 
     ratio = ( (1-coff)+ coff/2 + coff/2 *  tanh((c_EC-4500*0.5)/500))
     return sigma*ratio
 
-def Xi(c_e,c_EC, T):# Mark Ruihe add update 221208
+def EC_transference_number(c_e,c_EC, T):# Mark Ruihe add update 221208
 
     Xi = 0.85 * c_EC / pybamm.Parameter("Typical EC concentration [mol.m-3]")
     return Xi
@@ -477,13 +492,7 @@ def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
     p20 =  -5.379e-07  ;
     p11 =  -1.399e-08 ;
     p02 =  -8.137e-09  ;
-    # kai  = p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y
-    kai  = (
-        (x > 0 and y >0)  * (
-        p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y)
-        + (x <= 0 and y <=0 ) * 0 )
-    if kai < 0:
-        kai = 0
+    kai  = p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y
     return kai
 # Mark Ruihe block end
 
@@ -538,11 +547,10 @@ def get_parameter_values():
         "Inner SEI open-circuit potential [V]": 0.1,
         "Outer SEI open-circuit potential [V]": 0.8,
         "Inner SEI electron conductivity [S.m-1]": 8.95e-14,
-        "Inner SEI lithium interstitial diffusivity [m2.s-1]": 1e-20,
+        "Inner SEI lithium interstitial diffusivity [m2.s-1]": 1e-19,
         "Lithium interstitial reference concentration [mol.m-3]": 15.0,
         "Initial inner SEI thickness [m]": 2.5e-09,
         "Initial outer SEI thickness [m]": 2.5e-09,
-        "EC initial concentration in electrolyte [mol.m-3]": 4541.0,
         "EC diffusivity [m2.s-1]": 2e-18,
         "SEI kinetic rate constant [m.s-1]": 1e-12,
         "SEI open-circuit potential [V]": 0.4,
@@ -624,16 +632,18 @@ def get_parameter_values():
         "1 + dlnf/dlnc": 1.0,
         "Electrolyte diffusivity [m2.s-1]": electrolyte_diffusivity_Valoen2005Constant,
         "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Valoen2005Constant,
+        # or: electrolyte_conductivity_Valoen2005Constant_wEC_Haya 
+        # or: electrolyte_conductivity_Andrew2022
 
         # Mark Ruihe block start
-        "EC transference number": Xi,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
+        "EC transference number": EC_transference_number,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
         "EC transference number zero": 0.85  , # from Andrew": 
-        "EC initial concentration in electrolyte [mol.m-3]": 4541  ,
-        "Typical EC concentration [mol.m-3]": 4541     , 
-        "Background solvent concentration [mol.m-3]": 6000,  # should from Andrew, add temperoaliy
-        "EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-10   ,      # from Andrew
-        "Typical EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-10,
-        "EC diffusivity in electrolyte [m2.s-1]": 5E-10    ,     #from Andrew
+        "EC initial concentration in electrolyte [mol.m-3]": 6200  ,
+        "Typical EC concentration [mol.m-3]": 6200     , 
+        "Background solvent concentration [mol.m-3]": 5200,  # should from Andrew, add temperoaliy
+        "EC Lithium ion cross diffusivity [m2.s-1]": Dimensional_EC_Lithium_ion_cross_diffusivity,      # from Andrew
+        "Typical EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-12,
+        "EC diffusivity in electrolyte [m2.s-1]": EC_diffusivity_5E_10,     #from Andrew
         "Typical EC diffusivity in electrolyte [m2.s-1]": 5E-10, #from Andrew
         "EC diffusivity in SEI [m2.s-1]": 2E-18               ,  #from Yang2017": 
         "Typical EC diffusivity in SEI [m2.s-1]": 2E-18,
