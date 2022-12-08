@@ -82,8 +82,9 @@ class Double_SpatialConsume_w_refill(BaseSolventDiffusion):
             param.tau_cross_Rio /param.gamma_e_ec_Rio* 
             tor * param.D_ec_Li_cross * pybamm.grad(c_e) )
         # Mark Ruihe: most important correction that change again everything... update 221021
-        #there should be a minus here!
-        N_EC_migration = - param.C_e* param.Xi * i_e / param.gamma_e *(
+        #there should be a minus here! --> 
+        # update 221208: change from minus to 2* based on Charles's advice
+        N_EC_migration = + 2 * param.C_e* param.Xi(c_e,c_EC, T) * i_e / param.gamma_e *( 
             param.tau_ec_Rio / param.gamma_e_ec_Rio / param.tau_diffusion_e)
 
         N_EC = N_EC_diffusion + N_cross_diffusion + N_EC_migration

@@ -47,7 +47,7 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 Sets the dimension of the current collector problem. Can be 0
                 (default), 1 or 2.
             * "electrolyte conductivity" : str
-                Can be "default" (default), "full", "leading order", "composite" or
+                Can be "default" (default), "full", "sol full", "leading order", "composite" or
                 "integrated".
             * "solvent diffusion" : str    # Mark Ruihe Li add
                 Can be "double spatial consume w refill", "double spatial consume wo refill", 
@@ -209,6 +209,8 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 "leading order",
                 "composite",
                 "integrated",
+                "sol full",  # Mark Ruihe add, 
+                # consider effect of solvent concentration gradient
             ],
             "solvent diffusion": [
                 "double spatial consume w refill", "double spatial consume wo refill", 

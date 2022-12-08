@@ -422,6 +422,12 @@ def electrolyte_conductivity_Valoen2005Constant_ECtanh500_1(c_e,c_EC, T):# Mark 
     coff = 1
     ratio = ( (1-coff)+ coff/2 + coff/2 *  tanh((c_EC-4500*0.5)/500))
     return sigma*ratio
+
+def Xi(c_e,c_EC, T):# Mark Ruihe add update 221208
+
+    Xi = 0.85 * c_EC / pybamm.Parameter("Typical EC concentration [mol.m-3]")
+    return Xi
+
 def electrolyte_conductivity_Valoen2005Constant_ECtanh700_1(c_e,c_EC, T):# Mark Ruihe change
     # T = T + 273.15
     # mol/m3 to molar
@@ -614,15 +620,17 @@ def get_parameter_values():
         # electrolyte
         "Typical electrolyte concentration [mol.m-3]": 1000.0,
         "Initial concentration in electrolyte [mol.m-3]": 1000.0,
-        "Cation transference number": 0.2594,
+        "Cation transference number": 0.3,   # from Andrew 
         "1 + dlnf/dlnc": 1.0,
         "Electrolyte diffusivity [m2.s-1]": electrolyte_diffusivity_Valoen2005Constant,
         "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Valoen2005Constant,
 
         # Mark Ruihe block start
-        "EC transference number": -1.4  ,  # from Andrew": 
+        "EC transference number": Xi,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
+        "EC transference number zero": 0.85  , # from Andrew": 
         "EC initial concentration in electrolyte [mol.m-3]": 4541  ,
         "Typical EC concentration [mol.m-3]": 4541     , 
+        "Background solvent concentration [mol.m-3]": 6000,  # should from Andrew, add temperoaliy
         "EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-10   ,      # from Andrew
         "Typical EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-10,
         "EC diffusivity in electrolyte [m2.s-1]": 5E-10    ,     #from Andrew

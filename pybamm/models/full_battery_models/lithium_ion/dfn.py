@@ -115,7 +115,7 @@ class DFN(BaseModel):
     def set_electrolyte_potential_submodel(self):
         surf_form = pybamm.electrolyte_conductivity.surface_potential_form
 
-        if self.options["electrolyte conductivity"] not in ["default", "full"]:
+        if self.options["electrolyte conductivity"] not in ["default", "full","sol full"]:
             raise pybamm.OptionError(
                 "electrolyte conductivity '{}' not suitable for DFN".format(
                     self.options["electrolyte conductivity"]
@@ -123,9 +123,14 @@ class DFN(BaseModel):
             )
 
         if self.options["surface form"] == "false":
-            self.submodels[
-                "electrolyte conductivity"
-            ] = pybamm.electrolyte_conductivity.Full(self.param, self.options)
+            if self.options["electrolyte conductivity"] == "sol full":
+                self.submodels[
+                    "electrolyte conductivity"
+                ] = pybamm.electrolyte_conductivity.sol_Full(self.param, self.options)
+            if self.options["electrolyte conductivity"] == "full":
+                self.submodels[
+                    "electrolyte conductivity"
+                ] = pybamm.electrolyte_conductivity.Full(self.param, self.options)
 
         if self.options["surface form"] == "false":
             surf_model = surf_form.Explicit

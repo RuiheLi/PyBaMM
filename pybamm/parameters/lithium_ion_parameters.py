@@ -150,9 +150,9 @@ class LithiumIonParameters(BaseParameters):
         # Reference OCP based on initial concentration
         self.ocv_ref = self.p.U_ref - self.n.U_ref
         self.ocv_init_dim = self.p.prim.U_init_dim - self.n.prim.U_init_dim
-
-        self.Xi = pybamm.Parameter(
-            "EC transference number") 
+        # Mark: will need to unify with EC transference number in the future
+        self.Xi_0 = pybamm.Parameter(
+            "EC transference number zero")    
         self.c_ec_typ = pybamm.Parameter("Typical EC concentration [mol.m-3]") 
         self.D_ec_Li_cross_dim = pybamm.Parameter(
             "EC Lithium ion cross diffusivity [m2.s-1]")
@@ -170,7 +170,9 @@ class LithiumIonParameters(BaseParameters):
         self.Vmolar_CH2OCO2Li2 = pybamm.Parameter(
             "CH2OCO2Li2 partial molar volume [m3.mol-1]")
         # Total electrolyte concentration [mol.m-3] - just for double diffusion
-        self.ce_tot = self.c_e_typ *2 + self.c_ec_typ
+        # update 221208: Add background solvent concentration now!
+        self.c_0_back = pybamm.Parameter("Background solvent concentration [mol.m-3]") 
+        self.ce_tot = self.c_e_typ *2 + self.c_ec_typ + self.c_0_back
 
         
         # Mark Ruihe block end
@@ -371,6 +373,18 @@ class LithiumIonParameters(BaseParameters):
             "Temperature [K]": self.Delta_T * T + self.T_ref,
         }
         return pybamm.FunctionParameter("Cation transference number", inputs)
+    
+    def Xi(self, c_e, c_EC, T): 
+        """EC transference number (dimensionless)
+        # Mark Ruihe add, should be positive now, 
+        equals to 0.85*c_EC/ c_EC_tpy
+        """
+        inputs = {
+            "Electrolyte concentration [mol.m-3]": c_e * self.c_e_typ,
+            "EC concentration [mol.m-3]": c_EC * self.c_ec_typ,
+            "Temperature [K]": self.Delta_T * T + self.T_ref,
+        }
+        return pybamm.FunctionParameter("EC transference number", inputs)
 
     def one_plus_dlnf_dlnc(self, c_e, T):
         """Thermodynamic factor (dimensionless)"""
