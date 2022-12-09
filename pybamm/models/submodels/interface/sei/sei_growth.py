@@ -128,7 +128,7 @@ class SEIGrowth(BaseModel):
         elif self.options["SEI"] == "interstitial-diffusion limited":
             C_sei = phase_param.C_sei_inter
             print("Confirm: using interstitial-diffusion limited")
-            j_sei = -pybamm.exp(-prefactor * delta_phi) / (C_sei * L_sei_inner)
+            j_sei = - c_ec_relative *  pybamm.exp(-prefactor * delta_phi) / (C_sei * L_sei_inner) # Mark Ruihe add
 
         elif self.options["SEI"] == "solvent-diffusion limited":
             C_sei = phase_param.C_sei_solvent * phase_param.c_ec_0_dim / c_ec_neg # Mark Ruihe add
