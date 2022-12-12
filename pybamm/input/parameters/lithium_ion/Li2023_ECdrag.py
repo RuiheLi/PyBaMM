@@ -312,7 +312,7 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
-    sigma = (c_e <= 4.5) * (
+    sigma = (c_e <= 4.5 ) * (
         (1e-3 / 1e-2) * (
         c_e
         * (
@@ -321,9 +321,9 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
             + c_e ** 2 * (0.494 - 8.86e-4 * T)
         )
         ** 2
-    )) + (c_e > 4.5) *  (
+    )) + (c_e > 4.5 ) *  (
         (1e-3 / 1e-2) * (
-        4.5
+        4.5 
         * (
             (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
             + 4.5 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
@@ -345,9 +345,9 @@ def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T):
     D_0_constant = -4.43 - 54 / (T - T_g_constant)
     D_1 = -0.22
 
-    D_final = (c_e <= 4500) * (
+    D_final = (c_e <= 4.5) * (
         (10 ** (D_0 + D_1 * c_e)) * 1e-4
-    ) + (c_e > 4500) *  (
+    ) + (c_e > 4.5) *  (
         (10 ** (D_0_constant + D_1 * c_e_constant)) * 1e-4
     )
 
@@ -359,117 +359,37 @@ def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
     # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
-    sigma = (c_e <= 4.5) * (
+    c_EC_1 = c_EC / pybamm.Parameter("Typical EC concentration [mol.m-3]") 
+    sigma = (c_EC_1 <= 1) * (
         (1e-3 / 1e-2) * (
-        c_e
-        * (
             (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
             + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
             + c_e ** 2 * (0.494 - 8.86e-4 * T)
         )
         ** 2
-    )) + (c_e > 4.5) *  (
+    ) + (c_EC_1 > 1 ) *  (
         (1e-3 / 1e-2) * (
-        4.5
-        * (
             (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
-            + 4.5 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
-            + 4.5 ** 2 * (0.494 - 8.86e-4 * T)
+            + 1 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + 1 ** 2 * (0.494 - 8.86e-4 * T)
         )
         ** 2
-    ))
+    )
     a=1.092; b=-6.497e-6; c=-0.7877; d=-0.0004808
     ratio= (
         a*exp(b*c_EC)+c*exp(d*c_EC) )
     return sigma*ratio
 
-
-def electrolyte_conductivity_Valoen2005Constant_ECtanh100_1(c_e,c_EC, T):# Mark Ruihe change
-    # T = T + 273.15
-    # mol/m3 to molar
-    c_e = c_e / 1000
-    sigma = (c_e <= 4.5) * (
-        (1e-3 / 1e-2) * (
-        c_e
-        * (
-            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
-            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
-            + c_e ** 2 * (0.494 - 8.86e-4 * T)
-        )
-        ** 2
-    )) + (c_e > 4.5) *  (
-        (1e-3 / 1e-2) * (
-        4.5
-        * (
-            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
-            + 4.5 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
-            + 4.5 ** 2 * (0.494 - 8.86e-4 * T)
-        )
-        ** 2
-    ))
-    coff = 1
-    ratio = ( (1-coff)+ coff/2 + coff/2 *  tanh((c_EC-4500*0.5)/100))
-    return sigma*ratio
-
-def electrolyte_conductivity_Valoen2005Constant_ECtanh500_1(c_e,c_EC, T):# Mark Ruihe change
-    # T = T + 273.15
-    # mol/m3 to molar
-    c_e = c_e / 1000
-    sigma = (c_e <= 4.5) * (
-        (1e-3 / 1e-2) * (
-        c_e
-        * (
-            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
-            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
-            + c_e ** 2 * (0.494 - 8.86e-4 * T)
-        )
-        ** 2
-    )) + (c_e > 4.5) *  (
-        (1e-3 / 1e-2) * (
-        4.5
-        * (
-            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
-            + 4.5 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
-            + 4.5 ** 2 * (0.494 - 8.86e-4 * T)
-        )
-        ** 2
-    ))
-    coff = 1
-    ratio = ( (1-coff)+ coff/2 + coff/2 *  tanh((c_EC-4500*0.5)/500))
-    return sigma*ratio
-
-def EC_transference_number(c_e,c_EC, T):# Mark Ruihe add update 221208
-
-    Xi = 0.85 * c_EC / pybamm.Parameter("Typical EC concentration [mol.m-3]")
+def EC_transference_number(c_e,c_EC, T):# Mark Ruihe add update 221212
+    c_EC_0 = pybamm.Parameter("Typical EC concentration [mol.m-3]")
+    Xi = ( 
+        (c_EC < 0 ) * 0 
+        + 
+        (c_EC <= c_EC_0) * (c_e >= 0) * (0.85 * c_EC / c_EC_0 )
+        +
+        (c_EC > c_EC_0 ) * 0.85  
+    )
     return Xi
-
-def electrolyte_conductivity_Valoen2005Constant_ECtanh700_1(c_e,c_EC, T):# Mark Ruihe change
-    # T = T + 273.15
-    # mol/m3 to molar
-    c_e = c_e / 1000
-    sigma = (c_e <= 4.5) * (
-        (1e-3 / 1e-2) * (
-        c_e
-        * (
-            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
-            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
-            + c_e ** 2 * (0.494 - 8.86e-4 * T)
-        )
-        ** 2
-    )) + (c_e > 4.5) *  (
-        (1e-3 / 1e-2) * (
-        4.5
-        * (
-            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
-            + 4.5 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
-            + 4.5 ** 2 * (0.494 - 8.86e-4 * T)
-        )
-        ** 2
-    ))
-    coff = 1
-    ratio = ( (1-coff)+ coff/2 + coff/2 *  tanh((c_EC-4500*0.5)/700))
-    return sigma*ratio
-
 
 def electrolyte_conductivity_Ding2001(c_e, c_EC,  T):
     # c_e is lithium ion concentration in electrolyte in mol/m3, need to change to mol/kg
@@ -492,7 +412,9 @@ def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
     p20 =  -5.379e-07  ;
     p11 =  -1.399e-08 ;
     p02 =  -8.137e-09  ;
-    kai  = p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y
+    kai  = (
+        (p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y)
+    )
     return kai
 # Mark Ruihe block end
 
