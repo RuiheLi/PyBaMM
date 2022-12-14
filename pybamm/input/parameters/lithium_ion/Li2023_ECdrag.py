@@ -312,7 +312,8 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     # T = T + 273.15
     # mol/m3 to molar
     c_e = c_e / 1000
-    sigma = (c_e <= 4.5 ) * (
+    c_e_constant = 4500/1000
+    sigma = (c_e <= c_e_constant ) * (
         (1e-3 / 1e-2) * (
         c_e
         * (
@@ -321,13 +322,13 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
             + c_e ** 2 * (0.494 - 8.86e-4 * T)
         )
         ** 2
-    )) + (c_e > 4.5 ) *  (
+    )) + (c_e > c_e_constant ) *  (
         (1e-3 / 1e-2) * (
-        4.5 
+        c_e_constant
         * (
             (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
-            + 4.5 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
-            + 4.5 ** 2 * (0.494 - 8.86e-4 * T)
+            + c_e_constant * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e_constant ** 2 * (0.494 - 8.86e-4 * T)
         )
         ** 2
     ))
@@ -345,9 +346,9 @@ def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T):
     D_0_constant = -4.43 - 54 / (T - T_g_constant)
     D_1 = -0.22
 
-    D_final = (c_e <= 4.5) * (
+    D_final = (c_e <= c_e_constant) * (
         (10 ** (D_0 + D_1 * c_e)) * 1e-4
-    ) + (c_e > 4.5) *  (
+    ) + (c_e > c_e_constant) *  (
         (10 ** (D_0_constant + D_1 * c_e_constant)) * 1e-4
     )
 
@@ -385,11 +386,21 @@ def EC_transference_number(c_e,c_EC, T):# Mark Ruihe add update 221212
     Xi = ( 
         (c_EC < 0 ) * 0 
         + 
-        (c_EC <= c_EC_0) * (c_e >= 0) * (0.85 * c_EC / c_EC_0 )
+        (c_EC <= c_EC_0) * (c_EC >= 0) * (0.85 * c_EC / c_EC_0 )
         +
         (c_EC > c_EC_0 ) * 0.85  
     )
     return Xi
+def t_0plus_linkEC(c_e,c_EC, T):# Mark Ruihe add update 221214
+    c_EC_0 = pybamm.Parameter("Typical EC concentration [mol.m-3]")
+    t_0plus = ( 
+        (c_EC < 0 ) * 0 
+        + 
+        (c_EC <= c_EC_0) * (c_e >= 0) * (0.34 * c_EC / c_EC_0 )
+        +
+        (c_EC > c_EC_0 ) * 0.34  
+    )
+    return t_0plus
 
 def electrolyte_conductivity_Ding2001(c_e, c_EC,  T):
     # c_e is lithium ion concentration in electrolyte in mol/m3, need to change to mol/kg
@@ -550,7 +561,7 @@ def get_parameter_values():
         # electrolyte
         "Typical electrolyte concentration [mol.m-3]": 1000.0,
         "Initial concentration in electrolyte [mol.m-3]": 1000.0,
-        "Cation transference number": 0.3,   # from Andrew 
+        "Cation transference number": t_0plus_linkEC,   # from Andrew 
         "1 + dlnf/dlnc": 1.0,
         "Electrolyte diffusivity [m2.s-1]": electrolyte_diffusivity_Valoen2005Constant,
         "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Valoen2005Constant,
