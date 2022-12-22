@@ -383,14 +383,17 @@ def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
 
 def EC_transference_number(c_e,c_EC, T):# Mark Ruihe add update 221212
     c_EC_0 = pybamm.Parameter("Typical EC concentration [mol.m-3]")
+    Xi_0 =   pybamm.Parameter("EC transference number zero")
+    
     Xi = ( 
         (c_EC < 0 ) * 0 
         + 
-        (c_EC <= c_EC_0) * (c_EC >= 0) * (0.85 * c_EC / c_EC_0 )
-        +
-        (c_EC > c_EC_0 ) * 0.85  
+        (c_EC >= 0) * (Xi_0 * c_EC / c_EC_0 )
+        #+
+        #(c_EC > c_EC_0 ) * Xi_0
     )
     return Xi
+
 def t_0plus_linkEC(c_e,c_EC, T):# Mark Ruihe add update 221214
     c_EC_0 = pybamm.Parameter("Typical EC concentration [mol.m-3]")
     t_0plus = ( 
@@ -424,9 +427,12 @@ def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
     p11 =  -1.399e-08 ;
     p02 =  -8.137e-09  ;
     kai  = (
+        (x > 0 )  *(
         (p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y)
+        + (x <= 0 ) * 0 )
     )
-    return kai
+    kai_final = (kai>0) * kai + (kai<0) * 0
+    return kai_final
 # Mark Ruihe block end
 
 
@@ -561,19 +567,20 @@ def get_parameter_values():
         # electrolyte
         "Typical electrolyte concentration [mol.m-3]": 1000.0,
         "Initial concentration in electrolyte [mol.m-3]": 1000.0,
-        "Cation transference number": t_0plus_linkEC,   # from Andrew 
+        "Cation transference number": 0.28 ,   # from Andrew 
         "1 + dlnf/dlnc": 1.0,
         "Electrolyte diffusivity [m2.s-1]": electrolyte_diffusivity_Valoen2005Constant,
-        "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Valoen2005Constant,
+        "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Andrew2022,
         # or: electrolyte_conductivity_Valoen2005Constant_wEC_Haya 
         # or: electrolyte_conductivity_Andrew2022
 
         # Mark Ruihe block start
+        # 3500 and 7000; 6250 and 5300; 9200 and 3350
         "EC transference number": EC_transference_number,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
-        "EC transference number zero": 0.85  , # from Andrew": 
-        "EC initial concentration in electrolyte [mol.m-3]": 6200  ,
-        "Typical EC concentration [mol.m-3]": 6200     , 
-        "Background solvent concentration [mol.m-3]": 5200,  # should from Andrew, add temperoaliy
+        "EC transference number zero": 0.7  , # from Andrew": 
+        "EC initial concentration in electrolyte [mol.m-3]": 3500  ,
+        "Typical EC concentration [mol.m-3]": 6250, 
+        "Background solvent concentration [mol.m-3]": 7000,  # should from Andrew, add temperoaliy
         "EC Lithium ion cross diffusivity [m2.s-1]": Dimensional_EC_Lithium_ion_cross_diffusivity,      # from Andrew
         "Typical EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-12,
         "EC diffusivity in electrolyte [m2.s-1]": EC_diffusivity_5E_10,     #from Andrew

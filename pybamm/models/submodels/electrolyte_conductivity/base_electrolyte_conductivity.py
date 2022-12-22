@@ -134,7 +134,7 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
 
         return variables
 
-    def _get_split_overpotential(self, eta_c_av, delta_phi_e_av):
+    def _get_split_overpotential(self, eta_c_av, eta_cEC_av, delta_phi_e_av):
         """
         A private function to obtain the standard variables which
         can be derived from the electrode-averaged concentration
@@ -143,7 +143,9 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
         Parameters
         ----------
         eta_c_av : :class:`pybamm.Symbol`
-            The electrode-averaged concentration overpotential
+            The electrode-averaged concentration overpotential - due to c(Li+) only!
+        eta_cEC_av : :class:`pybamm.Symbol`
+            The electrode-averaged concentration overpotential - due to c(EC) only! - Add by Ruihe Li
         delta_phi_e_av: :class:`pybamm.Symbol`
             The electrode-averaged electrolyte Ohmic losses
 
@@ -160,8 +162,10 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
 
         variables = {
             "X-averaged concentration overpotential": eta_c_av,
+            "X-averaged EC concentration overpotential": eta_cEC_av,
             "X-averaged electrolyte ohmic losses": delta_phi_e_av,
             "X-averaged concentration overpotential [V]": pot_scale * eta_c_av,
+            "X-averaged EC concentration overpotential [V]": pot_scale * eta_cEC_av,
             "X-averaged electrolyte ohmic losses [V]": pot_scale * delta_phi_e_av,
         }
 
@@ -226,7 +230,7 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
 
         return variables
 
-    def _get_electrolyte_overpotentials(self, variables):
+    def _get_electrolyte_overpotentials(self, variables): # Mark Ruihe change the whole thing
         """
         A private function to obtain the electrolyte overpotential and Ohmic losses.
         Note: requires 'variables' to contain the potential, electrolyte concentration
@@ -245,22 +249,6 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
             and currents.
         """
         param = self.param
-
-        if self.options.electrode_types["negative"] == "planar":
-            # No concentration overpotential in the counter electrode
-            phi_e_n = pybamm.Scalar(0)
-            indef_integral_n = pybamm.Scalar(0)
-        else:
-            phi_e_n = variables["Negative electrolyte potential"]
-            # concentration overpotential
-            c_e_n = variables["Negative electrolyte concentration"]
-            c_EC_n = variables["Negative EC concentration"] # Mark: Ruihe add
-            T_n = variables["Negative electrode temperature"]
-            indef_integral_n = pybamm.IndefiniteIntegral(
-                param.chiT_over_c(c_e_n, c_EC_n,T_n) * pybamm.grad(c_e_n),
-                pybamm.standard_spatial_vars.x_n,
-            )
-
         phi_e_p = variables["Positive electrolyte potential"]
 
         c_e_s = variables["Separator electrolyte concentration"]
@@ -270,17 +258,94 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
 
         T_s = variables["Separator temperature"]
         T_p = variables["Positive electrode temperature"]
+        phi_e_n = variables["Negative electrolyte potential"]
+        c_e_n = variables["Negative electrolyte concentration"]
+        c_EC_n = variables["Negative EC concentration"] # Mark: Ruihe add
+        T_n = variables["Negative electrode temperature"]
 
-        # concentration overpotential
-        indef_integral_s = pybamm.IndefiniteIntegral(
-            param.chiT_over_c(c_e_s, c_EC_s, T_s) * pybamm.grad(c_e_s),
-            pybamm.standard_spatial_vars.x_s,
-        )
-        indef_integral_p = pybamm.IndefiniteIntegral(
-            param.chiT_over_c(c_e_p,c_EC_p, T_p) * pybamm.grad(c_e_p),
-            pybamm.standard_spatial_vars.x_p,
-        )
+        if self.options.electrode_types["negative"] == "planar":
+            # No concentration overpotential in the counter electrode
+            phi_e_n = pybamm.Scalar(0)
+            indef_integral_n = pybamm.Scalar(0)
+            # concentration overpotential
+            indef_integral_s = pybamm.IndefiniteIntegral(
+                param.chiT_over_c(c_e_s, c_EC_s, T_s) * pybamm.grad(c_e_s),
+                pybamm.standard_spatial_vars.x_s,
+            )
+            indef_integral_p = pybamm.IndefiniteIntegral(
+                param.chiT_over_c(c_e_p,c_EC_p, T_p) * pybamm.grad(c_e_p),
+                pybamm.standard_spatial_vars.x_p,
+            )
+            eta_cEC_av = pybamm.Scalar(0)                               # Mark Ruihe add
+        elif self.options["electrolyte conductivity"] == "sol full":    # Mark Ruihe add    
+            # concentration overpotential
+            indef_integral_n = pybamm.IndefiniteIntegral(
+                param.chiT_over_c(c_e_n, c_EC_n,T_n) * pybamm.grad(c_e_n) * param.c_0_back / param.ce_tot,
+                pybamm.standard_spatial_vars.x_n,
+            )
+            # concentration overpotential
+            indef_integral_s = pybamm.IndefiniteIntegral(
+                param.chiT_over_c(c_e_s, c_EC_s, T_s) * pybamm.grad(c_e_s) * param.c_0_back / param.ce_tot,
+                pybamm.standard_spatial_vars.x_s,
+            )
+            indef_integral_p = pybamm.IndefiniteIntegral(
+                param.chiT_over_c(c_e_p,c_EC_p, T_p) * pybamm.grad(c_e_p) * param.c_0_back / param.ce_tot,
+                pybamm.standard_spatial_vars.x_p,
+            )
+            # Mark Ruihe add for c(EC) induced concentration overpotential
+            indef_integral_EC_n = pybamm.IndefiniteIntegral((                                 
+                2 * param.c_0_back / param.ce_tot  
+                * param.Xi_0 * param.c_ec_typ / param.c_ec_0_dim
+                * pybamm.grad(c_EC_n)   ),pybamm.standard_spatial_vars.x_n,
+            )
+            indef_integral_EC_s = pybamm.IndefiniteIntegral((                                 
+                2 * param.c_0_back / param.ce_tot  
+                * param.Xi_0 * param.c_ec_typ / param.c_ec_0_dim
+                * pybamm.grad(c_EC_s)   ),pybamm.standard_spatial_vars.x_s,
+            )
+            indef_integral_EC_p = pybamm.IndefiniteIntegral((                                 
+                2 * param.c_0_back / param.ce_tot  
+                * param.Xi_0 * param.c_ec_typ / param.c_ec_0_dim
+                * pybamm.grad(c_EC_p)   ),pybamm.standard_spatial_vars.x_p,
+            )
+            # process here:
+            integral_EC_n = indef_integral_EC_n
+            integral_EC_s = indef_integral_EC_s + pybamm.boundary_value(integral_EC_n, "right")
+            integral_EC_p = indef_integral_EC_p + pybamm.boundary_value(integral_EC_s, "right")
+            eta_cEC_av = pybamm.x_average(integral_EC_p) - pybamm.x_average(integral_EC_n)
+        else:
+            # concentration overpotential
+            indef_integral_n = pybamm.IndefiniteIntegral(
+                param.chiT_over_c(c_e_n, c_EC_n,T_n) * pybamm.grad(c_e_n),
+                pybamm.standard_spatial_vars.x_n,
+            )
+            # concentration overpotential
+            indef_integral_s = pybamm.IndefiniteIntegral(
+                param.chiT_over_c(c_e_s, c_EC_s, T_s) * pybamm.grad(c_e_s),
+                pybamm.standard_spatial_vars.x_s,
+            )
+            indef_integral_p = pybamm.IndefiniteIntegral(
+                param.chiT_over_c(c_e_p,c_EC_p, T_p) * pybamm.grad(c_e_p),
+                pybamm.standard_spatial_vars.x_p,
+            )
+            indef_integral_n_fake = pybamm.IndefiniteIntegral(
+                pybamm.grad(pybamm.FullBroadcast(
+                pybamm.Scalar(0), "negative electrode", 
+                auxiliary_domains={"secondary": "current collector"})),
+                pybamm.standard_spatial_vars.x_n,
+            )
+            indef_integral_p_fake = pybamm.IndefiniteIntegral(
+                pybamm.grad(pybamm.FullBroadcast(
+                pybamm.Scalar(0), "positive electrode", 
+                auxiliary_domains={"secondary": "current collector"})),
+                pybamm.standard_spatial_vars.x_p,
+            )
+            eta_cEC_av = (
+                pybamm.x_average(indef_integral_n_fake)
+                -
+                pybamm.x_average(indef_integral_p_fake) ) # Mark Ruihe add
 
+        
         integral_n = indef_integral_n
         integral_s = indef_integral_s + pybamm.boundary_value(integral_n, "right")
         integral_p = indef_integral_p + pybamm.boundary_value(integral_s, "right")
@@ -288,10 +353,12 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
         eta_c_av = pybamm.x_average(integral_p) - pybamm.x_average(integral_n)
 
         delta_phi_e_av = (
-            pybamm.x_average(phi_e_p) - pybamm.x_average(phi_e_n) - eta_c_av
+            pybamm.x_average(phi_e_p) - pybamm.x_average(phi_e_n) - eta_c_av #- eta_cEC_av # Mark Ruihe change 
         )
-
-        variables.update(self._get_split_overpotential(eta_c_av, delta_phi_e_av))
+        # print(type(eta_c_av),type(eta_cEC_av),type(delta_phi_e_av))
+        # Mark Ruihe change 
+        #print(len(eta_c_av),len(eta_cEC_av),len(delta_phi_e_av))
+        variables.update(   self._get_split_overpotential( eta_c_av, eta_cEC_av, delta_phi_e_av)   ) # 
 
         return variables
 

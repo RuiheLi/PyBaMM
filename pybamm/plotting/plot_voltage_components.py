@@ -38,12 +38,14 @@ def plot_voltage_components(
     overpotentials = [
         "X-averaged battery reaction overpotential [V]",
         "X-averaged battery concentration overpotential [V]",
+        "X-averaged EC concentration overpotential [V]", # Mark Ruihe add
         "X-averaged battery electrolyte ohmic losses [V]",
         "X-averaged battery solid phase ohmic losses [V]",
     ]
     labels = [
         "Reaction overpotential",
-        "Concentration overpotential",
+        "Concentration overpotential - Li+",
+        "Concentration overpotential - EC",
         "Ohmic electrolyte overpotential",
         "Ohmic electrode overpotential",
     ]

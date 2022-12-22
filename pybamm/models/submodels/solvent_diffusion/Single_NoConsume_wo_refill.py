@@ -27,8 +27,10 @@ class Single_NoConsume_wo_refill(BaseSolventDiffusion):
         # will it be possible to have variable whose a rhs is not dependent on 
         # x (no domain) then FullBroadcast this variable to here?
         # such as d_c_EC_bulk_dt =  ..., then ...
+        param = self.param
+        c_EC_constant = param.c_ec_0_dim/param.c_ec_typ
         c_EC_dict = {
-            domain: pybamm.FullBroadcast(1, domain, "current collector")
+            domain: pybamm.FullBroadcast(c_EC_constant, domain, "current collector")
             for domain in self.options.whole_cell_domains
         }
         variables=self._get_standard_EC_concentration_variables(c_EC_dict)
