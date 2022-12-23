@@ -8,22 +8,59 @@ import traceback
 import random;import time, signal
 
 from pybamm import tanh,exp,sqrt
-
-def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
-    p00 =     -0.2524;
-    p10 =    0.001402;
-    p01 =   0.0001142 ;
-    p20 =  -5.379e-07  ;
-    p11 =  -1.399e-08 ;
-    p02 =  -8.137e-09  ;
-    kai  = p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y
-    kai_final = (kai>0) * kai + (kai<=0) * 0
-
-    return kai_final
-
-def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T): 
-    # mol/m3 to molar
+def EC_transference_number(c_e,c_EC, T):# Mark Ruihe add update 221212
+    c_EC_0 = pybamm.Parameter("Typical EC concentration [mol.m-3]")
+    Xi_0 =   pybamm.Parameter("EC transference number zero")
+    
+    Xi = ( 
+        (c_EC < 0 ) * 0 
+        + 
+        (c_EC >= 0) * (Xi_0 * c_EC / c_EC_0 )
+        #+
+        #(c_EC > c_EC_0 ) * Xi_0
+    )
+    return Xi
+def EC_diffusivity_5E_5(c_e, c_EC , T):
+    D_ec_dim = (
+        (c_EC >= 0 ) * 5e-5 
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_dim
+def t_0plus_constant(c_e, c_EC , T):
+    t_0plus = (
+        (c_EC >= 0 ) * 0.28
+        +  (c_EC < 0 ) * 0.28 
+    )
+    return t_0plus
+def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    c_e_constant = 4500/1000
+    sigma = (c_e <= c_e_constant ) * (
+        (1e-3 / 1e-2) * (
+        c_e
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    )) + (c_e > c_e_constant ) *  (
+        (1e-3 / 1e-2) * (
+        c_e_constant
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + c_e_constant * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e_constant ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    ))
+    # mS/cm to S/m
+    return sigma
+def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T): 
+    # T = T + 273.15
+    # mol/m3 to molar
     c_e = c_e / 1000
     c_e_constant = 4500/1000
 
@@ -33,9 +70,74 @@ def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T):
     D_0_constant = -4.43 - 54 / (T - T_g_constant)
     D_1 = -0.22
 
-    D_final = (c_e <= 4500) * (
+    D_final = (c_e <= c_e_constant) * (
         (10 ** (D_0 + D_1 * c_e)) * 1e-4
-    ) + (c_e > 4500) *  (
+    ) + (c_e > c_e_constant) *  (
+        (10 ** (D_0_constant + D_1 * c_e_constant)) * 1e-4
+    )
+
+    # cm2/s to m2/s
+    # note, in the Valoen paper, ln means log10, so its inverse is 10^x
+    return D_final
+def electrolyte_conductivity_Nyman2008Exp(c_e,c_EC, T):
+    sigma_e = (
+        0.1 * 0.06248 * (1+298.15-0.05559) * 
+        (c_e/1e3) * (1 - 3.084 *sqrt(c_e/1e3) 
+        + 1.33 *(1+ 0.03633 *(exp(1000/298.15))*c_e/1e3)   ) 
+        / (1+(c_e/1e3)**4*( 0.00795 *exp(1000/298.15))) 
+    )
+    return sigma_e
+def electrolyte_diffusivity_Nyman2008Exp(c_e,c_EC, T):
+    D_c_e = (
+        6 * exp( -1 *(c_e/1000)) 
+        * exp(-5/298.15) 
+        * exp(-95/298.15*(c_e/1000)) * 1e-10 
+    )
+    return D_c_e
+
+def diff_constant(c_e, c_EC , T):
+    D_Li = (
+        (c_EC >= 0 ) * 3e-10
+        +  (c_EC < 0 ) * 3e-10 
+    )
+    return D_Li
+def cond_constant(c_e, c_EC , T):
+    cond = (
+        (c_EC >= 0 ) * 0.7
+        +  (c_EC < 0 ) * 0.7
+    )
+    return cond
+
+def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
+    p00 =     -0.2524;
+    p10 =    0.001402;
+    p01 =   0.0001142 ;
+    p20 =  -5.379e-07  ;
+    p11 =  -1.399e-08 ;
+    p02 =  -8.137e-09  ;
+    kai  = (
+        (x > 0 )  *(
+        (p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y)
+        + (x <= 0 ) * 0 )
+    )
+    kai_final = (kai>0) * kai + (kai<0) * 0
+    return kai_final
+
+def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T): 
+    # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    c_e_constant = 4500/1000
+
+    T_g = 229 + 5 * c_e
+    T_g_constant = 229 + 5 * c_e_constant
+    D_0 = -4.43 - 54 / (T - T_g)
+    D_0_constant = -4.43 - 54 / (T - T_g_constant)
+    D_1 = -0.22
+
+    D_final = (c_e <= c_e_constant) * (
+        (10 ** (D_0 + D_1 * c_e)) * 1e-4
+    ) + (c_e > c_e_constant) *  (
         (10 ** (D_0_constant + D_1 * c_e_constant)) * 1e-4
     )
 
@@ -44,10 +146,11 @@ def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T):
     return D_final
 
 def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
-    # mol/m3 to molar
     # T = T + 273.15
+    # mol/m3 to molar
     c_e = c_e / 1000
-    sigma = (c_e <= 4.5) * (
+    c_e_constant = 4500/1000
+    sigma = (c_e <= c_e_constant ) * (c_e > 0 ) * (
         (1e-3 / 1e-2) * (
         c_e
         * (
@@ -56,16 +159,16 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
             + c_e ** 2 * (0.494 - 8.86e-4 * T)
         )
         ** 2
-    )) + (c_e > 4.5) *  (
+    )) + (c_e > c_e_constant ) *  (
         (1e-3 / 1e-2) * (
-        4.5
+        c_e_constant
         * (
             (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
-            + 4.5 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
-            + 4.5 ** 2 * (0.494 - 8.86e-4 * T)
+            + c_e_constant * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e_constant ** 2 * (0.494 - 8.86e-4 * T)
         )
         ** 2
-    ))
+    )) + (c_e <= 0 ) * 0 
     # mS/cm to S/m
     return sigma
     
@@ -677,6 +780,133 @@ def recursive_scan(mylist,kvs, key_list, acc):
         # print(v)
         recursive_scan(mylist,kvs, key_list[1:], acc)
 
+
+def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para):
+    para_used = para.copy()
+    if (
+        model.options["solvent diffusion"]=="double spatial consume w refill" 
+        and 
+        model.options["electrolyte conductivity"]=='full'):
+        para_used.update({"EC diffusivity in electrolyte [m2.s-1]":EC_diffusivity_5E_5})
+        print('Using EC_diffusivity_5E_5')
+    V_max = 4.2;        V_min = 2.5
+    if Rate_Dis > 4:
+        ts_dis = 1
+    else: 
+        ts_dis = 20
+    if Rate_Cha > 4:
+        ts_cha = 1
+    else:
+        ts_cha = 20
+    Exp_1  = pybamm.Experiment(
+    [ (
+        f"Hold at {V_max} V until C/100",
+        f"Discharge at {Rate_Dis} C until {V_min} V ({ts_dis} second period)", 
+        f"Charge at {Rate_Cha} C until {V_max} V ({ts_cha} second period)", 
+        f"Hold at {V_max} V until C/100")    ] * 1 )  
+
+    c_e = model.variables["Electrolyte concentration [mol.m-3]"]
+    c_EC= model.variables["EC concentration [mol.m-3]"]
+    T = model.variables["Cell temperature [K]"]
+    D_e = para_used["Electrolyte diffusivity [m2.s-1]"]
+    D_EC= para_used["EC diffusivity in electrolyte [m2.s-1]"]
+    sigma_e = para_used["Electrolyte conductivity [S.m-1]"]
+    Xi = para_used["EC transference number"]
+    model.variables["Electrolyte diffusivity [m2.s-1]"] = D_e(c_e,c_EC, T)
+    model.variables["EC diffusivity in electrolyte [m2.s-1]"] = D_EC(c_e,c_EC, T)
+    model.variables["Electrolyte conductivity [S.m-1]"] = sigma_e(c_e,c_EC, T)
+    model.variables["EC transference number"] = Xi(c_e,c_EC, T)
+    model.variables["c(EC) over c(Li+)"] = c_EC / c_e
+    t_0plus = para_used["Cation transference number"]
+    model.variables["Cation transference number"] = t_0plus(c_e,c_EC, T)
+    sim    = pybamm.Simulation(
+        model, experiment = Exp_1,
+        parameter_values = para_used,
+        solver = pybamm.CasadiSolver(return_solution_if_failed_early=True),)       
+    sol    = sim.solve()
+    MyDict = {}
+    try:
+        MyDict ['Discharge Capacity'] = abs(
+            sol.cycles[0].steps[1]['Discharge capacity [A.h]'].entries[0] - 
+            sol.cycles[0].steps[1]['Discharge capacity [A.h]'].entries[-1] )
+    except:
+        MyDict ['Discharge Capacity'] = 0
+    else:
+        pass
+    try:
+        MyDict ['Charge Capacity'] = abs(
+            sol.cycles[0].steps[2]['Discharge capacity [A.h]'].entries[0] - 
+            sol.cycles[0].steps[3]['Discharge capacity [A.h]'].entries[-1] )#
+    except:
+        MyDict ['Charge Capacity']    = 0
+    else:
+        pass
+    MyDict['Solution']  = sol
+    MyDict['Rate_Dis']  = Rate_Dis
+    MyDict['Rate_Cha']  = Rate_Cha
+    return MyDict
+    
+def Scan_Crate(Rate_Dis_All,Rate_Cha_All,model,para,str_model,str_para):   
+    Case_Dict = {}
+    MyDict_All =[]; Cap_Dis_All = []  ; Cap_Cha_All = []  
+    # scan C-rate
+    for Rate_Dis in Rate_Dis_All:
+        for Rate_Cha in Rate_Cha_All:
+            MyDict_All.append(
+                Run_P3_OneCycle(
+                    Rate_Dis,Rate_Cha,model,para,
+                    str_model,str_para))
+            Cap_Dis_All.append(MyDict_All[-1]['Discharge Capacity'])
+            Cap_Cha_All.append(MyDict_All[-1]['Charge Capacity'])
+    Case_Dict ['Cap_Dis_All'] = Cap_Dis_All
+    Case_Dict ['Cap_Cha_All'] = Cap_Cha_All
+    Case_Dict ['str_model'] = str_model
+    Case_Dict ['str_para']  = str_para
+    Case_Dict ['MyDict_All']  = MyDict_All
+    Case_Dict ['Rate_Dis_All']  = Rate_Dis_All
+    Case_Dict ['Rate_Cha_All']  = Rate_Cha_All
+    return Case_Dict
+
+def Plot_quick(Case_Para_All, Crate_i, fs):
+    font = {'family' : 'DejaVu Sans','size'   : fs}; mpl.rc('font', **font)
+    label = ["Normal DFN","Single transport","Double transport",] 
+    output_variables3 = [
+        #"X-averaged battery open circuit voltage [V]",
+        "Battery voltage [V]",
+        "X-averaged battery reaction overpotential [V]",
+        "X-averaged battery concentration overpotential [V]",
+        "X-averaged EC concentration overpotential [V]", # Mark Ruihe add
+        "X-averaged battery electrolyte ohmic losses [V]",
+        "X-averaged battery solid phase ohmic losses [V]",
+    ]
+    quick_plot = pybamm.QuickPlot(
+        [
+            Case_Para_All[i]['MyDict_All'][Crate_i]['Solution'].cycles[0].steps[1] for i in range(0,3)
+        ], 
+        output_variables3,label,variable_limits='tight',
+        time_unit='hours',
+        spatial_unit='mm',     #  (“m”, “mm”, or “um”)
+        n_rows=2) #figsize = (18,12),
+    quick_plot.dynamic_plot()
+
+    output_variables3 = [
+        "Electrolyte potential [V]",
+        "EC concentration [mol.m-3]",
+        "Electrolyte concentration [mol.m-3]",
+        "EC transference number",
+        "Electrolyte conductivity [S.m-1]",
+        "Electrolyte diffusivity [m2.s-1]",
+    ]
+    quick_plot = pybamm.QuickPlot(
+        [
+            Case_Para_All[i]['MyDict_All'][Crate_i]['Solution'].cycles[0].steps[1] for i in range(0,3)
+        ], 
+        output_variables3,label,variable_limits='fixed',
+        time_unit='hours',
+        spatial_unit='mm',     #  (“m”, “mm”, or “um”)
+        n_rows=2) #figsize = (18,12),
+    quick_plot.dynamic_plot()
+
 # this function is to initialize the para with a known dict
 def Para_init(Para_dict):
     Para_dict_used = Para_dict.copy();
@@ -725,6 +955,16 @@ def Para_init(Para_dict):
             "Electrolyte diffusivity [m2.s-1]": 
             eval(Para_dict_used["Func Electrolyte diffusivity [m2.s-1]"])})
         Para_dict_used.pop("Func Electrolyte diffusivity [m2.s-1]")
+    if Para_dict_used.__contains__("Func EC transference number"):
+        Para_0.update({
+            "EC transference number": 
+            eval(Para_dict_used["Func EC transference number"])})
+        Para_dict_used.pop("Func EC transference number")
+    if Para_dict_used.__contains__("Func Cation transference number"):
+        Para_0.update({
+            "Cation transference number": 
+            eval(Para_dict_used["Func Cation transference number"])})
+        Para_dict_used.pop("Func Cation transference number")
 
     if Para_dict_used.__contains__("Initial Neg SOC"):
         c_Neg1SOC_in = (
@@ -807,7 +1047,6 @@ def GetSol_dict (my_dict, keys_all, Sol,
                         Sol.cycles[cycle_no].steps[step_no][key[6:]].entries[:,-1])
     return my_dict 
 
-
 # Run model   # mark:
 def Run_P3_model(
     index_xlsx, Para_dict_i,   Path_pack , 
@@ -846,6 +1085,14 @@ def Run_P3_model(
         "Electrolyte diffusivity [m2.s-1]"):
         model_0.variables["Electrolyte diffusivity [m2.s-1]"] =(
             Para_0['Electrolyte diffusivity [m2.s-1]'](c_e,c_EC, T))
+    if not Para_dict_i.__contains__(
+        "Cation transference number"):
+        model_0.variables["Cation transference number"] =(
+            Para_0['Cation transference number'](c_e,c_EC, T))
+    if not Para_dict_i.__contains__(
+        "EC transference number"):
+        model_0.variables["EC transference number"] =(
+            Para_0['EC transference number'](c_e,c_EC, T))
     
 
     # Define experiment- for ageing only, NOT RPT

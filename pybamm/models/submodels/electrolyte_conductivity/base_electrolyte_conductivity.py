@@ -353,7 +353,7 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
         eta_c_av = pybamm.x_average(integral_p) - pybamm.x_average(integral_n)
 
         delta_phi_e_av = (
-            pybamm.x_average(phi_e_p) - pybamm.x_average(phi_e_n) - eta_c_av #- eta_cEC_av # Mark Ruihe change 
+            pybamm.x_average(phi_e_p) - pybamm.x_average(phi_e_n) - eta_c_av - eta_cEC_av # Mark Ruihe change 
         )
         # print(type(eta_c_av),type(eta_cEC_av),type(delta_phi_e_av))
         # Mark Ruihe change 

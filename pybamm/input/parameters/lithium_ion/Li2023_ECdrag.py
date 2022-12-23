@@ -313,7 +313,7 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     # mol/m3 to molar
     c_e = c_e / 1000
     c_e_constant = 4500/1000
-    sigma = (c_e <= c_e_constant ) * (
+    sigma = (c_e <= c_e_constant ) * (c_e > 0 ) * (
         (1e-3 / 1e-2) * (
         c_e
         * (
@@ -331,7 +331,7 @@ def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
             + c_e_constant ** 2 * (0.494 - 8.86e-4 * T)
         )
         ** 2
-    ))
+    )) + (c_e <= 0 ) * 0 
     # mS/cm to S/m
     return sigma
 def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T): 
@@ -419,6 +419,20 @@ def electrolyte_conductivity_Ding2001(c_e, c_EC,  T):
         kai = 0
     return kai / 10 
 
+def diff_constant(c_e, c_EC , T):
+    D_Li = (
+        (c_EC >= 0 ) * 3e-10
+        +  (c_EC < 0 ) * 3e-10 
+    )
+    return D_Li
+def cond_constant(c_e, c_EC , T):
+    cond = (
+        (c_EC >= 0 ) * 0.7
+        +  (c_EC < 0 ) * 0.7
+    )
+    return cond
+
+
 def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
     p00 =     -0.2524;
     p10 =    0.001402;
@@ -433,6 +447,13 @@ def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
     )
     kai_final = (kai>0) * kai + (kai<0) * 0
     return kai_final
+
+def t_0plus_constant(c_e, c_EC , T):
+    t_0plus = (
+        (c_EC >= 0 ) * 0.28
+        +  (c_EC < 0 ) * 0.28 
+    )
+    return t_0plus
 # Mark Ruihe block end
 
 
@@ -567,7 +588,7 @@ def get_parameter_values():
         # electrolyte
         "Typical electrolyte concentration [mol.m-3]": 1000.0,
         "Initial concentration in electrolyte [mol.m-3]": 1000.0,
-        "Cation transference number": 0.28 ,   # from Andrew 
+        "Cation transference number": t_0plus_constant ,   # from Andrew 
         "1 + dlnf/dlnc": 1.0,
         "Electrolyte diffusivity [m2.s-1]": electrolyte_diffusivity_Valoen2005Constant,
         "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Andrew2022,
