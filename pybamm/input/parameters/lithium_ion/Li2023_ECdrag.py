@@ -599,9 +599,9 @@ def get_parameter_values():
         # 3500 and 7000; 6250 and 5300; 9200 and 3350
         "EC transference number": EC_transference_number,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
         "EC transference number zero": 0.7  , # from Andrew": 
-        "EC initial concentration in electrolyte [mol.m-3]": 3500  ,
+        "EC initial concentration in electrolyte [mol.m-3]": 6250  ,
         "Typical EC concentration [mol.m-3]": 6250, 
-        "Background solvent concentration [mol.m-3]": 7000,  # should from Andrew, add temperoaliy
+        "Background solvent concentration [mol.m-3]": 5300,  # should from Andrew, add temperoaliy
         "EC Lithium ion cross diffusivity [m2.s-1]": Dimensional_EC_Lithium_ion_cross_diffusivity,      # from Andrew
         "Typical EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-12,
         "EC diffusivity in electrolyte [m2.s-1]": EC_diffusivity_5E_10,     #from Andrew
