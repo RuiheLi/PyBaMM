@@ -516,21 +516,17 @@ def Plot_Fig_1(Full_cycle,my_dict_AGE,
     axs[1,1].plot(
         Full_cycle, 
         my_dict_AGE["CC LLI to SEI per Ah"],
-        my_dict_AGE["CC LLI to SEI per Ah"],
         '--^',label="CC" )
     axs[1,1].plot(
         Full_cycle, 
-        my_dict_AGE["CV LLI to SEI per Ah"],
         my_dict_AGE["CV LLI to SEI per Ah"],
         '--^',label="CV" )
     axs[1,1].plot(
         Full_cycle, 
         my_dict_AGE["Cha LLI to SEI per Ah"],
-        my_dict_AGE["Cha LLI to SEI per Ah"],
         '-s',label="Charge" )
     axs[1,1].plot(
         Full_cycle, 
-        my_dict_AGE["Dis LLI to SEI per Ah"],
         my_dict_AGE["Dis LLI to SEI per Ah"],
         '-o',label="Discharge" )
     axs[1,2].plot(
@@ -1316,6 +1312,37 @@ def Run_P3_model(
         my_dict_AGE["LLI to SEI in one Charge step [A.h]"]=(
             np.array(my_dict_AGE["LLI to SEI in one CV step [A.h]"]) +
             np.array(my_dict_AGE["LLI to SEI in one CC step [A.h]"])
+        ).tolist()
+        # Add for LLI per Ah:
+        my_dict_AGE["CC Charge capacity [A.h]"]=(
+            abs(
+            np.array(my_dict_AGE["CCsta Discharge capacity [A.h]"])-
+            np.array(my_dict_AGE["CCend Discharge capacity [A.h]"])
+        )).tolist()
+        my_dict_AGE["CV Charge capacity [A.h]"]=(
+            abs(
+            np.array(my_dict_AGE["CVsta Discharge capacity [A.h]"])-
+            np.array(my_dict_AGE["CVend Discharge capacity [A.h]"])
+        )).tolist()
+        my_dict_AGE["Charge capacity [A.h]"]=(
+            np.array(my_dict_AGE["CC Charge capacity [A.h]"]) + 
+            np.array(my_dict_AGE["CV Charge capacity [A.h]"])
+        ).tolist()
+        my_dict_AGE["CC LLI to SEI per Ah"]=(
+            np.array(my_dict_AGE["LLI to SEI in one CC step [A.h]"])/
+            np.array(my_dict_AGE["CC Charge capacity [A.h]"])
+        ).tolist()
+        my_dict_AGE["CV LLI to SEI per Ah"]=(
+            np.array(my_dict_AGE["LLI to SEI in one CV step [A.h]"])/
+            np.array(my_dict_AGE["CV Charge capacity [A.h]"])
+        ).tolist()
+        my_dict_AGE["Dis LLI to SEI per Ah"]=(
+            np.array(my_dict_AGE["LLI to SEI in one CD step [A.h]"])/
+            np.array(my_dict_AGE["Discharge capacity [A.h]"])
+        ).tolist()
+        my_dict_AGE["Cha LLI to SEI per Ah"]=(
+            np.array(my_dict_AGE["CC LLI to SEI per Ah"]) +
+            np.array(my_dict_AGE["CV LLI to SEI per Ah"])
         ).tolist()
         ###########################################        
         #    11111111111111111111111111111111     #
