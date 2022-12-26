@@ -1317,64 +1317,6 @@ def Run_P3_model(
             np.array(my_dict_AGE["LLI to SEI in one CV step [A.h]"]) +
             np.array(my_dict_AGE["LLI to SEI in one CC step [A.h]"])
         ).tolist()
-
-        my_dict_AGE["CC Charge capacity [A.h]"]=(
-            abs(
-            np.array(my_dict_AGE["CCsta Discharge capacity [A.h]"])-
-            np.array(my_dict_AGE["CCend Discharge capacity [A.h]"])
-        )).tolist()
-        my_dict_AGE["CV Charge capacity [A.h]"]=(
-            abs(
-            np.array(my_dict_AGE["CVsta Discharge capacity [A.h]"])-
-            np.array(my_dict_AGE["CVend Discharge capacity [A.h]"])
-        )).tolist()
-
-        my_dict_AGE["CV LLI to SEI per Ah"]=(
-            np.array(my_dict_AGE["LLI to SEI in one CV step [A.h]"]) /
-            np.array(my_dict_AGE["CV Charge capacity [A.h]"])
-        ).tolist()
-        my_dict_AGE["CC LLI to SEI per Ah"]=(
-            np.array(my_dict_AGE["LLI to SEI in one CC step [A.h]"]) /
-            np.array(my_dict_AGE["CC Charge capacity [A.h]"])
-        ).tolist()
-        my_dict_AGE["Dis LLI to SEI per Ah"]=(
-            np.array(my_dict_AGE["LLI to SEI in one CD step [A.h]"]) /
-            np.array(my_dict_AGE["Discharge capacity [A.h]"])
-        ).tolist()
-        my_dict_AGE["Cha LLI to SEI per Ah"]=(
-            np.array(my_dict_AGE["CV LLI to SEI per Ah"]) +
-            np.array(my_dict_AGE["CC LLI to SEI per Ah"])
-        ).tolist()
-
-
-        my_dict_AGE["CC Charge capacity [A.h]"]=(
-            abs(
-            np.array(my_dict_AGE["CCsta Discharge capacity [A.h]"])-
-            np.array(my_dict_AGE["CCend Discharge capacity [A.h]"])
-        )).tolist()
-        my_dict_AGE["CV Charge capacity [A.h]"]=(
-            abs(
-            np.array(my_dict_AGE["CVsta Discharge capacity [A.h]"])-
-            np.array(my_dict_AGE["CVend Discharge capacity [A.h]"])
-        )).tolist()
-
-        my_dict_AGE["CV LLI to SEI per Ah"]=(
-            np.array(my_dict_AGE["LLI to SEI in one CV step [A.h]"]) /
-            np.array(my_dict_AGE["CV Charge capacity [A.h]"])
-        ).tolist()
-        my_dict_AGE["CC LLI to SEI per Ah"]=(
-            np.array(my_dict_AGE["LLI to SEI in one CC step [A.h]"]) /
-            np.array(my_dict_AGE["CC Charge capacity [A.h]"])
-        ).tolist()
-        my_dict_AGE["Cha LLI to SEI per Ah"]=(
-            np.array(my_dict_AGE["LLI to SEI in one CD step [A.h]"]) /
-            np.array(my_dict_AGE["Discharge capacity [A.h]"])
-        ).tolist()
-        my_dict_AGE["Dis LLI to SEI per Ah"]=(
-            np.array(my_dict_AGE["CV LLI to SEI per Ah"]) +
-            np.array(my_dict_AGE["CC LLI to SEI per Ah"])
-        ).tolist()
-
         ###########################################        
         #    11111111111111111111111111111111     #
         ###########################################   
@@ -1420,6 +1362,7 @@ def Run_P3_model(
                 BasicPath + Target+f"{count_i}th Scan/" +
                 "Fig. 3 - CDend Loc based overall.png", dpi=dpi)
         except:
+            print(f"Something went wrong during plotting Fig. 1~3 for scan {count_i}")
             print(f"Something went wrong during plotting Fig. 1~3 for scan {count_i}")
         else:
             pass
