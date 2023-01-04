@@ -383,7 +383,7 @@ class LithiumIonParameters(BaseParameters):
             2*(1-t_plus) for Stefan-Maxwell,
         see Bizeray et al (2016) "Resolving a discrepancy ...".
         """
-        return (2 * (1 - self.t_plus(c_e,c_EC, T))) * (self.one_plus_dlnf_dlnc(c_e, T))
+        return (2 * (1 - self.t_plus(c_e,c_EC, T))) * (self.one_plus_dlnf_dlnc(c_e,c_EC, T))
 
     def chiT_over_c(self, c_e,c_EC, T):
         """
@@ -415,13 +415,23 @@ class LithiumIonParameters(BaseParameters):
         }
         return pybamm.FunctionParameter("EC transference number", inputs)
 
-    def one_plus_dlnf_dlnc(self, c_e, T):
+    def one_plus_dlnf_dlnc(self, c_e,c_EC, T):
         """Thermodynamic factor (dimensionless)"""
         inputs = {
             "Electrolyte concentration [mol.m-3]": c_e * self.c_e_typ,
+            "EC concentration [mol.m-3]": c_EC * self.c_ec_typ,
             "Temperature [K]": self.Delta_T * T + self.T_ref,
         }
         return pybamm.FunctionParameter("1 + dlnf/dlnc", inputs)
+    
+    def TDF_EC(self, c_e,c_EC, T):
+        """Thermodynamic factor of EC (dimensionless), add by Ruihe Li"""
+        inputs = {
+            "Electrolyte concentration [mol.m-3]": c_e * self.c_e_typ,
+            "EC concentration [mol.m-3]": c_EC * self.c_ec_typ,
+            "Temperature [K]": self.Delta_T * T + self.T_ref,
+        }
+        return pybamm.FunctionParameter("TDF of EC", inputs)
 
     def D_e(self, c_e,c_EC, T):
         """Dimensionless electrolyte diffusivity"""

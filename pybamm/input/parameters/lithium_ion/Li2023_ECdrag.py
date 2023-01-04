@@ -454,9 +454,46 @@ def t_0plus_constant(c_e, c_EC , T):
         +  (c_EC < 0 ) * 0.28 
     )
     return t_0plus
+# add TDF 
+def fun_TDF_EC5(c_e, c_EC , T):
+    TDF_EC = (
+        (c_EC >= 0 ) * 5
+        +  (c_EC < 0 ) * 5
+    )
+    return TDF_EC
+
+import numpy as np
+def electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs):
+    c = c_e / 1000  # mol.m-3 -> mol.l
+    p1, p2, p3, p4, p5, p6, p7, p8, p9 = coeffs
+    tdf = (
+        p1
+        + p2 * c
+        + p3 * T
+        + p4 * c**2
+        + p5 * c * T
+        + p6 * T**2
+        + p7 * c**3
+        + p8 * c**2 * T
+        + p9 * c * T**2
+    )
+    return tdf
+def electrolyte_TDF_EC_DMC_1_1_Landesfeind2019(c_e, c_EC , T):
+    coeffs = np.array(
+        [-5.58, 7.17, 3.80e-2, 1.91, -6.65e-2, -5.08e-5, 1.1e-1, -6.10e-3, 1.51e-4]
+    )
+    return electrolyte_TDF_base_Landesfeind2019(c_e,  c_EC ,T, coeffs)
+def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019(c_e, c_EC , T):
+    coeffs = np.array(
+        [2.57e1, -4.51e1, -1.77e-1, 1.94, 2.95e-1, 3.08e-4, 2.59e-1, -9.46e-3, -4.54e-4]
+    )
+    return electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs)
+def electrolyte_TDF_EMC_FEC_19_1_Landesfeind2019(c_e, c_EC , T):
+    coeffs = np.array(
+        [3.22, -1.01e1, -1.58e-2, 6.12, 2.96e-2, 2.42e-5, -2.22e-1, -1.57e-2, 6.30e-6]
+    )
+    return electrolyte_TDF_base_Landesfeind2019(c_e,  c_EC ,T, coeffs)
 # Mark Ruihe block end
-
-
 
 # Call dict via a function to avoid errors when editing in place
 def get_parameter_values():
@@ -590,6 +627,7 @@ def get_parameter_values():
         "Initial concentration in electrolyte [mol.m-3]": 1000.0,
         "Cation transference number": t_0plus_constant ,   # from Andrew 
         "1 + dlnf/dlnc": 1.0,
+        "TDF of EC": 5.0, 
         "Electrolyte diffusivity [m2.s-1]": electrolyte_diffusivity_Valoen2005Constant,
         "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Andrew2022,
         # or: electrolyte_conductivity_Valoen2005Constant_wEC_Haya 
