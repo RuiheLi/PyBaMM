@@ -280,31 +280,31 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
         elif self.options["electrolyte conductivity"] == "sol full":    # Mark Ruihe add    
             # concentration overpotential
             indef_integral_n = pybamm.IndefiniteIntegral(
-                param.chiT_over_c(c_e_n, c_EC_n,T_n) * pybamm.grad(c_e_n) * param.c_0_back / param.ce_tot,
+                param.chiT_over_c(c_e_n, c_EC_n,T_n) * pybamm.grad(c_e_n) ,#* param.c_0_back / param.ce_tot
                 pybamm.standard_spatial_vars.x_n,
             )
             # concentration overpotential
             indef_integral_s = pybamm.IndefiniteIntegral(
-                param.chiT_over_c(c_e_s, c_EC_s, T_s) * pybamm.grad(c_e_s) * param.c_0_back / param.ce_tot,
+                param.chiT_over_c(c_e_s, c_EC_s, T_s) * pybamm.grad(c_e_s) ,#* param.c_0_back / param.ce_tot
                 pybamm.standard_spatial_vars.x_s,
             )
             indef_integral_p = pybamm.IndefiniteIntegral(
-                param.chiT_over_c(c_e_p,c_EC_p, T_p) * pybamm.grad(c_e_p) * param.c_0_back / param.ce_tot,
+                param.chiT_over_c(c_e_p,c_EC_p, T_p) * pybamm.grad(c_e_p) ,#* param.c_0_back / param.ce_tot
                 pybamm.standard_spatial_vars.x_p,
             )
             # Mark Ruihe add for c(EC) induced concentration overpotential
             indef_integral_EC_n = pybamm.IndefiniteIntegral((                                 
-                2 * param.c_0_back / param.ce_tot  
+                2 * param.TDF_EC(c_e_n,c_EC_n, T_n)  # * param.c_0_back / param.ce_tot  
                 * param.Xi_0 * param.c_ec_typ / param.c_ec_0_dim
                 * pybamm.grad(c_EC_n)   ),pybamm.standard_spatial_vars.x_n,
             )
             indef_integral_EC_s = pybamm.IndefiniteIntegral((                                 
-                2 * param.c_0_back / param.ce_tot  
+                2 * param.TDF_EC(c_e_s,c_EC_s, T_s)  #  * param.c_0_back / param.ce_tot  
                 * param.Xi_0 * param.c_ec_typ / param.c_ec_0_dim
                 * pybamm.grad(c_EC_s)   ),pybamm.standard_spatial_vars.x_s,
             )
             indef_integral_EC_p = pybamm.IndefiniteIntegral((                                 
-                2 * param.c_0_back / param.ce_tot  
+                2 * param.TDF_EC(c_e_p,c_EC_p, T_p)  #  * param.c_0_back / param.ce_tot  
                 * param.Xi_0 * param.c_ec_typ / param.c_ec_0_dim
                 * pybamm.grad(c_EC_p)   ),pybamm.standard_spatial_vars.x_p,
             )

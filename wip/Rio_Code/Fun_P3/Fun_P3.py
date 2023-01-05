@@ -32,6 +32,46 @@ def t_0plus_constant(c_e, c_EC , T):
         +  (c_EC < 0 ) * 0.28 
     )
     return t_0plus
+
+def elely_TDF_15(c_e, c_EC , T):
+    Oneplus_dlnfdlnc = (
+        (c_EC >= 0 ) * 15
+        +  (c_EC < 0 ) * 15
+    )
+    return Oneplus_dlnfdlnc
+
+import numpy as np
+def electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs):
+    c = c_e / 1000  # mol.m-3 -> mol.l
+    p1, p2, p3, p4, p5, p6, p7, p8, p9 = coeffs
+    tdf = (
+        p1
+        + p2 * c
+        + p3 * T
+        + p4 * c**2
+        + p5 * c * T
+        + p6 * T**2
+        + p7 * c**3
+        + p8 * c**2 * T
+        + p9 * c * T**2
+    )
+    return tdf
+def electrolyte_TDF_EC_DMC_1_1_Landesfeind2019(c_e, c_EC , T):
+    coeffs = np.array(
+        [-5.58, 7.17, 3.80e-2, 1.91, -6.65e-2, -5.08e-5, 1.1e-1, -6.10e-3, 1.51e-4]
+    )
+    return electrolyte_TDF_base_Landesfeind2019(c_e,  c_EC ,T, coeffs)
+def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019(c_e, c_EC , T):
+    coeffs = np.array(
+        [2.57e1, -4.51e1, -1.77e-1, 1.94, 2.95e-1, 3.08e-4, 2.59e-1, -9.46e-3, -4.54e-4]
+    )
+    return electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs)
+def electrolyte_TDF_EMC_FEC_19_1_Landesfeind2019(c_e, c_EC , T):
+    coeffs = np.array(
+        [3.22, -1.01e1, -1.58e-2, 6.12, 2.96e-2, 2.42e-5, -2.22e-1, -1.57e-2, 6.30e-6]
+    )
+    return electrolyte_TDF_base_Landesfeind2019(c_e,  c_EC ,T, coeffs)
+
 def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     # T = T + 273.15
     # mol/m3 to molar
@@ -792,16 +832,16 @@ def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para):
         and 
         model.options["electrolyte conductivity"]=='full'):
         para_used.update({"EC diffusivity in electrolyte [m2.s-1]":EC_diffusivity_5E_5})
-        print('Using EC_diffusivity_5E_5')
+        # print('Using EC_diffusivity_5E_5')
     V_max = 4.2;        V_min = 2.5
     if Rate_Dis > 4:
-        ts_dis = 1
+        ts_dis = 0.5
     else: 
-        ts_dis = 20
+        ts_dis = 2
     if Rate_Cha > 4:
         ts_cha = 1
     else:
-        ts_cha = 20
+        ts_cha = 5
     Exp_1  = pybamm.Experiment(
     [ (
         f"Hold at {V_max} V until C/100",
@@ -969,6 +1009,11 @@ def Para_init(Para_dict):
             "Cation transference number": 
             eval(Para_dict_used["Func Cation transference number"])})
         Para_dict_used.pop("Func Cation transference number")
+    if Para_dict_used.__contains__("Func 1 + dlnf/dlnc"):
+        Para_0.update({
+            "1 + dlnf/dlnc": 
+            eval(Para_dict_used["Func 1 + dlnf/dlnc"])})
+        Para_dict_used.pop("Func 1 + dlnf/dlnc")
 
     if Para_dict_used.__contains__("Initial Neg SOC"):
         c_Neg1SOC_in = (

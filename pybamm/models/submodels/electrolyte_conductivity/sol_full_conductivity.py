@@ -56,7 +56,7 @@ class sol_Full(BaseElectrolyteConductivity):
                 # * param.c_0_back / param.ce_tot  Update 230104: add thermodynamic factors
                 ) # Mark Ruihe add this line, one more ratio
             + (                                   # Mark Ruihe add this follwing lines for double transport 
-                2 * param.TDF_EC  #     param.c_0_back / param.ce_tot  
+                2 * param.TDF_EC(c_e,c_EC, T)  #     param.c_0_back / param.ce_tot  
                 * param.Xi_0 * param.c_ec_typ / param.c_ec_0_dim
                 * pybamm.grad(c_EC)   
             )
