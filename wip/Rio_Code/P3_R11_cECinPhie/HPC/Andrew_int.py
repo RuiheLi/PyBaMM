@@ -310,8 +310,8 @@ exp_index_pack = [
    cycle_no,step_AGE_CD,
    step_AGE_CC,step_AGE_CV,];
 # Path and save to excel
-BasicPath = 'D:/OneDrive - Imperial College London/SimDataSave/P3R11/'; 
-Target  = 'Andrew_int=6e-19_2000_chi/' # wip\Rio_Code\P3R10\.ipynb
+BasicPath=os.getcwd() # for HPC
+Target  = '/Andrew_int=6e-19_2000_chi/' # wip\Rio_Code\P3R10\.ipynb
 if not os.path.exists(BasicPath + Target):
    os.mkdir(BasicPath + Target);
 book_name_xlsx = 'Andrew_int.xlsx';sheet_name_xlsx = 'Results';
@@ -351,7 +351,7 @@ Sol_all = []; Midc_Merge = []; J = [];
    J.append(j)
    Midc_Merge.append(midc_merge) """
 if __name__ == "__main__":
-    pool = multiprocessing.Pool(1)
+    pool = multiprocessing.Pool(18)
     processes = [pool.apply_async(
         Run_P3_model, 
         args=(
