@@ -10,14 +10,18 @@ import pybamm
 
 class Interpolant(pybamm.Function):
     """
-    Interpolate data in 1D.
+    Interpolate data in 1D, 2D, or 3D. Interpolation in 3D requires the input data to be
+    on a regular grid (as per scipy.interpolate.RegularGridInterpolator).
 
     Parameters
     ----------
     x : iterable of :class:`numpy.ndarray`
-        1-D array(s) of real values defining the data point coordinates.
+        The data point coordinates. If 1-D, then this is an array(s) of real values. If,
+        2D or 3D interpolation, then this is to ba a tuple of 1D arrays (one for each
+        dimension) which together define the coordinates of the points.
     y : :class:`numpy.ndarray`
-        The values of the function to interpolate at the data points.
+        The values of the function to interpolate at the data points. In 2D and 3D, this
+        should be a matrix of two and three dimensions respectively.
     children : iterable of :class:`pybamm.Symbol`
         Node(s) to use when evaluating the interpolant. Each child corresponds to an
         entry of x
@@ -26,10 +30,13 @@ class Interpolant(pybamm.Function):
         function" is given.
     interpolator : str, optional
         Which interpolator to use. Can be "linear", "cubic", or "pchip". Default is
-        "linear".
+        "linear". For 3D interpolation, only "linear" an "cubic" are currently
+        supported.
     extrapolate : bool, optional
         Whether to extrapolate for points that are outside of the parametrisation
         range, or return NaN (following default behaviour from scipy). Default is True.
+        Generally, it is best to set this to be False for 3D interpolation due to
+        the higher potential for errors in extrapolation.
 
     **Extends**: :class:`pybamm.Function`
     """
@@ -61,15 +68,35 @@ class Interpolant(pybamm.Function):
             x1, x2 = x
             if y.ndim != 2:
                 raise ValueError("y should be two-dimensional if len(x)=2")
-            if x1.shape[0] != y.shape[1]:
+            if x1.shape[0] != y.shape[0]:
                 raise ValueError(
                     "len(x1) should equal y=shape[1], "
                     f"but x1.shape={x1.shape} and y.shape={y.shape}"
                 )
-            if x2 is not None and x2.shape[0] != y.shape[0]:
+            if x2 is not None and x2.shape[0] != y.shape[1]:
                 raise ValueError(
                     "len(x2) should equal y=shape[0], "
                     f"but x2.shape={x2.shape} and y.shape={y.shape}"
+                )
+        elif isinstance(x, (tuple, list)) and len(x) == 3:
+            x1, x2, x3 = x
+            if y.ndim != 3:
+                raise ValueError("y should be three-dimensional if len(x)=3")
+
+            if x1.shape[0] != y.shape[0]:
+                raise ValueError(
+                    "len(x1) should equal y=shape[0], "
+                    f"but x1.shape={x1.shape} and y.shape={y.shape}"
+                )
+            if x2 is not None and x2.shape[0] != y.shape[1]:
+                raise ValueError(
+                    "len(x2) should equal y=shape[1], "
+                    f"but x2.shape={x2.shape} and y.shape={y.shape}"
+                )
+            if x3 is not None and x3.shape[0] != y.shape[2]:
+                raise ValueError(
+                    "len(x3) should equal y=shape[2], "
+                    f"but x3.shape={x3.shape} and y.shape={y.shape}"
                 )
         else:
             if isinstance(x, (tuple, list)):
@@ -126,8 +153,39 @@ class Interpolant(pybamm.Function):
                     "interpolator should be 'linear' or 'cubic' if x is two-dimensional"
                 )
             else:
-                interpolating_function = interpolate.interp2d(
-                    x1, x2, y, kind=interpolator
+                if extrapolate:
+                    fill_value = None
+                else:
+                    fill_value = np.nan
+                interpolating_function = interpolate.RegularGridInterpolator(
+                    (x1, x2),
+                    y,
+                    method=interpolator,
+                    bounds_error=False,
+                    fill_value=fill_value,
+                )
+
+        elif len(x) == 3:
+            self.dimension = 3
+
+            if extrapolate:
+                fill_value = None
+            else:
+                fill_value = np.nan
+
+            possible_interpolators = ["linear", "cubic"]
+            if interpolator not in possible_interpolators:
+                raise ValueError(
+                    """interpolator should be 'linear' or 'cubic'
+                    for 3D interpolation"""
+                )
+            else:
+                interpolating_function = interpolate.RegularGridInterpolator(
+                    (x1, x2, x3),
+                    y,
+                    method=interpolator,
+                    bounds_error=False,
+                    fill_value=fill_value,
                 )
         else:
             raise ValueError("Invalid dimension of x: {0}".format(len(x)))
@@ -192,12 +250,47 @@ class Interpolant(pybamm.Function):
                 children_eval_flat.append(child)
         if self.dimension == 1:
             return self.function(*children_eval_flat).flatten()[:, np.newaxis]
-        elif self.dimension == 2:
-            res = self.function(*children_eval_flat)
-            if res.ndim > 1:
-                return np.diagonal(res)[:, np.newaxis]
+        elif self.dimension in [2, 3]:
+
+            # If the children are scalars, we need to add a dimension
+            shapes = []
+            for child in evaluated_children:
+                if isinstance(child, (float, int)):
+                    shapes.append(())
+                else:
+                    shapes.append(child.shape)
+            shapes = set(shapes)
+            shapes.discard(())
+
+            if len(shapes) > 1:
+                raise ValueError(
+                    "All children must have the same shape for 3D interpolation"
+                )
+
+            if len(shapes) == 0:
+                shape = (1,)
             else:
-                # raise ValueError("Invalid children dimension: {0}".format(res.ndim))
+                shape = shapes.pop()
+            new_evaluated_children = []
+            for child in evaluated_children:
+
+                if hasattr(child, "shape") and child.shape == shape:
+                    new_evaluated_children.append(child.flatten())
+                else:
+                    new_evaluated_children.append(np.reshape(child, shape).flatten())
+
+            # return nans if there are any within the children
+            nans = np.isnan(new_evaluated_children)
+            if np.any(nans):
+                nan_children = []
+                for child, interp_range in zip(
+                    new_evaluated_children, self.function.grid
+                ):
+                    nan_children.append(np.ones_like(child) * interp_range.mean())
+                return self.function(np.transpose(nan_children)) * np.nan
+            else:
+                res = self.function(np.transpose(new_evaluated_children))
                 return res[:, np.newaxis]
+
         else:  # pragma: no cover
             raise ValueError("Invalid dimension: {0}".format(self.dimension))

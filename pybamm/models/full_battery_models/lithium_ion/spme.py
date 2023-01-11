@@ -9,19 +9,8 @@ class SPMe(SPM):
     """
     Single Particle Model with Electrolyte (SPMe) of a lithium-ion battery, from
     [1]_. Inherits most submodels from SPM, only modifies potentials and electrolyte.
+    See :class:`pybamm.lithium_ion.BaseModel` for more details.
 
-    Parameters
-    ----------
-    options : dict, optional
-        A dictionary of options to be passed to the model. For a detailed list of
-        options see :class:`~pybamm.BatteryModelOptions`.
-    name : str, optional
-        The name of the model.
-    build :  bool, optional
-        Whether to build the model on instantiation. Default is True. Setting this
-        option to False allows users to change any number of the submodels before
-        building the complete model (submodels cannot be changed after the model is
-        built).
     Examples
     --------
     >>> import pybamm
@@ -47,27 +36,6 @@ class SPMe(SPM):
 
         # Initialize with the SPM
         super().__init__(options, name, build)
-
-    def set_convection_submodel(self):
-
-        self.submodels[
-            "through-cell convection"
-        ] = pybamm.convection.through_cell.NoConvection(self.param, self.options)
-        self.submodels[
-            "transverse convection"
-        ] = pybamm.convection.transverse.NoConvection(self.param, self.options)
-
-    def set_transport_efficiency_submodels(self):
-        self.submodels[
-            "electrolyte transport efficiency"
-        ] = pybamm.transport_efficiency.Bruggeman(
-            self.param, "Electrolyte", self.options, True
-        )
-        self.submodels[
-            "electrode transport efficiency"
-        ] = pybamm.transport_efficiency.Bruggeman(
-            self.param, "Electrode", self.options, True
-        )
 
     def set_solid_submodel(self):
         for domain in ["negative", "positive"]:

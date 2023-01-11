@@ -435,7 +435,7 @@ class Divergence(SpatialOperator):
 
 class Laplacian(SpatialOperator):
     """
-    A node in the expression tree representing a laplacian operator. This is
+    A node in the expression tree representing a Laplacian operator. This is
     currently only implemeted in the weak form for finite element formulations.
 
     **Extends:** :class:`SpatialOperator`
@@ -634,7 +634,7 @@ class BaseIndefiniteIntegral(Integral):
         if isinstance(integration_variable, list):
             if len(integration_variable) > 1:
                 raise NotImplementedError(
-                    "Indefinite integral only implemeted w.r.t. one variable"
+                    "Indefinite integral only implemented w.r.t. one variable"
                 )
             else:
                 integration_variable = integration_variable[0]
@@ -965,6 +965,9 @@ class ExplicitTimeIntegral(UnaryOperator):
     def _unary_new_copy(self, child):
         return self.__class__(child, self.initial_condition)
 
+    def is_constant(self):
+        return False
+
 
 class BoundaryGradient(BoundaryOperator):
     """
@@ -1084,7 +1087,10 @@ def grad(symbol):
     """
     # Gradient of a broadcast is zero
     if isinstance(symbol, pybamm.PrimaryBroadcast):
-        new_child = pybamm.PrimaryBroadcast(0, symbol.child.domain)
+        if symbol.child.domain == []:
+            new_child = pybamm.Scalar(0)
+        else:
+            new_child = pybamm.PrimaryBroadcast(0, symbol.child.domain)
         return pybamm.PrimaryBroadcastToEdges(new_child, symbol.domain)
     elif isinstance(symbol, pybamm.FullBroadcast):
         return pybamm.FullBroadcastToEdges(0, broadcast_domains=symbol.domains)
@@ -1110,7 +1116,10 @@ def div(symbol):
     """
     # Divergence of a broadcast is zero
     if isinstance(symbol, pybamm.PrimaryBroadcastToEdges):
-        new_child = pybamm.PrimaryBroadcast(0, symbol.child.domain)
+        if symbol.child.domain == []:
+            new_child = pybamm.Scalar(0)
+        else:
+            new_child = pybamm.PrimaryBroadcast(0, symbol.child.domain)
         return pybamm.PrimaryBroadcast(new_child, symbol.domain)
     # Divergence commutes with Negate operator
     if isinstance(symbol, pybamm.Negate):
@@ -1134,13 +1143,13 @@ def laplacian(symbol):
     ----------
 
     symbol : :class:`Symbol`
-        the laplacian will be performed on this sub-symbol
+        the Laplacian will be performed on this sub-symbol
 
     Returns
     -------
 
     :class:`Laplacian`
-        the laplacian of ``symbol``
+        the Laplacian of ``symbol``
     """
 
     return Laplacian(symbol)
@@ -1243,8 +1252,24 @@ def boundary_value(symbol, side):
         return BoundaryValue(symbol, side)
 
 
+def boundary_gradient(symbol, side):
+    # Gradient of a broadcast is zero
+    if isinstance(symbol, pybamm.Broadcast):
+        return 0 * symbol.reduce_one_dimension()
+    else:
+        return BoundaryGradient(symbol, side)
+
+
 def sign(symbol):
     """Returns a :class:`Sign` object."""
+    if isinstance(symbol, pybamm.Broadcast):
+        # Move sign inside the broadcast
+        # Apply recursively
+        return symbol._unary_new_copy(sign(symbol.orphans[0]))
+    elif isinstance(symbol, pybamm.Concatenation) and not isinstance(
+        symbol, pybamm.ConcatenationVariable
+    ):
+        return pybamm.concatenation(*[sign(child) for child in symbol.orphans])
     return pybamm.simplify_if_constant(Sign(symbol))
 
 

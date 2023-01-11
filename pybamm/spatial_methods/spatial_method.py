@@ -47,7 +47,7 @@ class SpatialMethod:
         mesh_pts = 1
         for level, dom in domains.items():
             if level != "primary" and dom != []:
-                mesh_pts *= self.mesh.combine_submeshes(*dom).npts
+                mesh_pts *= self.mesh[dom].npts
         return mesh_pts
 
     @property
@@ -70,7 +70,7 @@ class SpatialMethod:
         :class:`pybamm.Vector`
             Contains the discretised spatial variable
         """
-        symbol_mesh = self.mesh.combine_submeshes(*symbol.domain)
+        symbol_mesh = self.mesh[symbol.domain]
         repeats = self._get_auxiliary_domain_repeats(symbol.domains)
         if symbol.evaluates_on_edges("primary"):
             entries = np.tile(symbol_mesh.edges, repeats)
@@ -99,7 +99,7 @@ class SpatialMethod:
             The discretised symbol of the correct size for the spatial method
         """
         domain = domains["primary"]
-        primary_domain_size = self.mesh.combine_submeshes(*domain).npts
+        primary_domain_size = self.mesh[domain].npts
         secondary_domain_size = self._get_auxiliary_domain_repeats(
             {"secondary": domains["secondary"]}
         )
@@ -187,7 +187,7 @@ class SpatialMethod:
 
     def laplacian(self, symbol, discretised_symbol, boundary_conditions):
         """
-        Implements the laplacian for a spatial method.
+        Implements the Laplacian for a spatial method.
 
         Parameters
         ----------
@@ -202,7 +202,7 @@ class SpatialMethod:
         Returns
         -------
         :class: `pybamm.Array`
-            Contains the result of acting the discretised laplacian on
+            Contains the result of acting the discretised Laplacian on
             the child discretised_symbol
         """
         raise NotImplementedError
@@ -313,7 +313,7 @@ class SpatialMethod:
         self, left_symbol_disc, right_symbol_disc, left_mesh, right_mesh
     ):
         """
-        A method to find the internal neumann conditions between two symbols
+        A method to find the internal Neumann conditions between two symbols
         on adjacent subdomains.
 
         Parameters
@@ -329,9 +329,6 @@ class SpatialMethod:
         """
 
         raise NotImplementedError
-
-    def preprocess_external_variables(self, var):
-        return {}
 
     def boundary_value_or_flux(self, symbol, discretised_child, bcs=None):
         """
@@ -403,8 +400,8 @@ class SpatialMethod:
         # to account for Dirichlet boundary conditions. Here, we just have the default
         # behaviour that the mass matrix is the identity.
 
-        # Create appropriate submesh by combining submeshes in domain
-        submesh = self.mesh.combine_submeshes(*symbol.domain)
+        # Get submesh
+        submesh = self.mesh[symbol.domain]
 
         # Get number of points in primary dimension
         n = submesh.npts

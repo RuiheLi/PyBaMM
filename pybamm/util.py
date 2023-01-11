@@ -13,7 +13,6 @@ import pickle
 import subprocess
 import sys
 import timeit
-from collections import defaultdict
 from platform import system
 import difflib
 
@@ -25,17 +24,6 @@ import pybamm
 # versions of jax and jaxlib compatible with PyBaMM
 JAX_VERSION = "0.2.12"
 JAXLIB_VERSION = "0.1.70"
-
-
-def tree_search(tree, item, solutions):
-    for child in tree.children:
-        tree_search(child, item, solutions)
-        if (child == item) or (child.name == item.name):
-            solutions.append(True)
-        else:
-            solutions.append(False)
-    solutions.append((tree == item) or (tree.name == item.name))
-    return None
 
 
 def root_dir():
@@ -69,16 +57,12 @@ class FuzzyDict(dict):
         try:
             return super().__getitem__(key)
         except KeyError:
-            if "negative electrode sei" in key.lower():
+            if key in ["Negative electrode SOC", "Positive electrode SOC"]:
+                domain = key.split(" ")[0]
                 raise KeyError(
-                    f"'{key}' not found. All SEI parameters have been "
-                    "renamed from '...negative electrode SEI...' to '...SEI...'"
-                )
-            if "negative electrode lithium plating" in key.lower():
-                raise KeyError(
-                    f"'{key}' not found. All lithium plating parameters have been "
-                    "renamed from '...negative electrode lithium plating...' "
-                    "to '...lithium plating...'"
+                    f"Variable '{domain} electrode SOC' has been renamed to "
+                    f"'{domain} electrode stoichiometry' to avoid confusion "
+                    "with cell SOC"
                 )
             best_matches = self.get_best_matches(key)
             raise KeyError(f"'{key}' not found. Best matches are {best_matches}")
@@ -294,28 +278,6 @@ def rmse(x, y):
     return np.sqrt(np.nanmean((x - y) ** 2))
 
 
-def get_infinite_nested_dict():
-    """
-    Return a dictionary that allows infinite nesting without having to define level by
-    level.
-
-    See:
-    https://stackoverflow.com/questions/651794/whats-the-best-way-to-initialize-a-dict-of-dicts-in-python/652226#652226
-
-    Example
-    -------
-    >>> import pybamm
-    >>> d = pybamm.get_infinite_nested_dict()
-    >>> d["a"] = 1
-    >>> d["a"]
-    1
-    >>> d["b"]["c"]["d"] = 2
-    >>> d["b"]["c"] == {"d": 2}
-    True
-    """
-    return defaultdict(get_infinite_nested_dict)
-
-
 def load(filename):
     """Load a saved object"""
     with open(filename, "rb") as f:
@@ -330,19 +292,6 @@ def get_parameters_filepath(path):
         return path
     else:
         return os.path.join(pybamm.__path__[0], path)
-
-
-def have_julia():
-    """
-    Checks whether the Julia programming language has been installed
-    """
-    # Try reading the julia version quietly to see whether julia is installed
-    FNULL = open(os.devnull, "w")
-    try:
-        subprocess.call(["julia", "--version"], stdout=FNULL, stderr=subprocess.STDOUT)
-        return True
-    except subprocess.CalledProcessError:  # pragma: no cover
-        return False
 
 
 def have_jax():

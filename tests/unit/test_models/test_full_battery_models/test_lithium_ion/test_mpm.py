@@ -55,11 +55,17 @@ class TestMPM(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             pybamm.lithium_ion.MPM(options)
 
+    def test_differential_surface_form(self):
+        options = {"surface form": "differential"}
+        model = pybamm.lithium_ion.MPM(options)
+        model.check_well_posedness()
+
     def test_necessary_options(self):
         options = {"particle size": "single"}
         with self.assertRaises(pybamm.OptionError):
             pybamm.lithium_ion.MPM(options)
-        options = {"surface form": "none"}
+
+        options = {"surface form": "false"}
         with self.assertRaises(pybamm.OptionError):
             pybamm.lithium_ion.MPM(options)
 
@@ -141,7 +147,10 @@ class TestMPMWithSEI(unittest.TestCase):
             pybamm.lithium_ion.MPM(options)
 
     def test_ec_reaction_limited_not_implemented(self):
-        options = {"SEI": "ec reaction limited", "SEI porosity change": "true"}
+        options = {
+            "SEI": "ec reaction limited",
+            "SEI porosity change": "true",
+        }
         with self.assertRaises(NotImplementedError):
             pybamm.lithium_ion.MPM(options)
 

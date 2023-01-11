@@ -498,43 +498,61 @@ def electrolyte_conductivity_Ai2020(c_e, T):
 
 # Load data in the appropriate format
 path, _ = os.path.split(os.path.abspath(__file__))
-graphite_ocp_Enertech_Ai2020 = pybamm.parameters.process_1D_data(
+graphite_ocp_Enertech_Ai2020_data = pybamm.parameters.process_1D_data(
     "graphite_ocp_Enertech_Ai2020.csv", path=path
 )
-lico2_ocp_Ai2020 = pybamm.parameters.process_1D_data("lico2_ocp_Ai2020.csv", path=path)
+lico2_ocp_Ai2020_data = pybamm.parameters.process_1D_data(
+    "lico2_ocp_Ai2020.csv", path=path
+)
+
+
+def graphite_ocp_Enertech_Ai2020(sto):
+    name, (x, y) = graphite_ocp_Enertech_Ai2020_data
+    return pybamm.Interpolant(x, y, sto, name=name, interpolator="cubic")
+
+
+def lico2_ocp_Ai2020(sto):
+    name, (x, y) = lico2_ocp_Ai2020_data
+    return pybamm.Interpolant(x, y, sto, name=name, interpolator="cubic")
 
 
 # Call dict via a function to avoid errors when editing in place
 def get_parameter_values():
     """
-    Parameters for the Enertech cell (Ai2020), from the papers
+    Parameters for the Enertech cell (Ai2020), from the papers:
 
-    > Ai, W., Kraft, L., Sturm, J., Jossen, A., & Wu, B. (2020). Electrochemical
-    Thermal-Mechanical Modelling of Stress Inhomogeneity in Lithium-Ion Pouch Cells.
-    Journal of The Electrochemical Society, 167(1), 013512. DOI: 10.1149/2.0122001JES.
-    > Rieger, B., Erhard, S. V., Rumpf, K., & Jossen, A. (2016). A new method to model
-    the thickness change of a commercial pouch cell during discharge. Journal of The
-    Electrochemical Society, 163(8), A1566-A1575.
+        Ai, W., Kraft, L., Sturm, J., Jossen, A., & Wu, B. (2020). Electrochemical
+        Thermal-Mechanical Modelling of Stress Inhomogeneity in Lithium-Ion Pouch Cells.
+        Journal of The Electrochemical Society, 167(1), 013512. DOI:
+        10.1149/2.0122001JES.
+
+        Rieger, B., Erhard, S. V., Rumpf, K., & Jossen, A. (2016). A new method to model
+        the thickness change of a commercial pouch cell during discharge. Journal of The
+        Electrochemical Society, 163(8), A1566-A1575.
 
     and references therein.
 
     SEI parameters are example parameters for SEI growth from the papers:
 
-    > Ramadass, P., Haran, B., Gomadam, P. M., White, R., & Popov, B. N. (2004).
-    Development of first principles capacity fade model for Li-ion cells. Journal of the
-     Electrochemical Society, 151(2), A196-A203.
-    > Ploehn, H. J., Ramadass, P., & White, R. E. (2004). Solvent diffusion model for
-    aging of lithium-ion battery cells. Journal of The Electrochemical Society, 151(3),
-    A456-A462.
-    > Single, F., Latz, A., & Horstmann, B. (2018). Identifying the mechanism of
-    continued growth of the solid–electrolyte interphase. ChemSusChem, 11(12),
-    1950-1955.
-    > Safari, M., Morcrette, M., Teyssot, A., & Delacour, C. (2009). Multimodal Physics-
-    Based Aging Model for Life Prediction of Li-Ion Batteries. Journal of The
-    Electrochemical Society, 156(3),
-    > Yang, X., Leng, Y., Zhang, G., Ge, S., Wang, C. (2017). Modeling of lithium
-    plating induced aging of lithium-ion batteries: Transition from linear to nonlinear
-    aging. Journal of Power Sources, 360, 28-40.
+        Ramadass, P., Haran, B., Gomadam, P. M., White, R., & Popov, B. N. (2004).
+        Development of first principles capacity fade model for Li-ion cells. Journal of
+        the Electrochemical Society, 151(2), A196-A203.
+
+        Ploehn, H. J., Ramadass, P., & White, R. E. (2004). Solvent diffusion model for
+        aging of lithium-ion battery cells. Journal of The Electrochemical Society,
+        151(3), A456-A462.
+
+        Single, F., Latz, A., & Horstmann, B. (2018). Identifying the mechanism of
+        continued growth of the solid-electrolyte interphase. ChemSusChem, 11(12),
+        1950-1955.
+
+        Safari, M., Morcrette, M., Teyssot, A., & Delacour, C. (2009). Multimodal
+        Physics- Based Aging Model for Life Prediction of Li-Ion Batteries. Journal of
+        The Electrochemical Society, 156(3).
+
+        Yang, X., Leng, Y., Zhang, G., Ge, S., Wang, C. (2017). Modeling of lithium
+        plating induced aging of lithium-ion batteries: Transition from linear to
+        nonlinear aging. Journal of Power Sources, 360, 28-40.
 
     Note: this parameter set does not claim to be representative of the true parameter
     values. Instead these are parameter values that were used to fit SEI models to
@@ -542,6 +560,7 @@ def get_parameter_values():
     """
 
     return {
+        "chemistry": "lithium_ion",
         # sei
         "Ratio of lithium moles to SEI moles": 2.0,
         "Inner SEI reaction proportion": 0.5,

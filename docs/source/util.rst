@@ -1,8 +1,6 @@
 Utility functions
 =================
 
-.. autofunction:: pybamm.get_infinite_nested_dict
-
 .. autofunction:: pybamm.get_git_commit_info
 
 .. autofunction:: pybamm.rmse
@@ -23,8 +21,6 @@ Utility functions
 .. autofunction:: pybamm.load
 
 .. autofunction:: pybamm.get_parameters_filepath
-
-.. autofunction:: pybamm.have_julia
 
 .. autofunction:: pybamm.have_jax
 

@@ -34,7 +34,7 @@ PRINT_OPTIONS_OUTPUT = """\
 'particle phases': '1' (possible: ['1', '2'])
 'particle shape': 'spherical' (possible: ['spherical', 'no particles'])
 'particle size': 'single' (possible: ['single', 'distribution'])
-'SEI': 'none' (possible: ['none', 'constant', 'reaction limited', 'solvent-diffusion limited', 'electron-migration limited', 'interstitial-diffusion limited', 'ec reaction limited'])
+'SEI': 'none' (possible: ['none', 'constant', 'reaction limited', 'reaction limited (asymmetric)', 'solvent-diffusion limited', 'electron-migration limited', 'interstitial-diffusion limited', 'ec reaction limited', 'ec reaction limited (asymmetric)'])
 'SEI film resistance': 'none' (possible: ['none', 'distributed', 'average'])
 'SEI on cracks': 'false' (possible: ['false', 'true'])
 'SEI porosity change': 'false' (possible: ['false', 'true'])
@@ -44,7 +44,6 @@ PRINT_OPTIONS_OUTPUT = """\
 'total interfacial current density as a state': 'false' (possible: ['false', 'true'])
 'working electrode': 'both' (possible: ['both', 'negative', 'positive'])
 'x-average side reactions': 'false' (possible: ['false', 'true'])
-'external submodels': []
 'timescale': 'default'
 """  # noqa: E501
 
@@ -388,6 +387,20 @@ class TestBaseBatteryModel(unittest.TestCase):
     def test_timescale(self):
         model = pybamm.BaseModel()
         self.assertEqual(model.timescale.evaluate(), 1)
+
+    def test_option_type(self):
+        # no entry gets default options
+        model = pybamm.BaseBatteryModel()
+        self.assertIsInstance(model.options, pybamm.BatteryModelOptions)
+
+        # dict options get converted to BatteryModelOptions
+        model = pybamm.BaseBatteryModel({"thermal": "isothermal"})
+        self.assertIsInstance(model.options, pybamm.BatteryModelOptions)
+
+        # special dict types are not changed
+        options = pybamm.FuzzyDict({"thermal": "isothermal"})
+        model = pybamm.BaseBatteryModel(options)
+        self.assertEqual(model.options, options)
 
 
 class TestOptions(unittest.TestCase):

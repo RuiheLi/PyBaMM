@@ -57,39 +57,13 @@ class FiniteVolume(pybamm.SpatialMethod):
         :class:`pybamm.Vector`
             Contains the discretised spatial variable
         """
-        symbol_mesh = self.mesh.combine_submeshes(*symbol.domain)
+        symbol_mesh = self.mesh[symbol.domain]
         repeats = self._get_auxiliary_domain_repeats(symbol.domains)
         if symbol.evaluates_on_edges("primary"):
             entries = np.tile(symbol_mesh.edges, repeats)
         else:
             entries = np.tile(symbol_mesh.nodes, repeats)
         return pybamm.Vector(entries, domains=symbol.domains)
-
-    def preprocess_external_variables(self, var):
-        """
-        For finite volumes, we need the boundary fluxes for discretising
-        properly. Here, we extrapolate and then add them to the boundary
-        conditions.
-
-        Parameters
-        ----------
-        var : :class:`pybamm.Variable` or :class:`pybamm.Concatenation`
-            The external variable that is to be processed
-
-        Returns
-        -------
-        new_bcs: dict
-            A dictionary containing the new boundary conditions
-        """
-
-        new_bcs = {
-            var: {
-                "left": (pybamm.BoundaryGradient(var, "left"), "Neumann"),
-                "right": (pybamm.BoundaryGradient(var, "right"), "Neumann"),
-            }
-        }
-
-        return new_bcs
 
     def gradient(self, symbol, discretised_symbol, boundary_conditions):
         """Matrix-vector multiplication to implement the gradient operator.
@@ -137,7 +111,7 @@ class FiniteVolume(pybamm.SpatialMethod):
             The (sparse) finite volume gradient matrix for the domain
         """
         # Create appropriate submesh by combining submeshes in primary domain
-        submesh = self.mesh.combine_submeshes(*domain)
+        submesh = self.mesh[domain]
 
         # Create 1D matrix using submesh
         n = submesh.npts
@@ -160,7 +134,7 @@ class FiniteVolume(pybamm.SpatialMethod):
         """Matrix-vector multiplication to implement the divergence operator.
         See :meth:`pybamm.SpatialMethod.divergence`
         """
-        submesh = self.mesh.combine_submeshes(*symbol.domain)
+        submesh = self.mesh[symbol.domain]
 
         divergence_matrix = self.divergence_matrix(symbol.domains)
 
@@ -195,7 +169,7 @@ class FiniteVolume(pybamm.SpatialMethod):
             The (sparse) finite volume divergence matrix for the domain
         """
         # Create appropriate submesh by combining submeshes in domain
-        submesh = self.mesh.combine_submeshes(*domains["primary"])
+        submesh = self.mesh[domains["primary"]]
 
         # check coordinate system
         if submesh.coord_sys in ["cylindrical polar", "spherical polar"]:
@@ -276,7 +250,7 @@ class FiniteVolume(pybamm.SpatialMethod):
             )
 
         domain = child.domains[integration_dimension]
-        submesh = self.mesh.combine_submeshes(*domain)
+        submesh = self.mesh[domain]
 
         # check coordinate system
         if submesh.coord_sys in ["cylindrical polar", "spherical polar"]:
@@ -291,7 +265,7 @@ class FiniteVolume(pybamm.SpatialMethod):
 
         if integration_dimension == "primary":
             # Create appropriate submesh by combining submeshes in domain
-            submesh = self.mesh.combine_submeshes(*domains["primary"])
+            submesh = self.mesh[domains["primary"]]
 
             # Create vector of ones for primary domain submesh
 
@@ -306,7 +280,7 @@ class FiniteVolume(pybamm.SpatialMethod):
             matrix = kron(eye(second_dim_repeats), d_edges)
         elif integration_dimension == "secondary":
             # Create appropriate submesh by combining submeshes in domain
-            primary_submesh = self.mesh.combine_submeshes(*domains["primary"])
+            primary_submesh = self.mesh[domains["primary"]]
 
             # Create matrix which integrates in the secondary dimension
             # Different number of edges depending on whether child evaluates on edges
@@ -348,7 +322,7 @@ class FiniteVolume(pybamm.SpatialMethod):
             # the case where child evaluates on edges
             # If it becomes necessary to implement this, will need to think about what
             # the cylindrical/spherical polar indefinite integral should be
-            submesh = self.mesh.combine_submeshes(*child.domain)
+            submesh = self.mesh[child.domain]
             if submesh.coord_sys in ["cylindrical polar", "spherical polar"]:
                 raise NotImplementedError(
                     f"Indefinite integral on a {submesh.coord_sys} domain is not "
@@ -438,7 +412,7 @@ class FiniteVolume(pybamm.SpatialMethod):
         """
 
         # Create appropriate submesh by combining submeshes in domain
-        submesh = self.mesh.combine_submeshes(*domains["primary"])
+        submesh = self.mesh[domains["primary"]]
         n = submesh.npts
         second_dim_repeats = self._get_auxiliary_domain_repeats(domains)
 
@@ -488,7 +462,7 @@ class FiniteVolume(pybamm.SpatialMethod):
         """
 
         # Create appropriate submesh by combining submeshes in domain
-        submesh = self.mesh.combine_submeshes(*domains["primary"])
+        submesh = self.mesh[domains["primary"]]
         n = submesh.npts
         second_dim_repeats = self._get_auxiliary_domain_repeats(domains)
 
@@ -518,7 +492,7 @@ class FiniteVolume(pybamm.SpatialMethod):
         See :meth:`pybamm.SpatialMethod.delta_function`
         """
         # Find the number of submeshes
-        submesh = self.mesh.combine_submeshes(*symbol.domain)
+        submesh = self.mesh[symbol.domain]
 
         prim_pts = submesh.npts
         second_dim_repeats = self._get_auxiliary_domain_repeats(symbol.domains)
@@ -551,7 +525,7 @@ class FiniteVolume(pybamm.SpatialMethod):
         self, left_symbol_disc, right_symbol_disc, left_mesh, right_mesh
     ):
         """
-        A method to find the internal neumann conditions between two symbols
+        A method to find the internal Neumann conditions between two symbols
         on adjacent subdomains.
 
         Parameters
@@ -635,13 +609,11 @@ class FiniteVolume(pybamm.SpatialMethod):
         """
         # get relevant grid points
         domain = symbol.domain
-        submesh = self.mesh.combine_submeshes(*domain)
+        submesh = self.mesh[domain]
 
         # Prepare sizes and empty bcs_vector
         n = submesh.npts
         second_dim_repeats = self._get_auxiliary_domain_repeats(symbol.domains)
-
-        bcs_vector = pybamm.Vector([])  # starts empty
 
         lbc_value, lbc_type = bcs["left"]
         rbc_value, rbc_type = bcs["right"]
@@ -757,7 +729,7 @@ class FiniteVolume(pybamm.SpatialMethod):
 
         """
         # get relevant grid points
-        submesh = self.mesh.combine_submeshes(*domain)
+        submesh = self.mesh[domain]
 
         # Prepare sizes and empty bcs_vector
         n = submesh.npts - 1
@@ -774,7 +746,7 @@ class FiniteVolume(pybamm.SpatialMethod):
             n_bcs += 1
 
         # Add any values from Neumann boundary conditions to the bcs vector
-        if lbc_type == "Neumann":
+        if lbc_type == "Neumann" and lbc_value != 0:
             lbc_sub_matrix = coo_matrix(([1], ([0], [0])), shape=(n + n_bcs, 1))
             lbc_matrix = csr_matrix(kron(eye(second_dim_repeats), lbc_sub_matrix))
             if lbc_value.evaluates_to_number():
@@ -782,15 +754,15 @@ class FiniteVolume(pybamm.SpatialMethod):
             else:
                 left_bc = lbc_value
             lbc_vector = pybamm.Matrix(lbc_matrix) @ left_bc
-        elif lbc_type == "Dirichlet":
+        elif lbc_type == "Dirichlet" or (lbc_type == "Neumann" and lbc_value == 0):
             lbc_vector = pybamm.Vector(np.zeros((n + n_bcs) * second_dim_repeats))
         else:
             raise ValueError(
                 "boundary condition must be Dirichlet or Neumann, not '{}'".format(
-                    lbc_type
+                    rbc_type
                 )
             )
-        if rbc_type == "Neumann":
+        if rbc_type == "Neumann" and rbc_value != 0:
             rbc_sub_matrix = coo_matrix(
                 ([1], ([n + n_bcs - 1], [0])), shape=(n + n_bcs, 1)
             )
@@ -800,7 +772,7 @@ class FiniteVolume(pybamm.SpatialMethod):
             else:
                 right_bc = rbc_value
             rbc_vector = pybamm.Matrix(rbc_matrix) @ right_bc
-        elif rbc_type == "Dirichlet":
+        elif rbc_type == "Dirichlet" or (rbc_type == "Neumann" and rbc_value == 0):
             rbc_vector = pybamm.Vector(np.zeros((n + n_bcs) * second_dim_repeats))
         else:
             raise ValueError(
@@ -849,7 +821,7 @@ class FiniteVolume(pybamm.SpatialMethod):
         """
 
         # Find the number of submeshes
-        submesh = self.mesh.combine_submeshes(*discretised_child.domain)
+        submesh = self.mesh[discretised_child.domain]
 
         prim_pts = submesh.npts
         repeats = self._get_auxiliary_domain_repeats(discretised_child.domains)
@@ -1136,7 +1108,7 @@ class FiniteVolume(pybamm.SpatialMethod):
         See :meth:`pybamm.SpatialMethod.concatenation`
         """
         for idx, child in enumerate(disc_children):
-            submesh = self.mesh.combine_submeshes(*child.domain)
+            submesh = self.mesh[child.domain]
             repeats = self._get_auxiliary_domain_repeats(child.domains)
             n_nodes = len(submesh.nodes) * repeats
             n_edges = len(submesh.edges) * repeats
@@ -1203,7 +1175,7 @@ class FiniteVolume(pybamm.SpatialMethod):
         def arithmetic_mean(array):
             """Calculate the arithmetic mean of an array using matrix multiplication"""
             # Create appropriate submesh by combining submeshes in domain
-            submesh = self.mesh.combine_submeshes(*array.domain)
+            submesh = self.mesh[array.domain]
 
             # Create 1D matrix using submesh
             n = submesh.npts
@@ -1261,7 +1233,7 @@ class FiniteVolume(pybamm.SpatialMethod):
             approximation to the diffusion equation." (2012).
             """
             # Create appropriate submesh by combining submeshes in domain
-            submesh = self.mesh.combine_submeshes(*array.domain)
+            submesh = self.mesh[array.domain]
 
             # Get second dimension length for use later
             second_dim_repeats = self._get_auxiliary_domain_repeats(
@@ -1398,7 +1370,7 @@ class FiniteVolume(pybamm.SpatialMethod):
         direction : str
             Direction in which to apply the operator (upwind or downwind)
         """
-        submesh = self.mesh.combine_submeshes(*symbol.domain)
+        submesh = self.mesh[symbol.domain]
         n = submesh.npts
 
         if symbol not in bcs:

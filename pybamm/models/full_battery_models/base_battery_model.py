@@ -4,6 +4,7 @@
 
 import pybamm
 import numbers
+from functools import cached_property
 
 
 class BatteryModelOptions(pybamm.FuzzyDict):
@@ -49,11 +50,6 @@ class BatteryModelOptions(pybamm.FuzzyDict):
             * "electrolyte conductivity" : str
                 Can be "default" (default), "full", "leading order", "composite" or
                 "integrated".
-            * "external submodels" : list
-                A list of the submodels that you would like to supply an external
-                variable for instead of solving in PyBaMM. The entries of the lists
-                are strings that correspond to the submodel names in the keys
-                of `self.submodels`.
             * "hydrolysis" : str
                 Whether to include hydrolysis in the model. Only implemented for
                 lead-acid models. Can be "false" (default) or "true". If "true", then
@@ -121,9 +117,10 @@ class BatteryModelOptions(pybamm.FuzzyDict):
 
                 - "none": :class:`pybamm.sei.NoSEI` (no SEI growth)
                 - "constant": :class:`pybamm.sei.Constant` (constant SEI thickness)
-                - "reaction limited", "solvent-diffusion limited",\
-                    "electron-migration limited", "interstitial-diffusion limited", \
-                    or "ec reaction limited": :class:`pybamm.sei.SEIGrowth`
+                - "reaction limited", "reaction limited (asymmetric)", \
+                    "solvent-diffusion limited", "electron-migration limited", \
+                    "interstitial-diffusion limited", "ec reaction limited" \
+                    or "ec reaction limited (asymmetric)": :class:`pybamm.sei.SEIGrowth`
             * "SEI film resistance" : str
                 Set the submodel for additional term in the overpotential due to SEI.
                 The default value is "none" if the "SEI" option is "none", and
@@ -255,10 +252,12 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 "none",
                 "constant",
                 "reaction limited",
+                "reaction limited (asymmetric)",
                 "solvent-diffusion limited",
                 "electron-migration limited",
                 "interstitial-diffusion limited",
                 "ec reaction limited",
+                "ec reaction limited (asymmetric)",
             ],
             "SEI film resistance": ["none", "distributed", "average"],
             "SEI on cracks": ["false", "true"],
@@ -274,7 +273,6 @@ class BatteryModelOptions(pybamm.FuzzyDict):
         default_options = {
             name: options[0] for name, options in self.possible_options.items()
         }
-        default_options["external submodels"] = []
         default_options["timescale"] = "default"
 
         # Change the default for cell geometry based on which thermal option is provided
@@ -526,7 +524,7 @@ class BatteryModelOptions(pybamm.FuzzyDict):
 
         # Check options are valid
         for option, value in options.items():
-            if option in ["external submodels", "working electrode"]:
+            if option in ["working electrode"]:
                 pass
             else:
                 if isinstance(value, str) or option in [
@@ -597,19 +595,14 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 self._phases[domain] = phases
             return self._phases
 
-    @property
+    @cached_property
     def whole_cell_domains(self):
-        try:
-            return self._whole_cell_domains
-        except AttributeError:
-            if self["working electrode"] == "positive":
-                wcd = ["separator", "positive electrode"]
-            elif self["working electrode"] == "negative":
-                wcd = ["negative electrode", "separator"]
-            elif self["working electrode"] == "both":
-                wcd = ["negative electrode", "separator", "positive electrode"]
-            self._whole_cell_domains = wcd
-            return wcd
+        if self["working electrode"] == "positive":
+            return ["separator", "positive electrode"]
+        elif self["working electrode"] == "negative":
+            return ["negative electrode", "separator"]
+        elif self["working electrode"] == "both":
+            return ["negative electrode", "separator", "positive electrode"]
 
     @property
     def electrode_types(self):
@@ -693,6 +686,19 @@ class BatteryModelPhaseOptions(dict):
 class BaseBatteryModel(pybamm.BaseModel):
     """
     Base model class with some default settings and required variables
+
+    Parameters
+    ----------
+    options : dict-like, optional
+        A dictionary of options to be passed to the model. If this is a dict (and not
+        a subtype of dict), it will be processed by :class:`pybamm.BatteryModelOptions`
+        to ensure that the options are valid. If this is a subtype of dict, it is
+        assumed that the options have already been processed and are valid. This allows
+        for the use of custom options classes. The default options are given by
+        :class:`pybamm.BatteryModelOptions`.
+    name : str, optional
+        The name of the model. The default is "Unnamed battery model".
+
     **Extends:** :class:`pybamm.BaseModel`
     """
 
@@ -717,10 +723,7 @@ class BaseBatteryModel(pybamm.BaseModel):
 
     @property
     def default_geometry(self):
-        return pybamm.battery_geometry(
-            options=self.options,
-            current_collector_dimension=self.options["dimensionality"],
-        )
+        return pybamm.battery_geometry(options=self.options)
 
     @property
     def default_var_pts(self):
@@ -798,7 +801,13 @@ class BaseBatteryModel(pybamm.BaseModel):
 
     @options.setter
     def options(self, extra_options):
-        options = BatteryModelOptions(extra_options)
+        # if extra_options is a dict then process it into a BatteryModelOptions
+        # this does not catch cases that subclass the dict type
+        # so other submodels can pass in their own options class if needed
+        if extra_options is None or type(extra_options) == dict:
+            options = BatteryModelOptions(extra_options)
+        else:
+            options = extra_options
 
         # Options that are incompatible with models
         if isinstance(self, pybamm.lithium_ion.BaseModel):
@@ -843,7 +852,7 @@ class BaseBatteryModel(pybamm.BaseModel):
                 raise pybamm.OptionError("Lead-acid models cannot have lithium plating")
 
         if (
-            isinstance(self, (pybamm.lead_acid.LOQS, pybamm.lead_acid.Composite))
+            isinstance(self, pybamm.lead_acid.LOQS)
             and options["surface form"] == "false"
             and options["hydrolysis"] == "true"
         ):
@@ -891,113 +900,40 @@ class BaseBatteryModel(pybamm.BaseModel):
                 {"y": var.y, "y [m]": var.y * L_z, "z": var.z, "z [m]": var.z * L_z}
             )
 
-    def build_fundamental_and_external(self):
-        # Get the fundamental variables
-        for submodel_name, submodel in self.submodels.items():
-            pybamm.logger.debug(
-                "Getting fundamental variables for {} submodel ({})".format(
-                    submodel_name, self.name
-                )
-            )
-            self.variables.update(submodel.get_fundamental_variables())
-
-        # Set the submodels that are external
-        for sub in self.options["external submodels"]:
-            self.submodels[sub].external = True
-
-        # Set any external variables
-        self.external_variables = []
-        for submodel_name, submodel in self.submodels.items():
-            pybamm.logger.debug(
-                "Getting external variables for {} submodel ({})".format(
-                    submodel_name, self.name
-                )
-            )
-            external_variables = submodel.get_external_variables()
-
-            self.external_variables += external_variables
-
-        self._built_fundamental_and_external = True
-
-    def build_coupled_variables(self):
-        # Note: pybamm will try to get the coupled variables for the submodels in the
-        # order they are set by the user. If this fails for a particular submodel,
-        # return to it later and try again. If setting coupled variables fails and
-        # there are no more submodels to try, raise an error.
-        submodels = list(self.submodels.keys())
-        count = 0
-        # For this part the FuzzyDict of variables is briefly converted back into a
-        # normal dictionary for speed with KeyErrors
-        self._variables = dict(self._variables)
-        while len(submodels) > 0:
-            count += 1
-            for submodel_name, submodel in self.submodels.items():
-                if submodel_name in submodels:
-                    pybamm.logger.debug(
-                        "Getting coupled variables for {} submodel ({})".format(
-                            submodel_name, self.name
-                        )
-                    )
-                    try:
-                        self.variables.update(
-                            submodel.get_coupled_variables(self.variables)
-                        )
-                        submodels.remove(submodel_name)
-                    except KeyError as key:
-                        if len(submodels) == 1 or count == 100:
-                            # no more submodels to try
-                            raise pybamm.ModelError(
-                                "Missing variable for submodel '{}': {}.\n".format(
-                                    submodel_name, key
-                                )
-                                + "Check the selected "
-                                "submodels provide all of the required variables."
-                            )
-                        else:
-                            # try setting coupled variables on next loop through
-                            pybamm.logger.debug(
-                                "Can't find {}, trying other submodels first".format(
-                                    key
-                                )
-                            )
-        # Convert variables back into FuzzyDict
-        self.variables = pybamm.FuzzyDict(self._variables)
-
     def build_model_equations(self):
         # Set model equations
         for submodel_name, submodel in self.submodels.items():
-            if submodel.external is False:
-                pybamm.logger.verbose(
-                    "Setting rhs for {} submodel ({})".format(submodel_name, self.name)
-                )
+            pybamm.logger.verbose(
+                "Setting rhs for {} submodel ({})".format(submodel_name, self.name)
+            )
 
-                submodel.set_rhs(self.variables)
-                pybamm.logger.verbose(
-                    "Setting algebraic for {} submodel ({})".format(
-                        submodel_name, self.name
-                    )
+            submodel.set_rhs(self.variables)
+            pybamm.logger.verbose(
+                "Setting algebraic for {} submodel ({})".format(
+                    submodel_name, self.name
                 )
+            )
 
-                submodel.set_algebraic(self.variables)
-                pybamm.logger.verbose(
-                    "Setting boundary conditions for {} submodel ({})".format(
-                        submodel_name, self.name
-                    )
+            submodel.set_algebraic(self.variables)
+            pybamm.logger.verbose(
+                "Setting boundary conditions for {} submodel ({})".format(
+                    submodel_name, self.name
                 )
+            )
 
-                submodel.set_boundary_conditions(self.variables)
-                pybamm.logger.verbose(
-                    "Setting initial conditions for {} submodel ({})".format(
-                        submodel_name, self.name
-                    )
+            submodel.set_boundary_conditions(self.variables)
+            pybamm.logger.verbose(
+                "Setting initial conditions for {} submodel ({})".format(
+                    submodel_name, self.name
                 )
-                submodel.set_initial_conditions(self.variables)
-                submodel.set_events(self.variables)
-                pybamm.logger.verbose(
-                    "Updating {} submodel ({})".format(submodel_name, self.name)
-                )
-                self.update(submodel)
-                self.check_no_repeated_keys()
+            )
+            submodel.set_initial_conditions(self.variables)
+            submodel.set_events(self.variables)
+            pybamm.logger.verbose(
+                "Updating {} submodel ({})".format(submodel_name, self.name)
+            )
+            self.update(submodel)
+            self.check_no_repeated_keys()
 
     def build_model(self):
 
