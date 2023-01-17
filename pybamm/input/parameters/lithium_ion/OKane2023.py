@@ -1198,6 +1198,7 @@ def get_parameter_values():
     """
 
     return {
+        "chemistry": "lithium_ion",
         # lithium plating
         "Lithium metal partial molar volume [m3.mol-1]": 1.3e-05,
         "Lithium plating kinetic rate constant [m.s-1]": 1e-09,
@@ -1364,5 +1365,5 @@ def get_parameter_values():
         "Initial concentration in positive electrode [mol.m-3]": 13975.0,
         "Initial temperature [K]": 298.15,
         # citations
-        "citations": ["OKane2022", "OKane2020", "Chen2020"],
+        "citations": ["OKane2022", "OKane2020", "Chen2020", "ORegan2022"],
     }
