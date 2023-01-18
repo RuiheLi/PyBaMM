@@ -26,6 +26,29 @@ def EC_diffusivity_5E_5(c_e, c_EC , T):
         +  (c_EC < 0 ) * 0 
     )
     return D_ec_dim
+def Cross_diffusivity_1p5E_12(c_e, c_EC , T):
+    D_x_dim_1 = (
+        (c_EC >= 0 ) * 1.5e-12 
+        +  (c_EC < 0 ) * 0 
+    )
+    D_x_dim = (
+        (c_e >= 0 ) * D_x_dim_1 
+        +  (c_e < 0 ) * 0 
+    )
+    return D_x_dim
+
+def Cross_diffusivity_1p5E_10(c_e, c_EC , T):
+    D_x_dim_1 = (
+        (c_EC >= 0 ) * 1.5e-10
+        +  (c_EC < 0 ) * 0 
+    )
+    D_x_dim = (
+        (c_e >= 0 ) * D_x_dim_1 
+        +  (c_e < 0 ) * 0 
+    )
+    return D_x_dim
+
+
 def t_0plus_constant(c_e, c_EC , T):
     t_0plus = (
         (c_EC >= 0 ) * 0.28
@@ -40,8 +63,97 @@ def elely_TDF_15(c_e, c_EC , T):
     )
     return Oneplus_dlnfdlnc
 
+def nmc_LGM50_diffusivity_ORegan2022(sto, T):
+    a1 = -0.9231
+    a2 = -0.4066
+    a3 = -0.993
+    b1 = 0.3216
+    b2 = 0.4532
+    b3 = 0.8098
+    c0 = -13.96
+    c1 = 0.002534
+    c2 = 0.003926
+    c3 = 0.09924
+    d = 1449
+
+    D_ref = (
+        10
+        ** (
+            c0
+            + a1 * pybamm.exp(-((sto - b1) ** 2) / c1)
+            + a2 * pybamm.exp(-((sto - b2) ** 2) / c2)
+            + a3 * pybamm.exp(-((sto - b3) ** 2) / c3)
+        )
+        * 2.7  # correcting factor (see O'Regan et al 2021)
+    )
+
+    E_D_s = d * pybamm.constants.R
+    arrhenius = pybamm.exp(E_D_s / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    return D_ref * arrhenius
+
+def graphite_LGM50_diffusivity_ORegan2022(sto, T):
+    a0 = 11.17
+    a1 = -1.553
+    a2 = -6.136
+    a3 = -9.725
+    a4 = 1.85
+    b1 = 0.2031
+    b2 = 0.5375
+    b3 = 0.9144
+    b4 = 0.5953
+    c0 = -15.11
+    c1 = 0.0006091
+    c2 = 0.06438
+    c3 = 0.0578
+    c4 = 0.001356
+    d = 2092
+
+    D_ref = (
+        10
+        ** (
+            a0 * sto
+            + c0
+            + a1 * pybamm.exp(-((sto - b1) ** 2) / c1)
+            + a2 * pybamm.exp(-((sto - b2) ** 2) / c2)
+            + a3 * pybamm.exp(-((sto - b3) ** 2) / c3)
+            + a4 * pybamm.exp(-((sto - b4) ** 2) / c4)
+        )
+        * 3.0321  # correcting factor (see O'Regan et al 2021)
+    )
+
+    E_D_s = d * pybamm.constants.R
+    arrhenius = pybamm.exp(E_D_s / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    return D_ref * arrhenius
+
 import numpy as np
-def electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs):
+# Landesfeind electrolyte properties 
+def electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs):
+    c = (
+        (c_e >= 0 ) * c_e / 1000 
+        +  (c_e < 0 ) * 0  
+        )# mol.m-3 -> mol.l
+    p1, p2, p3, p4, p5, p6 = coeffs
+    A = p1 * (1 + (T - p2))
+    B = 1 + p3 * pybamm.sqrt(c) + p4 * (1 + p5 * pybamm.exp(1000 / T)) * c
+    C = 1 + c**4 * (p6 * pybamm.exp(1000 / T))
+    sigma_e = A * c * B / C  # mS.cm-1
+    return sigma_e / 10
+
+def electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs):
+    c = (
+        (c_e >= 0 ) * c_e / 1000 
+        +  (c_e < 0 ) * 0  
+        )# mol.m-3 -> mol.l
+    p1, p2, p3, p4 = coeffs
+    A = p1 * pybamm.exp(p2 * c)
+    B = pybamm.exp(p3 / T)
+    C = pybamm.exp(p4 * c / T)
+    D_e = A * B * C * 1e-10  # m2/s
+    return D_e
+
+def electrolyte_TDF_base_Landesfeind2019(c_e,c_EC, T, coeffs):
     c = c_e / 1000  # mol.m-3 -> mol.l
     p1, p2, p3, p4, p5, p6, p7, p8, p9 = coeffs
     tdf = (
@@ -56,21 +168,104 @@ def electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs):
         + p9 * c * T**2
     )
     return tdf
-def electrolyte_TDF_EC_DMC_1_1_Landesfeind2019(c_e, c_EC , T):
-    coeffs = np.array(
-        [-5.58, 7.17, 3.80e-2, 1.91, -6.65e-2, -5.08e-5, 1.1e-1, -6.10e-3, 1.51e-4]
+
+def electrolyte_transference_number_base_Landesfeind2019(c_e,c_EC, T, coeffs):
+    c = c_e / 1000  # mol.m-3 -> mol.l
+    p1, p2, p3, p4, p5, p6, p7, p8, p9 = coeffs
+    tplus = (
+        p1
+        + p2 * c
+        + p3 * T
+        + p4 * c**2
+        + p5 * c * T
+        + p6 * T**2
+        + p7 * c**3
+        + p8 * c**2 * T
+        + p9 * c * T**2
     )
-    return electrolyte_TDF_base_Landesfeind2019(c_e,  c_EC ,T, coeffs)
-def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019(c_e, c_EC , T):
+    return tplus
+
+def electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
+    coeffs = np.array(
+        [
+            -1.28e1,
+            -6.12,
+            8.21e-2,
+            9.04e-1,
+            3.18e-2,
+            -1.27e-4,
+            1.75e-2,
+            -3.12e-3,
+            -3.96e-5,
+        ]
+    )
+    return electrolyte_transference_number_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+
+def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
     coeffs = np.array(
         [2.57e1, -4.51e1, -1.77e-1, 1.94, 2.95e-1, 3.08e-4, 2.59e-1, -9.46e-3, -4.54e-4]
     )
-    return electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs)
-def electrolyte_TDF_EMC_FEC_19_1_Landesfeind2019(c_e, c_EC , T):
+    return electrolyte_TDF_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+
+
+def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
+    coeffs = np.array([1.01e3, 1.01, -1.56e3, -4.87e2])
+    return electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+
+
+def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
+    coeffs = np.array([5.21e-1, 2.28e2, -1.06, 3.53e-1, -3.59e-3, 1.48e-3])
+    return electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+
+def electrolyte_diffusivity_EC_DMC_1_1_Landesfeind2019(c_e, c_EC,T):
+    coeffs = np.array([1.47e3, 1.33, -1.69e3, -5.63e2])
+    return electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+
+def electrolyte_conductivity_EC_DMC_1_1_Landesfeind2019(c_e,c_EC, T):
+    coeffs = np.array([7.98e-1, 2.28e2, -1.22, 5.09e-1, -4e-3, 3.79e-3])
+    return electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+    
+def electrolyte_TDF_EC_DMC_1_1_Landesfeind2019(c_e,c_EC, T):
+    coeffs = np.array(
+        [-5.58, 7.17, 3.80e-2, 1.91, -6.65e-2, -5.08e-5, 1.1e-1, -6.10e-3, 1.51e-4]
+    )
+    return electrolyte_TDF_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+
+def electrolyte_transference_number_EC_DMC_1_1_Landesfeind2019(c_e,c_EC, T):
+    coeffs = np.array(
+        [
+            -7.91,
+            2.45e-1,
+            5.28e-2,
+            6.98e-1,
+            -1.08e-2,
+            -8.21e-5,
+            7.43e-4,
+            -2.22e-3,
+            3.07e-5,
+        ]
+    )
+    return electrolyte_transference_number_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+
+def electrolyte_diffusivity_EMC_FEC_19_1_Landesfeind2019(c_e,c_EC, T):
+    coeffs = np.array([5.86e2, 1.33, -1.38e3, -5.82e2])
+    return electrolyte_diffusivity_base_Landesfeind2019(c_e, c_EC,T, coeffs)
+
+def electrolyte_TDF_EMC_FEC_19_1_Landesfeind2019(c_e,c_EC, T):
     coeffs = np.array(
         [3.22, -1.01e1, -1.58e-2, 6.12, 2.96e-2, 2.42e-5, -2.22e-1, -1.57e-2, 6.30e-6]
     )
-    return electrolyte_TDF_base_Landesfeind2019(c_e,  c_EC ,T, coeffs)
+    return electrolyte_TDF_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+
+def electrolyte_transference_number_EMC_FEC_19_1_Landesfeind2019(c_e,c_EC, T):
+    coeffs = np.array(
+        [-1.22e1, -3.05, 8.38e-2, 1.78, 1.51e-3, -1.37e-4, -2.45e-2, -5.15e-3, 2.14e-5]
+    )
+    return electrolyte_transference_number_base_Landesfeind2019(c_e, c_EC,T, coeffs)
+
+def electrolyte_conductivity_EMC_FEC_19_1_Landesfeind2019(c_e,c_EC, T):
+    coeffs = np.array([2.51e-2, 1.75e2, 1.23, 2.05e-1, -8.81e-2, 2.83e-3])
+    return electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
 
 def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
     # T = T + 273.15
@@ -863,10 +1058,19 @@ def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para):
     model.variables["c(EC) over c(Li+)"] = c_EC / c_e
     t_0plus = para_used["Cation transference number"]
     model.variables["Cation transference number"] = t_0plus(c_e,c_EC, T)
+    var_pts = {
+        "x_n": 20,  # negative electrode
+        "x_s": 10,  # separator 
+        "x_p": 20,  # positive electrode
+        "r_n": 30,  # negative particle
+        "r_p": 30,  # positive particle
+    }
     sim    = pybamm.Simulation(
         model, experiment = Exp_1,
         parameter_values = para_used,
-        solver = pybamm.CasadiSolver(return_solution_if_failed_early=True),)       
+        solver = pybamm.CasadiSolver(return_solution_if_failed_early=True),
+        # var_pts=var_pts,
+        )       
     sol    = sim.solve()
     MyDict = {}
     try:

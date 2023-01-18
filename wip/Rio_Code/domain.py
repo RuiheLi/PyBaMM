@@ -1,5 +1,3 @@
-Title_All =[
-    "Andrew_2022","Ding_2001",
-    "Valoen_Constant","Valoen_Haya",
-    "Valoen_tanh500","Valoen_tanh1000"
-]
+t0plus_Landes_3_7.append(   electrolyte_transference_number_EC_DMC_3_7_Landesfeind2019(ce_i,6250, 298.15)  ) 
+    TDF_Landes_3_7.append  (   electrolyte_TDF_EC_DMC_3_7_Landesfeind2019 (ce_i,6250, 298.15)    )
+    
