@@ -48,6 +48,16 @@ def Cross_diffusivity_1p5E_10(c_e, c_EC , T):
     )
     return D_x_dim
 
+def Cross_diffusivity_1p5E_11(c_e, c_EC , T):
+    D_x_dim_1 = (
+        (c_EC >= 0 ) * 1.5e-11
+        +  (c_EC < 0 ) * 0 
+    )
+    D_x_dim = (
+        (c_e >= 0 ) * D_x_dim_1 
+        +  (c_e < 0 ) * 0 
+    )
+    return D_x_dim
 
 def t_0plus_constant(c_e, c_EC , T):
     t_0plus = (
