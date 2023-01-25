@@ -92,7 +92,6 @@ class Full(BaseElectrolyteDiffusion):
 
         eps_c_e = variables["Porosity times concentration"]
         c_e = variables["Electrolyte concentration"]
-        T = variables["Cell temperature"]
         N_e = variables["Electrolyte flux"]
         div_Vbox = variables["Transverse volume-averaged acceleration"]
 

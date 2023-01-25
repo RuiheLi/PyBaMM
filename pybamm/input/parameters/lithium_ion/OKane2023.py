@@ -1,6 +1,7 @@
 import pybamm
 import numpy as np
 
+
 def plating_exchange_current_density_OKane2020(c_e, c_Li, T):
     """
     Exchange-current density for Li plating reaction [A.m-2].
@@ -90,6 +91,7 @@ def SEI_limited_dead_lithium_OKane2022(L_sei):
     gamma = gamma_0 * L_sei_0 / L_sei
 
     return gamma
+
 
 def electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs):
     """
@@ -243,6 +245,7 @@ def electrolyte_transference_number_base_Landesfeind2019(c_e, T, coeffs):
     )
 
     return tplus
+
 
 def copper_heat_capacity_CRC(T):
     """
@@ -878,6 +881,7 @@ def separator_LGM50_heat_capacity_ORegan2022(T):
 
     return cp_wet
 
+
 def graphite_volume_change_Ai2020(sto, c_s_max):
     """
     Graphite particle volume change as a function of stochiometry [1, 2].
@@ -1016,6 +1020,7 @@ def cracking_rate_Ai2020(T_dim):
     Eac_cr = 0  # to be implemented
     arrhenius = pybamm.exp(Eac_cr / pybamm.constants.R * (1 / T_dim - 1 / 298.15))
     return k_cr * arrhenius
+
 
 def graphite_LGM50_ocp_OKane2023(sto):
     """
@@ -1346,13 +1351,12 @@ def get_parameter_values():
         "Typical electrolyte concentration [mol.m-3]": 1000.0,
         "Initial concentration in electrolyte [mol.m-3]": 1000.0,
         "Cation transference number"
-        "": 0.3,
+        "": electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019,
         "1 + dlnf/dlnc": electrolyte_TDF_EC_EMC_3_7_Landesfeind2019,
         "Electrolyte diffusivity [m2.s-1]"
         "": electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019,
         "Electrolyte conductivity [S.m-1]"
         "": electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019,
-        "1 + dlnf/dlnc": 1.0,
         # experiment
         "Reference temperature [K]": 298.15,
         "Total heat transfer coefficient [W.m-2.K-1]": 10.0,
