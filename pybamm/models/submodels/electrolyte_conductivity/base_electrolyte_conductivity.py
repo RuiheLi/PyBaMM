@@ -306,7 +306,7 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
             # Mark Ruihe add for c(EC) induced concentration overpotential
             indef_integral_EC_n = pybamm.IndefiniteIntegral(
                 (                                 
-                    2 * param.dLJP_dcEC(c_e_n,c_EC_n, T_n)  
+                    param.dLJP_dcEC(c_e_n,c_EC_n, T_n)  
                     * param.c_ec_typ / param.potential_scale
                     * pybamm.grad(c_EC_n)   
                 ),
@@ -314,7 +314,7 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
             )
             indef_integral_EC_s = pybamm.IndefiniteIntegral(
                 (                                 
-                    2 * param.dLJP_dcEC(c_e_s,c_EC_s, T_s)    
+                    param.dLJP_dcEC(c_e_s,c_EC_s, T_s)    
                     * param.c_ec_typ / param.potential_scale
                     * pybamm.grad(c_EC_s)   
                 ),
@@ -322,7 +322,7 @@ class BaseElectrolyteConductivity(pybamm.BaseSubModel):
             )
             indef_integral_EC_p = pybamm.IndefiniteIntegral(
                 (                                 
-                    2 * param.dLJP_dcEC(c_e_p,c_EC_p, T_p) 
+                    param.dLJP_dcEC(c_e_p,c_EC_p, T_p) 
                     * param.c_ec_typ / param.potential_scale
                     * pybamm.grad(c_EC_p)   
                 ),
