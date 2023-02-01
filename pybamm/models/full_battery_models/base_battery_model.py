@@ -944,6 +944,7 @@ class BaseBatteryModel(pybamm.BaseModel):
             count += 1
             for submodel_name, submodel in self.submodels.items():
                 if submodel_name in submodels:
+                    # print(submodels,count,'Rio')
                     pybamm.logger.debug(
                         "Getting coupled variables for {} submodel ({})".format(
                             submodel_name, self.name
@@ -955,7 +956,7 @@ class BaseBatteryModel(pybamm.BaseModel):
                         )
                         submodels.remove(submodel_name)
                     except KeyError as key:
-                        if len(submodels) == 1 or count == 100:
+                        if len(submodels) == 1 or count == 300:
                             # no more submodels to try
                             raise pybamm.ModelError(
                                 "Missing variable for submodel '{}': {}.\n".format(

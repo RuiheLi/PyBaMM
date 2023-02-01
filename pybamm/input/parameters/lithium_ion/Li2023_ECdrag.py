@@ -461,6 +461,13 @@ def fun_TDF_EC5(c_e, c_EC , T):
         +  (c_EC < 0 ) * 5
     )
     return TDF_EC
+# add Ruihe Li update 230201
+def dLJP_dcEC_Nyman_2011(c_e, c_EC , T):
+    dLJP_dcEC = -5.394e-6 - 3.616e-2 / c_EC
+    return dLJP_dcEC
+def dLJP_dce_Nyman_2011(c_e, c_EC , T):
+    dLJP_dce = 5.326e-5 + 2.47e-2 / c_e
+    return dLJP_dce
 
 import numpy as np
 def electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs):
@@ -628,6 +635,8 @@ def get_parameter_values():
         "Cation transference number": t_0plus_constant ,   # from Andrew 
         "1 + dlnf/dlnc": 1.0,
         "TDF of EC": 5.0, 
+        "Measured dLJP_dcEC": dLJP_dcEC_Nyman_2011,
+        "Measured dLJP_dce": dLJP_dce_Nyman_2011,
         "Electrolyte diffusivity [m2.s-1]": electrolyte_diffusivity_Valoen2005Constant,
         "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Andrew2022,
         # or: electrolyte_conductivity_Valoen2005Constant_wEC_Haya 

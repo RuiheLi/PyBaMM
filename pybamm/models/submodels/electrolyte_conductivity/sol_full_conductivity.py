@@ -48,18 +48,12 @@ class sol_Full(BaseElectrolyteConductivity):
         c_EC  = variables["EC concentration"]
         phi_e = variables["Electrolyte potential"]
 
-
+        # Update 230201: use measured liquid junction potential to replace TDF
         i_e = (param.kappa_e(c_e,c_EC, T) * tor * param.gamma_e / param.C_e) * (
-            - pybamm.grad(phi_e)   
-            + (
-                param.chiT_over_c(c_e,c_EC, T) * pybamm.grad(c_e) 
-                # * param.c_0_back / param.ce_tot  Update 230104: add thermodynamic factors
-                ) # Mark Ruihe add this line, one more ratio
-            + (                                   # Mark Ruihe add this follwing lines for double transport 
-                2 * param.TDF_EC(c_e,c_EC, T)  #     param.c_0_back / param.ce_tot  
-                * param.Xi_0 * param.c_ec_typ / param.c_ec_0_dim
-                * pybamm.grad(c_EC)   
-            )
+            # param.chiT_over_c(c_e,c_EC, T) * pybamm.grad(c_e) - pybamm.grad(phi_e)
+            - pybamm.grad(phi_e)
+            + pybamm.grad(c_e) * param.dLJP_dce(c_e,c_EC, T) * param.c_e_typ  / param.potential_scale
+            + pybamm.grad(c_EC)* param.dLJP_dcEC(c_e,c_EC, T)* param.c_ec_typ / param.potential_scale
         )
 
         # Override print_name

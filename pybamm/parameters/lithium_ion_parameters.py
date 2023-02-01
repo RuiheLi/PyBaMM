@@ -432,6 +432,23 @@ class LithiumIonParameters(BaseParameters):
             "Temperature [K]": self.Delta_T * T + self.T_ref,
         }
         return pybamm.FunctionParameter("TDF of EC", inputs)
+    # update: add Ruihe Li use measured liquid junction potential to replace TDF 
+    def dLJP_dcEC(self, c_e,c_EC, T):
+        """Measured liquid junction potential differential on c(EC) add by Ruihe Li"""
+        inputs = {
+            "Electrolyte concentration [mol.m-3]": c_e * self.c_e_typ,
+            "EC concentration [mol.m-3]": c_EC * self.c_ec_typ,
+            "Temperature [K]": self.Delta_T * T + self.T_ref,
+        }
+        return pybamm.FunctionParameter("Measured dLJP_dcEC", inputs)
+    def dLJP_dce(self, c_e,c_EC, T):
+        """Measured liquid junction potential differential on c(Li+) add by Ruihe Li"""
+        inputs = {
+            "Electrolyte concentration [mol.m-3]": c_e * self.c_e_typ,
+            "EC concentration [mol.m-3]": c_EC * self.c_ec_typ,
+            "Temperature [K]": self.Delta_T * T + self.T_ref,
+        }
+        return pybamm.FunctionParameter("Measured dLJP_dce", inputs)
 
     def D_e(self, c_e,c_EC, T):
         """Dimensionless electrolyte diffusivity"""
