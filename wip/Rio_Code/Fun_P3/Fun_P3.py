@@ -110,6 +110,12 @@ def EC_diffusivity_5E_5(c_e, c_EC , T):
         +  (c_EC < 0 ) * 0 
     )
     return D_ec_dim
+def EC_diffusivity_5E_10(c_e, c_EC , T):
+    D_ec_dim = (
+        (c_EC >= 0 ) * 5e-10
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_dim
 def Cross_diffusivity_1p5E_12(c_e, c_EC , T):
     D_x_dim_1 = (
         (c_EC >= 0 ) * 1.5e-12 
@@ -1373,7 +1379,8 @@ def Para_init(Para_dict):
     if Para_dict_used.__contains__("Model option"):
         model_options = Para_dict_used["Model option"]  
         Para_dict_used.pop("Model option")
-    if Para_dict_used.__contains__("Func Electrolyte conductivity [S.m-1]"):
+
+    """ if Para_dict_used.__contains__("Func Electrolyte conductivity [S.m-1]"):
         Para_0.update({
             "Electrolyte conductivity [S.m-1]": 
             eval(Para_dict_used["Func Electrolyte conductivity [S.m-1]"])})  
@@ -1397,7 +1404,7 @@ def Para_init(Para_dict):
         Para_0.update({
             "1 + dlnf/dlnc": 
             eval(Para_dict_used["Func 1 + dlnf/dlnc"])})
-        Para_dict_used.pop("Func 1 + dlnf/dlnc")
+        Para_dict_used.pop("Func 1 + dlnf/dlnc") """
 
     if Para_dict_used.__contains__("Initial Neg SOC"):
         c_Neg1SOC_in = (
@@ -1422,7 +1429,11 @@ def Para_init(Para_dict):
     for key, value in Para_dict_used.items():
         # risk: will update parameter that doesn't exist, 
         # so need to make sure the name is right 
-        Para_0.update({key: value},check_already_exists=False)
+        if isinstance(value, str):
+            Para_0.update({key: eval(value)})
+            #Para_dict_used.pop(key)
+        else:
+            Para_0.update({key: value},check_already_exists=False)
     return CyclePack,Para_0
 
 def GetSol_dict (my_dict, keys_all, Sol, 
