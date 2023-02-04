@@ -643,7 +643,7 @@ def get_parameter_values():
         # or: electrolyte_conductivity_Andrew2022
 
         # Mark Ruihe block start
-        # 3500 and 7000; 6250 and 5300; 9200 and 3350
+        # 3500 and 7000 (EC:EMC=3:7); 6250 and 5300 (EC:EMC=1:1); 9300 and 3250 (EC:EMC=7:3)
         "EC transference number": EC_transference_number,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
         "EC transference number zero": 0.7  , # from Andrew": 
         "EC initial concentration in electrolyte [mol.m-3]": 6250  ,

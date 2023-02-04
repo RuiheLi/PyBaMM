@@ -213,9 +213,10 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 # consider effect of solvent concentration gradient
             ],
             "solvent diffusion": [
-                "double spatial consume w refill", "double spatial consume wo refill", 
-                "single spatial consume w refill", "single spatial consume wo refill", 
-                "single no consume wo refill"],  # Mark Ruihe Li add
+                "single no consume wo refill","double spatial consume w refill", 
+                "double spatial consume wo refill","single spatial consume w refill", 
+                "single spatial consume wo refill", 
+                ],  # Mark Ruihe Li add
             "hydrolysis": ["false", "true"],
             "intercalation kinetics": [
                 "symmetric Butler-Volmer",

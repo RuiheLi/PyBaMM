@@ -8,6 +8,90 @@ import traceback
 import random;import time, signal
 
 from pybamm import tanh,exp,sqrt
+
+def Diff_Andrew_ACS(c_e,c_EC, T):
+    M_EMC = 104.105/1e3 # kg/mol
+    M_e   = 151.905/1e3 # kg/mol
+    c_e_constant = 3800 # mol/m3
+    # Get rho using Table S1:
+    c_e_used =(
+        (c_e <= c_e_constant) * c_e/ 1e3
+        +
+        (c_e > c_e_constant)  * c_e_constant/ 1e3
+    )
+    rho = (
+        1007.1+114.2*c_e_used 
+        - 8.121*np.power(c_e_used,1.5) 
+        - 4.013e-5*np.power(c_e_used,10) ) # kg/m3
+    # get y using Eq. (S16)
+    y = M_EMC*c_e_used*1e3  / (
+        rho + (2*M_EMC-M_e) * c_e_used*1e3 
+    )
+    #print("diffusivity:",y)
+    Diff = (4.998-29.96*y+53.78*np.power(y,2) ) / 1e10
+    return Diff
+def Density_Andrew_ACS(c_e,c_EC, T):
+    M_EMC = 104.105/1e3 # kg/mol
+    M_e   = 151.905/1e3 # kg/mol
+    c_e_constant = 3800 # mol/m3
+    # Get rho using Table S1:
+    c_e_used =(
+        (c_e <= c_e_constant) * c_e / 1e3
+        +
+        (c_e > c_e_constant)  * c_e_constant / 1e3
+    )
+    rho = (
+        1007.1+114.2*c_e_used 
+        - 8.121*np.power(c_e_used,1.5) 
+        - 4.013e-5*np.power(c_e_used,10) ) # kg/m3
+    return rho
+def Cond_Andrew_ACS(c_e,c_EC, T):
+    M_EMC = 104.105/1e3 # kg/mol
+    M_e   = 151.905/1e3 # kg/mol
+    c_e_constant = 3800 # mol/m3
+    # Get rho using Table S1:
+    c_e_used =(
+        (c_e <= c_e_constant) * c_e / 1e3
+        +
+        (c_e > c_e_constant)  * c_e_constant / 1e3
+    )
+    rho = (
+        1007.1+114.2*c_e_used 
+        - 8.121*np.power(c_e_used,1.5) 
+        - 4.013e-5*np.power(c_e_used,10) ) # kg/m3
+    # get y using Eq. (S16)
+    y = M_EMC*c_e_used *1e3 / (
+        rho + (2*M_EMC-M_e) * c_e_used * 1e3
+    )
+    #print("conductivity:",y)
+    cond = np.power( (
+        48.93*np.power(y,1.5)
+        - 284.8* np.power(y,2.5 )
+        + 817.7* np.power(y,4 ) ), 2 )
+    return cond
+def t_0plus_Andrew_ACS(c_e,c_EC, T):
+    M_EMC = 104.105/1e3 # kg/mol
+    M_e   = 151.905/1e3 # kg/mol
+    c_e_constant = 3800 # mol/m3
+    # Get rho using Table S1:
+    c_e_used =(
+        (c_e <= c_e_constant) * c_e/ 1e3
+        +
+        (c_e > c_e_constant)  * c_e_constant/ 1e3
+    )
+    rho = (
+        1007.1+114.2*c_e_used 
+        - 8.121*np.power(c_e_used,1.5) 
+        - 4.013e-5*np.power(c_e_used,10) ) # kg/m3
+    # get y using Eq. (S16)
+    y = M_EMC*c_e_used*1e3  / (
+        rho + (2*M_EMC-M_e) * c_e_used*1e3 
+    )
+    #print("transference:",y)
+    t_0plus = 0.4107 - 1.487*y + 2.547* np.power(y,2)
+    return t_0plus
+
+
 def EC_transference_number(c_e,c_EC, T):# Mark Ruihe add update 221212
     c_EC_0 = pybamm.Parameter("Typical EC concentration [mol.m-3]")
     Xi_0 =   pybamm.Parameter("EC transference number zero")
@@ -37,17 +121,6 @@ def Cross_diffusivity_1p5E_12(c_e, c_EC , T):
     )
     return D_x_dim
 
-def Cross_diffusivity_1p5E_10(c_e, c_EC , T):
-    D_x_dim_1 = (
-        (c_EC >= 0 ) * 1.5e-10
-        +  (c_EC < 0 ) * 0 
-    )
-    D_x_dim = (
-        (c_e >= 0 ) * D_x_dim_1 
-        +  (c_e < 0 ) * 0 
-    )
-    return D_x_dim
-
 def Cross_diffusivity_1p5E_11(c_e, c_EC , T):
     D_x_dim_1 = (
         (c_EC >= 0 ) * 1.5e-11
@@ -59,10 +132,32 @@ def Cross_diffusivity_1p5E_11(c_e, c_EC , T):
     )
     return D_x_dim
 
+def Cross_diffusivity_1p5E_10(c_e, c_EC , T):
+    D_x_dim_1 = (
+        (c_EC >= 0 ) * 1.5e-10
+        +  (c_EC < 0 ) * 0 
+    )
+    D_x_dim = (
+        (c_e >= 0 ) * D_x_dim_1 
+        +  (c_e < 0 ) * 0 
+    )
+    return D_x_dim
+
+def Cross_diffusivity_1p5E_09(c_e, c_EC , T):
+    D_x_dim_1 = (
+        (c_EC >= 0 ) * 1.5e-9
+        +  (c_EC < 0 ) * 0 
+    )
+    D_x_dim = (
+        (c_e >= 0 ) * D_x_dim_1 
+        +  (c_e < 0 ) * 0 
+    )
+    return D_x_dim
+
 def t_0plus_constant(c_e, c_EC , T):
     t_0plus = (
-        (c_EC >= 0 ) * 0.28
-        +  (c_EC < 0 ) * 0.28 
+        (c_EC >= 0 ) * 0.24
+        +  (c_EC < 0 ) * 0.24 
     )
     return t_0plus
 
@@ -210,6 +305,27 @@ def electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
         ]
     )
     return electrolyte_transference_number_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+def electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019_Con(c_e,c_EC, T):
+    coeffs = np.array(
+        [
+            -1.28e1,
+            -6.12,
+            8.21e-2,
+            9.04e-1,
+            3.18e-2,
+            -1.27e-4,
+            1.75e-2,
+            -3.12e-3,
+            -3.96e-5,
+        ]
+    )
+    c_e_constant = 3000
+    t0plus = (
+        (c_e <= c_e_constant) * electrolyte_transference_number_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+        + 
+        (c_e > c_e_constant) * electrolyte_transference_number_base_Landesfeind2019(c_e_constant,c_EC, T, coeffs)
+    )
+    return t0plus
 
 def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
     coeffs = np.array(
@@ -221,11 +337,39 @@ def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
 def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
     coeffs = np.array([1.01e3, 1.01, -1.56e3, -4.87e2])
     return electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019_Con(c_e,c_EC, T):
+    coeffs = np.array([1.01e3, 1.01, -1.56e3, -4.87e2])
+    c_e_constant = 3000
+    diff_f = (
+        (c_e <= c_e_constant) * electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+        +
+        (c_e > c_e_constant) * electrolyte_diffusivity_base_Landesfeind2019(c_e_constant,c_EC, T, coeffs)
+    )
+    return diff_f
 
 
 def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
     coeffs = np.array([5.21e-1, 2.28e2, -1.06, 3.53e-1, -3.59e-3, 1.48e-3])
     return electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019_Con(c_e,c_EC, T):
+    coeffs = np.array([5.21e-1, 2.28e2, -1.06, 3.53e-1, -3.59e-3, 1.48e-3])
+    c_e_constant = 3000
+    sigma = (
+        (c_e <= c_e_constant) * electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+        +
+        (c_e > c_e_constant) * electrolyte_conductivity_base_Landesfeind2019(c_e_constant,c_EC, T, coeffs)
+    )
+    return sigma
+
+def electrolyte_diffusivity_EC_DMC_1_1_Landesfeind2019_Con(c_e, c_EC,T):
+    coeffs = np.array([1.47e3, 1.33, -1.69e3, -5.63e2])
+    c_e_constant = 3000
+    diff_f = (
+        (c_e <= c_e_constant) * electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+        +
+        (c_e > c_e_constant) * electrolyte_diffusivity_base_Landesfeind2019(c_e_constant,c_EC, T, coeffs)
+    )
+    return diff_f
 
 def electrolyte_diffusivity_EC_DMC_1_1_Landesfeind2019(c_e, c_EC,T):
     coeffs = np.array([1.47e3, 1.33, -1.69e3, -5.63e2])
@@ -234,7 +378,17 @@ def electrolyte_diffusivity_EC_DMC_1_1_Landesfeind2019(c_e, c_EC,T):
 def electrolyte_conductivity_EC_DMC_1_1_Landesfeind2019(c_e,c_EC, T):
     coeffs = np.array([7.98e-1, 2.28e2, -1.22, 5.09e-1, -4e-3, 3.79e-3])
     return electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
-    
+
+def electrolyte_conductivity_EC_DMC_1_1_Landesfeind2019_Con(c_e,c_EC, T):
+    coeffs = np.array([7.98e-1, 2.28e2, -1.22, 5.09e-1, -4e-3, 3.79e-3])
+    c_e_constant = 3000
+    sigma = (
+        (c_e <= c_e_constant) * electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+        +
+        (c_e > c_e_constant) * electrolyte_conductivity_base_Landesfeind2019(c_e_constant,c_EC, T, coeffs)
+    )
+    return sigma
+
 def electrolyte_TDF_EC_DMC_1_1_Landesfeind2019(c_e,c_EC, T):
     coeffs = np.array(
         [-5.58, 7.17, 3.80e-2, 1.91, -6.65e-2, -5.08e-5, 1.1e-1, -6.10e-3, 1.51e-4]
@@ -256,6 +410,27 @@ def electrolyte_transference_number_EC_DMC_1_1_Landesfeind2019(c_e,c_EC, T):
         ]
     )
     return electrolyte_transference_number_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+def electrolyte_transference_number_EC_DMC_1_1_Landesfeind2019_Con(c_e,c_EC, T):
+    coeffs = np.array(
+        [
+            -7.91,
+            2.45e-1,
+            5.28e-2,
+            6.98e-1,
+            -1.08e-2,
+            -8.21e-5,
+            7.43e-4,
+            -2.22e-3,
+            3.07e-5,
+        ]
+    )
+    c_e_constant = 3000
+    t0plus = (
+        (c_e <= c_e_constant) * electrolyte_transference_number_base_Landesfeind2019(c_e,c_EC, T, coeffs)
+        + 
+        (c_e > c_e_constant) * electrolyte_transference_number_base_Landesfeind2019(c_e_constant,c_EC, T, coeffs)
+    )
+    return t0plus
 
 def electrolyte_diffusivity_EMC_FEC_19_1_Landesfeind2019(c_e,c_EC, T):
     coeffs = np.array([5.86e2, 1.33, -1.38e3, -5.82e2])
@@ -1030,7 +1205,7 @@ def recursive_scan(mylist,kvs, key_list, acc):
         recursive_scan(mylist,kvs, key_list[1:], acc)
 
 
-def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para):
+def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para,var_pts):
     para_used = para.copy()
     if (
         model.options["solvent diffusion"]=="double spatial consume w refill" 
@@ -1068,18 +1243,12 @@ def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para):
     model.variables["c(EC) over c(Li+)"] = c_EC / c_e
     t_0plus = para_used["Cation transference number"]
     model.variables["Cation transference number"] = t_0plus(c_e,c_EC, T)
-    var_pts = {
-        "x_n": 20,  # negative electrode
-        "x_s": 10,  # separator 
-        "x_p": 20,  # positive electrode
-        "r_n": 30,  # negative particle
-        "r_p": 30,  # positive particle
-    }
+    
     sim    = pybamm.Simulation(
         model, experiment = Exp_1,
         parameter_values = para_used,
         solver = pybamm.CasadiSolver(return_solution_if_failed_early=True),
-        # var_pts=var_pts,
+        var_pts=var_pts,
         )       
     sol    = sim.solve()
     MyDict = {}
@@ -1102,9 +1271,10 @@ def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para):
     MyDict['Solution']  = sol
     MyDict['Rate_Dis']  = Rate_Dis
     MyDict['Rate_Cha']  = Rate_Cha
+    print("Finish one cycle")
     return MyDict
     
-def Scan_Crate(Rate_Dis_All,Rate_Cha_All,model,para,str_model,str_para):   
+def Scan_Crate(Rate_Dis_All,Rate_Cha_All,model,para,str_model,str_para,var_pts):   
     Case_Dict = {}
     MyDict_All =[]; Cap_Dis_All = []  ; Cap_Cha_All = []  
     # scan C-rate
@@ -1113,7 +1283,7 @@ def Scan_Crate(Rate_Dis_All,Rate_Cha_All,model,para,str_model,str_para):
             MyDict_All.append(
                 Run_P3_OneCycle(
                     Rate_Dis,Rate_Cha,model,para,
-                    str_model,str_para))
+                    str_model,str_para,var_pts))
             Cap_Dis_All.append(MyDict_All[-1]['Discharge Capacity'])
             Cap_Cha_All.append(MyDict_All[-1]['Charge Capacity'])
     Case_Dict ['Cap_Dis_All'] = Cap_Dis_All
