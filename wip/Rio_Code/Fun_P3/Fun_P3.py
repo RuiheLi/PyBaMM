@@ -1057,16 +1057,22 @@ def Plot_Last_Single_Step(
     mpl.rc('font', **font)
     # 1st plot Li+ and flux
     i =Scan_i;
-    fig, axs= Plot_Loc_Var_sol_6(
-        sol,
-        ["x [m]","x [m]","x [m]","x [m]","x [m]","x [m]",], 
-        ["Electrolyte concentration",
-        "Minus div Li+ flux",
-        "Li+ source term",
-        "Minus div Li+ flux by diffusion",
-        "Minus div Li+ flux by migration",
-        "Minus div Li+ flux by solvent",], 
-        cycle,step,colormap,fs)
+    try:
+        fig, axs= Plot_Loc_Var_sol_6(
+            sol,
+            ["x [m]","x [m]","x [m]","x [m]","x [m]","x [m]",], 
+            ["Electrolyte concentration",
+            "Minus div Li+ flux",
+            "Li+ source term",
+            "Minus div Li+ flux by diffusion",
+            "Minus div Li+ flux by migration",
+            "Minus div Li+ flux by solvent",], 
+            cycle,step,colormap,fs)
+    except Exception as e:
+        traceback.print_exc()
+    else:
+        pass
+
     if Save == 'True':
         plt.savefig(
             BasicPath + 
@@ -1076,16 +1082,21 @@ def Plot_Last_Single_Step(
         pass
     
     # 2nd plot: for EC and flux
-    fig, axs = Plot_Loc_Var_sol_6(
-        sol,
-        ["x [m]","x [m]","x [m]","x [m]","x [m]","x [m]",], 
-        ["EC concentration",
-        "c(EC) over c(Li+)",
-        "Minus div EC flux",
-        "Minus div EC flux by diffusion",
-        "Minus div EC flux by migration",
-        "Minus div EC flux by Li+",], 
-        cycle,step,colormap,fs)
+    try:
+        fig, axs = Plot_Loc_Var_sol_6(
+            sol,
+            ["x [m]","x [m]","x [m]","x [m]","x [m]","x [m]",], 
+            ["EC concentration",
+            "c(EC) over c(Li+)",
+            "Minus div EC flux",
+            "Minus div EC flux by diffusion",
+            "Minus div EC flux by migration",
+            "Minus div EC flux by Li+",], 
+            cycle,step,colormap,fs)
+    except Exception as e:
+        traceback.print_exc()
+    else:
+        pass
     if Save == 'True':
         plt.savefig(
             BasicPath + 
@@ -1094,18 +1105,23 @@ def Plot_Last_Single_Step(
     else:
         pass
     # 3rd plot: porosity, potential
-    fig, axs = Plot_Loc_Var_sol_6(
-        sol,
-        ["x_n [m]","x_p [m]","x [m]","x [m]","x [m]","x [m]",], 
-        [
-            "Negative electrode porosity",
-            "Positive electrode potential [V]",
-            "Electrolyte current density [A.m-2]",
-            "Electrolyte potential [V]",
-            "Electrolyte diffusivity [m2.s-1]",
-            "Electrolyte conductivity [S.m-1]",
-        ], 
-        cycle,step,colormap,fs)
+    try:
+        fig, axs = Plot_Loc_Var_sol_6(
+            sol,
+            ["x_n [m]","x_p [m]","x [m]","x [m]","x [m]","x [m]",], 
+            [
+                "Negative electrode porosity",
+                "Positive electrode potential [V]",
+                "Electrolyte current density [A.m-2]",
+                "Electrolyte potential [V]",
+                "Electrolyte diffusivity [m2.s-1]",
+                "Electrolyte conductivity [S.m-1]",
+            ], 
+            cycle,step,colormap,fs)
+    except Exception as e:
+        traceback.print_exc()
+    else:
+        pass
     if Save == 'True':
         plt.savefig(
             BasicPath + 
@@ -1521,22 +1537,26 @@ def Run_P3_model(
     T = model_0.variables["Cell temperature [K]"]
     c_EC = model_0.variables["EC concentration [mol.m-3]"]
     model_0.variables["c(EC) over c(Li+)"] = c_EC / c_e
-    if not Para_dict_i.__contains__(
-        "Electrolyte conductivity [S.m-1]"):
-        model_0.variables["Electrolyte conductivity [S.m-1]"] =(
-            Para_0['Electrolyte conductivity [S.m-1]'](c_e,c_EC, T))
-    if not Para_dict_i.__contains__(
-        "Electrolyte diffusivity [m2.s-1]"):
-        model_0.variables["Electrolyte diffusivity [m2.s-1]"] =(
-            Para_0['Electrolyte diffusivity [m2.s-1]'](c_e,c_EC, T))
-    if not Para_dict_i.__contains__(
-        "Cation transference number"):
-        model_0.variables["Cation transference number"] =(
-            Para_0['Cation transference number'](c_e,c_EC, T))
-    if not Para_dict_i.__contains__(
-        "EC transference number"):
-        model_0.variables["EC transference number"] =(
-            Para_0['EC transference number'](c_e,c_EC, T))
+    if Para_dict_i.__contains__(
+        "Electrolyte conductivity [S.m-1]") and isinstance(
+            Para_dict_i["Electrolyte conductivity [S.m-1]"], str):
+                model_0.variables["Electrolyte conductivity [S.m-1]"] =(
+                    Para_0["Electrolyte conductivity [S.m-1]"](c_e,c_EC, T))
+    if Para_dict_i.__contains__(
+        "Electrolyte diffusivity [m2.s-1]") and isinstance(
+            Para_dict_i["Electrolyte diffusivity [m2.s-1]"], str):
+                model_0.variables["Electrolyte diffusivity [m2.s-1]"] =(
+                    Para_0['Electrolyte diffusivity [m2.s-1]'](c_e,c_EC, T))
+    if Para_dict_i.__contains__(
+        "Cation transference number") and isinstance(
+            Para_dict_i["Cation transference number"], str):
+                model_0.variables["Cation transference number"] =(
+                    Para_0['Cation transference number'](c_e,c_EC, T))
+    if Para_dict_i.__contains__(
+        "EC transference number") and isinstance(
+            Para_dict_i["EC transference number"], str):
+                model_0.variables["EC transference number"] =(
+                    Para_0['EC transference number'](c_e,c_EC, T))
     
 
     # Define experiment- for ageing only, NOT RPT
@@ -1548,7 +1568,13 @@ def Run_P3_model(
 
 
     #####Important: index canot be pre-determined anymore! ######
-
+    var_pts = {
+        "x_n": 10,  # negative electrode
+        "x_s": 5,  # separator 
+        "x_p": 10,  # positive electrode
+        "r_n": 80,  # negative particle
+        "r_p": 40,  # positive particle
+    }
 
     # initialize my_dict for outputs
     my_dict_AGE = {}; 
@@ -1573,7 +1599,7 @@ def Run_P3_model(
                     experiment = Experiment_All[step_switch],
                     parameter_values = Para_0,
                     solver = pybamm.CasadiSolver(),
-                    #var_pts=var_pts,
+                    var_pts=var_pts,
                     #submesh_types=submesh_types
                     ) 
                 sol_0    = sim_0.solve(
@@ -1589,7 +1615,7 @@ def Run_P3_model(
                     experiment =  Experiment_All[step_switch],
                     parameter_values = Para_0,
                     solver = pybamm.CasadiSolver(),
-                    #var_pts=var_pts,
+                    var_pts=var_pts,
                     #submesh_types=submesh_types
                     ) 
                 sol_new    = sim_new.solve(
@@ -1649,15 +1675,15 @@ def Run_P3_model(
         
     j=0;
     while j <len(Sol_All):
-            if len(Sol_All[j].cycles[-1].steps)==1:
-                break
-            j += 1
+        if len(Sol_All[j].cycles[-1].steps)==1:
+            break
+        j += 1
     if j < len(Sol_All):
-            print("Single step starts from %d" %j)
+        print("Single step starts from %d" %j)
     elif j==len(Sol_All):
-            print("No single step")
+        print("No single step")
     else:
-            pass
+        pass
     
     Sol_all_i = Sol_All
     Succ_Cyc_acc_i = np.cumsum(Succ_Cyc).tolist()
@@ -1829,7 +1855,6 @@ def Run_P3_model(
                 BasicPath + Target+f"{count_i}th Scan/" +
                 "Fig. 3 - CDend Loc based overall.png", dpi=dpi)
         except:
-            print(f"Something went wrong during plotting Fig. 1~3 for scan {count_i}")
             print(f"Something went wrong during plotting Fig. 1~3 for scan {count_i}")
         else:
             pass
