@@ -1024,8 +1024,8 @@ def cracking_rate_Ai2020(T_dim):
 
 def graphite_LGM50_ocp_OKane2023(sto):
     """
-    LG M50 Graphite open-circuit potential as a function of stochiometry. Fitted to
-    unpublished measurements taken by Kieran O'Regan.
+    LG M50 Graphite delithiation open-circuit potential as a function of stochiometry.
+    Fitted to unpublished measurements taken by Kieran O'Regan.
 
     Parameters
     ----------
@@ -1048,6 +1048,32 @@ def graphite_LGM50_ocp_OKane2023(sto):
     )
 
     return u_eq
+
+
+def nmc_LGM50_ocp_OKane2023(sto):
+    """
+    LG M50 NMC lithiation open-circuit potential as a function of stoichiometry.
+    Fitted to unpublished measurements by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open-circuit potential
+    """
+
+    U = (
+        -0.7983 * sto
+        + 4.513
+        - 0.03269 * pybamm.tanh(19.83 * (sto - 0.5424))
+        - 18.23 * pybamm.tanh(14.33 * (sto - 0.2771))
+        + 18.05 * pybamm.tanh(14.46 * (sto - 0.2776))
+    )
+
+    return U
 
 
 def electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019(c_e, T):
@@ -1263,7 +1289,7 @@ def get_parameter_values():
         "Current function [A]": 5.0,
         # negative electrode
         "Negative electrode conductivity [S.m-1]": 215.0,
-        "Maximum concentration in negative electrode [mol.m-3]": 29583.0,
+        "Maximum concentration in negative electrode [mol.m-3]": 32544.0,
         "Negative electrode diffusivity [m2.s-1]"
         "": graphite_LGM50_diffusivity_ORegan2022,
         "Negative electrode OCP [V]": graphite_LGM50_ocp_OKane2023,
@@ -1303,9 +1329,9 @@ def get_parameter_values():
         # positive electrode
         "Positive electrode conductivity [S.m-1]"
         "": nmc_LGM50_electronic_conductivity_ORegan2022,
-        "Maximum concentration in positive electrode [mol.m-3]": 51765.0,
+        "Maximum concentration in positive electrode [mol.m-3]": 52787.0,
         "Positive electrode diffusivity [m2.s-1]": nmc_LGM50_diffusivity_ORegan2022,
-        "Positive electrode OCP [V]": nmc_LGM50_ocp_Chen2020,
+        "Positive electrode OCP [V]": nmc_LGM50_ocp_OKane2023,
         "Positive electrode porosity": 0.335,
         "Positive electrode active material volume fraction": 0.665,
         "Positive particle radius [m]": 5.22e-06,
@@ -1365,8 +1391,8 @@ def get_parameter_values():
         "Number of cells connected in series to make a battery": 1.0,
         "Lower voltage cut-off [V]": 2.5,
         "Upper voltage cut-off [V]": 4.4,
-        "Initial concentration in negative electrode [mol.m-3]": 28866.0,
-        "Initial concentration in positive electrode [mol.m-3]": 13975.0,
+        "Initial concentration in negative electrode [mol.m-3]": 28543.0,
+        "Initial concentration in positive electrode [mol.m-3]": 12727.0,
         "Initial temperature [K]": 298.15,
         # citations
         "citations": ["OKane2022", "OKane2020", "Chen2020", "ORegan2022"],
