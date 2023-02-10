@@ -52,7 +52,14 @@ def split_cycles(df, cycleNum):
     return df[((df["half cycle"] == (2*cycleNum)-1) & (df[I] < 0))]
 
 #A function which combines some of the useful functions above to make loading/formatting data into a pandas dataframe easier.
-def combo_function_fast(filename, numCycles=1, rowsToSkip=0, colsToKeep = ["time/s", "Ecell/V", "I/mA", "(Q-Qo)/mA.h", "Temperature/ｰC", "Q discharge/mA.h", "Ns changes"], oldNames = ["time/s", "Ecell/V", "I/mA", "(Q-Qo)/mA.h", "Temperature/ｰC", "Q discharge/mA.h", "Ns changes"], newNames = [time, V, I, Qtot, T, Qdis, NS]):
+def combo_function_fast(
+        filename, numCycles=1, rowsToSkip=0, 
+        colsToKeep = [
+            "time/s", "Ecell/V", "I/mA", "(Q-Qo)/mA.h", "Temperature/ｰC", 
+            "Q discharge/mA.h", "Ns changes" ], 
+        oldNames = ["time/s", "Ecell/V", "I/mA", "(Q-Qo)/mA.h", 
+            "Temperature/ｰC", "Q discharge/mA.h", "Ns changes"], 
+        newNames = [time, V, I, Qtot, T, Qdis, NS]):
     df = read_mpt(filename, rowsToSkip, colsToKeep)
     df = rename_cols(df, oldNames, newNames)
     df[SOC] = create_SOC(df)

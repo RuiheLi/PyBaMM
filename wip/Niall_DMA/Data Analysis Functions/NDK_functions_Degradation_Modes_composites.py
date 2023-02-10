@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# Mark Ruieh: In this script, multi or multi_comp means two phase in graphite, compared with single phase
+#                             long means do optimization / others for different RPTs/BoL
+#                             standalone means only one cell one RPT
+
 # In[1]:
 
 
@@ -302,7 +306,9 @@ def calc_electrode_curve(component1_data, component2_data, cap_comp1, V_range):
 
 
 
-def stoich_OCV_fit_multi_comp(anode_comp1_data, anode_comp2_data, cathode_data, full_cell, z_guess=[0.1, 0.002, 0.95, 0.85, 0.84], diff_step_size=0.01):
+def stoich_OCV_fit_multi_comp(
+    anode_comp1_data, anode_comp2_data, cathode_data, full_cell, 
+    z_guess=[0.1, 0.002, 0.95, 0.85, 0.84], diff_step_size=0.01):
     
     # Format the negative electrode data (both components)
     ano_c1_data, ano_c2_data, V_range = format_el_component_data1(anode_comp1_data, anode_comp2_data)
@@ -361,9 +367,13 @@ def stoich_OCV_fit_multi_comp(anode_comp1_data, anode_comp2_data, cathode_data, 
         return output
      
     # This is the actual optimisation
-    # It takes the above function, x- and y-values from the full_cell dataset, and the initial_guess of the z_values provided in z_guess
+    # It takes the above function, x- and y-values from the full_cell dataset, 
+    # and the initial_guess of the z_values provided in z_guess
     # It returns the fitted z_values (lithiation fractions), and a covariance matrix
-    z_out, z_cov = optimize.curve_fit(calc_full_cell_OCV_multi, xdata=cell_SOC, ydata=cell_V, p0=z_guess, bounds=([0.,0.,0.,0.,0.], [1.,1.,1.,1.,1.]), diff_step=diff_step_size)
+    z_out, z_cov = optimize.curve_fit(
+        calc_full_cell_OCV_multi, xdata=cell_SOC, ydata=cell_V, 
+        p0=z_guess, bounds=([0.,0.,0.,0.,0.5], [1.,1.,1.,1.,1.]), # Mark Ruihe add: constrain Gr_frac to 0.5~1 as we know 
+        diff_step=diff_step_size)
     
     # The fitted z_values are then used for calculating the capacities of the full and 1/2 cells, and the offset
     PE_lo, NE_lo, PE_hi, NE_hi, comp1_frac = z_out
@@ -373,12 +383,16 @@ def stoich_OCV_fit_multi_comp(anode_comp1_data, anode_comp2_data, cathode_data, 
     ano_comp2_cap = ano_tot_cap*(1. - comp1_frac) # NE capacity is full cell capacity divided by the lithiation range of the NE (upper limit minus lower limit)
     cat_cap = cell_capacity/(PE_hi - PE_lo) # PE capacity is full cell capacity divided by the lithiation range of the PE (upper limit minus lower limit)
     offset = (z_out[0] * cat_cap) - (z_out[1] * ano_tot_cap) # Offset is (lower bound of PE lithitation * PE cap) minus (lower bound of NE lithitation * NE cap)
-    stoic_params = [cell_capacity, cat_cap, ano_tot_cap, ano_comp1_cap, ano_comp2_cap, offset] # Save the above paramters into a list
+    stoic_params = [
+        cell_capacity, cat_cap, ano_tot_cap, 
+        ano_comp1_cap, ano_comp2_cap, offset] # Save the above paramters into a list
     
     return z_out, z_cov, stoic_params # Returns the z_values, covariance of the fit, and the stoich parameters
 
-
-def calc_full_cell_OCV_multi_standalone(anode_comp1_data, anode_comp2_data, cathode_data, SOC_points, z_pe_lo, z_ne_lo, z_pe_hi, z_ne_hi, comp1_frac):
+# Mark Ruihe: Calculate fitted cell voltage based on the optimised value (one cell, one RPT)
+def calc_full_cell_OCV_multi_standalone(
+    anode_comp1_data, anode_comp2_data, cathode_data, 
+    SOC_points, z_pe_lo, z_ne_lo, z_pe_hi, z_ne_hi, comp1_frac):
     
     ano_c1_data, ano_c2_data, V_range = format_el_component_data1(anode_comp1_data, anode_comp2_data)
     
@@ -425,7 +439,7 @@ def calc_full_cell_OCV_multi_standalone(anode_comp1_data, anode_comp2_data, cath
 
     return cell_out, ne_data_int, ne_data, pe_data_int
 
-
+# Mark Ruihe: Seems that this function actually doesn't get used!
 def DM_calc_multi_comp(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell, aged_cells):
 # Function takes in 1/2 cell datasets along with a BoL and some aged cell datasets
     
@@ -435,7 +449,9 @@ def DM_calc_multi_comp(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell, aged_cells)
     BoL_cell_data[SOC] = 1 - BoL_cell_data['Charge (mA.h)']/BoL_cell_data['Charge (mA.h)'].max()
     
     # Perform the optimisation fit for the BoL data
-    z_BoL, z_BoL_cov, BoL_params = stoich_OCV_fit_multi_comp(anode_comp1_data=neg_el_comp1, anode_comp2_data=neg_el_comp2, cathode_data=pos_el, full_cell=BoL_cell_data)
+    z_BoL, z_BoL_cov, BoL_params = stoich_OCV_fit_multi_comp(
+        anode_comp1_data=neg_el_comp1, anode_comp2_data=neg_el_comp2, 
+        cathode_data=pos_el, full_cell=BoL_cell_data)
     
     # Make a list of z_values and cell_parameters and populate with BoL data
     z_list = [z_BoL]
@@ -451,15 +467,24 @@ def DM_calc_multi_comp(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell, aged_cells)
         aged_cell_data[SOC] = 1 - aged_cell_data['Charge (mA.h)']/aged_cell_data['Charge (mA.h)'].max()
         
         #Perform the optimisation fit for the aged full cell data
-        z_EoL, z_EoL_cov, aged_params = stoich_OCV_fit_multi_comp(anode_comp1_data=neg_el_comp1, anode_comp2_data=neg_el_comp2, cathode_data=pos_el, full_cell=aged_cell_data, z_guess=z_list[counter_val])
+        z_EoL, z_EoL_cov, aged_params = stoich_OCV_fit_multi_comp(
+            anode_comp1_data=neg_el_comp1, anode_comp2_data=neg_el_comp2, 
+            cathode_data=pos_el, full_cell=aged_cell_data, 
+            z_guess=z_list[counter_val]
+            )
         z_list.append(z_EoL) # Add the aged data to the list of z_values
         param_list.append(aged_params) # Add the aged data to the list of cell_parameters
         cov_matrix.append(np.sqrt(np.diag(z_EoL_cov)))
         counter_val += 1
     
     # Make dataframes using the lists complied above
-    z_parameter_df = pd.DataFrame(data=z_list, columns=['PE_lo', 'NE_lo', 'PE_hi', 'NE_hi', 'Gr_frac'])
-    stoic_parameter_df = pd.DataFrame(data=param_list, columns=['Cell Capacity', 'PE Capacity', 'NE(tot) Capacity', 'NE(Gr) Capacity', 'NE(Si) Capacity', 'Offset'])
+    z_parameter_df = pd.DataFrame(
+        data=z_list, columns=['PE_lo', 'NE_lo', 'PE_hi', 'NE_hi', 'Gr_frac'])
+    stoic_parameter_df = pd.DataFrame(
+        data=param_list, 
+        columns=[
+        'Cell Capacity', 'PE Capacity', 'NE(tot) Capacity', 
+        'NE(Gr) Capacity', 'NE(Si) Capacity', 'Offset'])
     
     # Calculate DM parameters from the stoic_parameter dataframe above
     SoH = stoic_parameter_df['Cell Capacity']/stoic_parameter_df['Cell Capacity'][0]
@@ -467,18 +492,27 @@ def DM_calc_multi_comp(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell, aged_cells)
     LAM_ne_tot = 1 - (stoic_parameter_df['NE(tot) Capacity']/stoic_parameter_df['NE(tot) Capacity'][0])
     LAM_ne_Gr = 1 - (stoic_parameter_df['NE(Gr) Capacity']/stoic_parameter_df['NE(Gr) Capacity'][0])
     LAM_ne_Si = 1 - (stoic_parameter_df['NE(Si) Capacity']/stoic_parameter_df['NE(Si) Capacity'][0])
-    LLI = (stoic_parameter_df['PE Capacity'][0] - stoic_parameter_df['PE Capacity'] - (stoic_parameter_df['Offset'][0]-stoic_parameter_df['Offset']))/stoic_parameter_df['Cell Capacity'][0]
+    LLI = (
+        stoic_parameter_df['PE Capacity'][0] 
+        - stoic_parameter_df['PE Capacity'] 
+        - (stoic_parameter_df['Offset'][0]-stoic_parameter_df['Offset'])
+        )/stoic_parameter_df['Cell Capacity'][0]
     
     # Compile the DM parameters into a dataframe
-    DM_df = pd.DataFrame(data={'SoH':SoH, 'LAM PE':LAM_pe, 'LAM NE_tot':LAM_ne_tot, 'LAM NE_Gr':LAM_ne_Gr, 'LAM NE_Si':LAM_ne_Si, 'LLI':LLI})
+    DM_df = pd.DataFrame(
+        data={
+        'SoH':SoH, 'LAM PE':LAM_pe, 'LAM NE_tot':LAM_ne_tot, 
+        'LAM NE_Gr':LAM_ne_Gr, 'LAM NE_Si':LAM_ne_Si, 'LLI':LLI})
     
     return DM_df, stoic_parameter_df#, cov_matrix # Output 2 dataframes: one with degradation modes, and another with capacities and offsets
 
 
-
+# Mark Ruihe: Calculate error used the fitted result; for one cell one RPT
 def DM_error_check(NE_comp1_data, NE_comp2_data, PE_data, cell_data, fit_results):
     
-    cell_calc_data, _, _, _ = calc_full_cell_OCV_multi_standalone(NE_comp1_data, NE_comp2_data, PE_data, cell_data[SOC], *fit_results)
+    cell_calc_data, _, _, _ = calc_full_cell_OCV_multi_standalone(
+        NE_comp1_data, NE_comp2_data, PE_data, 
+        cell_data[SOC], *fit_results)
     
     if len(cell_calc_data['OCV']) == len(cell_data[V]):
         diff = pd.DataFrame(data=cell_data[SOC])
@@ -494,22 +528,31 @@ def DM_error_check(NE_comp1_data, NE_comp2_data, PE_data, cell_data, fit_results
 
 
 
-
+# Mark Ruihe: Main function for one cell, all RPTs and BoL --> Big changes made!
 def DM_calc_multi_comp_long(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell, aged_cells, carry_guess=True):
 # Function takes in 1/2 cell datasets along with a BoL and some aged cell datasets
     
     #Format the BoL full cell data
     BoL_cell_data = BoL_cell[BoL_cell[I]<0].loc[:, ['Charge (mA.h)', V]]
     BoL_cell_data.reset_index(inplace=True, drop=True)
-    BoL_cell_data[SOC] = 1 - BoL_cell_data['Charge (mA.h)']/BoL_cell_data['Charge (mA.h)'].max()
+    BoL_cell_data[SOC] = (
+        1 - 
+        BoL_cell_data['Charge (mA.h)']/BoL_cell_data['Charge (mA.h)'].max())
     
     # Perform the optimisation fit for the BoL data
-    z_BoL, z_BoL_cov, BoL_params = stoich_OCV_fit_multi_comp(anode_comp1_data=neg_el_comp1, anode_comp2_data=neg_el_comp2, cathode_data=pos_el, full_cell=BoL_cell_data)
+    # Mark Ruihe: Change! Repeat this step for more times (1000?)
+    z_BoL, z_BoL_cov, BoL_params = stoich_OCV_fit_multi_comp(
+        anode_comp1_data=neg_el_comp1, 
+        anode_comp2_data=neg_el_comp2, 
+        cathode_data=pos_el, full_cell=BoL_cell_data)
     
     # Calculate error of the fit
-    err_BoL = DM_error_check(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell_data, z_BoL)
+    err_BoL = DM_error_check(
+        neg_el_comp1, neg_el_comp2, 
+        pos_el, BoL_cell_data, z_BoL)
     
     # Make a list of z_values and cell_parameters and populate with BoL data
+    # Mark Ruihe: this is for later optimization - choose the best from the list
     z_list = [z_BoL]
     param_list = [BoL_params]
     #cov_matrix = [np.sqrt(np.diag(z_BoL_cov))]
@@ -517,13 +560,17 @@ def DM_calc_multi_comp_long(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell, aged_c
     
     counter_val = 0
     
-    # Perform the optimisation fit for each of the aged cell datasets (using the z_BoL calculated above as the initial z_guess)
+    # Perform the optimisation fit for each of the aged cell datasets (
+    #           using the z_BoL calculated above as the initial z_guess)
     for aged_data in aged_cells:
         print(counter_val)
         # Format the aged full cell data
-        aged_cell_data = aged_data[aged_data[I]<0].loc[:, ['Charge (mA.h)', V]]
+        aged_cell_data = aged_data[aged_data[I]<0].loc[:, ['Charge (mA.h)', V]] # choose only the 
         aged_cell_data.reset_index(inplace=True, drop=True)
-        aged_cell_data[SOC] = 1 - aged_cell_data['Charge (mA.h)']/aged_cell_data['Charge (mA.h)'].max()
+        aged_cell_data[SOC] = (
+            1 - 
+            aged_cell_data['Charge (mA.h)']
+            /aged_cell_data['Charge (mA.h)'].max()   )
         
         if not carry_guess:
             guess_values = [0.1, 0.002, 0.95, 0.85, 0.84]
@@ -531,17 +578,29 @@ def DM_calc_multi_comp_long(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell, aged_c
             guess_values = z_list[counter_val]
         
         #Perform the optimisation fit for the aged full cell data
-        z_EoL, z_EoL_cov, aged_params = stoich_OCV_fit_multi_comp(anode_comp1_data=neg_el_comp1, anode_comp2_data=neg_el_comp2, cathode_data=pos_el, full_cell=aged_cell_data, z_guess=guess_values)
+        z_EoL, z_EoL_cov, aged_params = stoich_OCV_fit_multi_comp(
+            anode_comp1_data=neg_el_comp1, anode_comp2_data=neg_el_comp2, 
+            cathode_data=pos_el, full_cell=aged_cell_data, z_guess=guess_values)
         
         # Calculate error of fit (RMSE of fitted curve minus actual data)
         err_EoL = DM_error_check(neg_el_comp1, neg_el_comp2, pos_el, aged_cell_data, z_EoL)
         
-        iter_val=0
-        while (aged_params[4] > param_list[counter_val][4] or aged_params[2] > param_list[counter_val][2]) and iter_val < 10:
+        iter_val=0  
+        while (
+            aged_params[4] > param_list[counter_val][4] 
+            or 
+            aged_params[2] > param_list[counter_val][2]) and iter_val < 10:  # repeat for 10 times！
             iter_val += 1
-            z_EoL, z_EoL_cov, aged_params = stoich_OCV_fit_multi_comp(anode_comp1_data=neg_el_comp1, anode_comp2_data=neg_el_comp2, cathode_data=pos_el, full_cell=aged_cell_data, z_guess=z_list[counter_val], diff_step_size=0.1)
+            z_EoL, z_EoL_cov, aged_params = stoich_OCV_fit_multi_comp(
+                anode_comp1_data=neg_el_comp1, 
+                anode_comp2_data=neg_el_comp2, cathode_data=pos_el, 
+                full_cell=aged_cell_data, 
+                z_guess=z_list[counter_val], 
+                diff_step_size=0.1)
             # Calculate error of fit (RMSE of fitted curve minus actual data)
-            err_EoL = DM_error_check(neg_el_comp1, neg_el_comp2, pos_el, aged_cell_data, z_EoL)
+            err_EoL = DM_error_check(
+                neg_el_comp1, neg_el_comp2, 
+                pos_el, aged_cell_data, z_EoL)
             
         
         z_list.append(z_EoL) # Add the aged data to the list of z_values
@@ -552,8 +611,12 @@ def DM_calc_multi_comp_long(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell, aged_c
     
     # Make dataframes using the lists complied above
     z_parameter_df = pd.DataFrame(data=z_list, columns=['PE_lo', 'NE_lo', 'PE_hi', 'NE_hi', 'Gr_frac'])
-    stoic_parameter_df = pd.DataFrame(data=param_list, columns=['Cell Capacity', 'PE Capacity', 'NE(tot) Capacity', 'NE(Gr) Capacity', 'NE(Si) Capacity', 'Offset'])
-    err_df = pd.DataFrame(data={'RMSE (V)':err_list})
+    stoic_parameter_df = pd.DataFrame(
+        data=param_list, 
+        columns=[
+        'Cell Capacity', 'PE Capacity', 'NE(tot) Capacity', 
+        'NE(Gr) Capacity', 'NE(Si) Capacity', 'Offset'])
+    err_df = pd.DataFrame(data={'RMSE (V)':err_list})   # RMSE for one cell, all RPTs
     
     # Calculate DM parameters from the stoic_parameter dataframe above
     SoH = stoic_parameter_df['Cell Capacity']/stoic_parameter_df['Cell Capacity'][0]
@@ -564,9 +627,13 @@ def DM_calc_multi_comp_long(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell, aged_c
     LLI = (stoic_parameter_df['PE Capacity'][0] - stoic_parameter_df['PE Capacity'] - (stoic_parameter_df['Offset'][0]-stoic_parameter_df['Offset']))/stoic_parameter_df['Cell Capacity'][0]
     
     # Compile the DM parameters into a dataframe
-    DM_df = pd.DataFrame(data={'SoH':SoH, 'LAM PE':LAM_pe, 'LAM NE_tot':LAM_ne_tot, 'LAM NE_Gr':LAM_ne_Gr, 'LAM NE_Si':LAM_ne_Si, 'LLI':LLI})
-    
-    return DM_df, stoic_parameter_df, err_df#, cov_matrix # Output 2 dataframes: one with degradation modes, and another with capacities and offsets
+    DM_df = pd.DataFrame(
+        data={
+        'SoH':SoH, 'LAM PE':LAM_pe, 'LAM NE_tot':LAM_ne_tot, 
+        'LAM NE_Gr':LAM_ne_Gr, 'LAM NE_Si':LAM_ne_Si, 'LLI':LLI})
+    #, cov_matrix # Output 2 dataframes: one with degradation modes, and another with capacities and offsets
+    return DM_df, stoic_parameter_df, err_df
+
 
 
 # In[ ]:
