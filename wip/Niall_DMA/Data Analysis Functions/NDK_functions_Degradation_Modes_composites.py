@@ -130,7 +130,7 @@ def composite_fit(component1_data, component2_data, composite_el_data, gr_cap_gu
     # It returns the fitted relative_caps (capacity fractions), and a covariance matrix
     z_out, z_cov = optimize.curve_fit(calc_electrode_cap, xdata=el_cap, ydata=el_V, p0=gr_cap_guess, bounds=(0., 1.), diff_step=0.1)
     
-    return z_out, z_cov#, stoic_params # Returns the z_values, covariance of the fit, and the stoich parameters
+    return z_out, z_cov#, Cap_out # Returns the z_values, covariance of the fit, and the stoich parameters
 
 
 #Function for calculation the residual between the real and calculated 1/2 cell voltage curves of a composite electrode (in terms of 'z').
@@ -383,11 +383,11 @@ def stoich_OCV_fit_multi_comp(
     ano_comp2_cap = ano_tot_cap*(1. - comp1_frac) # NE capacity is full cell capacity divided by the lithiation range of the NE (upper limit minus lower limit)
     cat_cap = cell_capacity/(PE_hi - PE_lo) # PE capacity is full cell capacity divided by the lithiation range of the PE (upper limit minus lower limit)
     offset = (z_out[0] * cat_cap) - (z_out[1] * ano_tot_cap) # Offset is (lower bound of PE lithitation * PE cap) minus (lower bound of NE lithitation * NE cap)
-    stoic_params = [
+    Cap_out = [
         cell_capacity, cat_cap, ano_tot_cap, 
         ano_comp1_cap, ano_comp2_cap, offset] # Save the above paramters into a list
     
-    return z_out, z_cov, stoic_params # Returns the z_values, covariance of the fit, and the stoich parameters
+    return z_out, z_cov, Cap_out # Returns the z_values, covariance of the fit, and the stoich parameters
 
 # Mark Ruihe: Calculate fitted cell voltage based on the optimised value (one cell, one RPT)
 def calc_full_cell_OCV_multi_standalone(
