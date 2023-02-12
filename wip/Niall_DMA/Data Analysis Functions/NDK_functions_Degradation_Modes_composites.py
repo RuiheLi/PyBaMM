@@ -587,9 +587,10 @@ def DM_calc_multi_comp_long(neg_el_comp1, neg_el_comp2, pos_el, BoL_cell, aged_c
         
         iter_val=0  
         while (
-            aged_params[4] > param_list[counter_val][4] 
+            aged_params[4] > param_list[counter_val][4] # 'NE(Si) Capacity' 
             or 
-            aged_params[2] > param_list[counter_val][2]) and iter_val < 10:  # repeat for 10 times！
+            aged_params[2] > param_list[counter_val][2] # 'NE(tot) Capacity', 
+            ) and iter_val < 10:  # repeat for 10 times！
             iter_val += 1
             z_EoL, z_EoL_cov, aged_params = stoich_OCV_fit_multi_comp(
                 anode_comp1_data=neg_el_comp1, 
