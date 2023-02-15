@@ -1,12 +1,6 @@
-SoH = Cap_1CellAllRPTs_df['Cell Capacity']/Cap_1CellAllRPTs_df['Cell Capacity'][0]
-LAM_pe = 1 - (Cap_1CellAllRPTs_df['PE Capacity']/Cap_1CellAllRPTs_df['PE Capacity'][0])
-LAM_ne_tot = 1 - (Cap_1CellAllRPTs_df['NE(tot) Capacity']/Cap_1CellAllRPTs_df['NE(tot) Capacity'][0])
-LAM_ne_Gr = 1 - (Cap_1CellAllRPTs_df['NE(Gr) Capacity']/Cap_1CellAllRPTs_df['NE(Gr) Capacity'][0])
-LAM_ne_Si = 1 - (Cap_1CellAllRPTs_df['NE(Si) Capacity']/Cap_1CellAllRPTs_df['NE(Si) Capacity'][0])
-LLI = (Cap_1CellAllRPTs_df['PE Capacity'][0] - Cap_1CellAllRPTs_df['PE Capacity'] - (Cap_1CellAllRPTs_df['Offset'][0]-Cap_1CellAllRPTs_df['Offset']))/Cap_1CellAllRPTs_df['Cell Capacity'][0]
-
-# Compile the DM parameters into a dataframe
-DM_df = pd.DataFrame(
-    data={
-    'SoH':SoH, 'LAM PE':LAM_pe, 'LAM NE_tot':LAM_ne_tot, 
-    'LAM NE_Gr':LAM_ne_Gr, 'LAM NE_Si':LAM_ne_Si, 'LLI':LLI})
+FishPool_Low_1Cell1RPT["z_1Cell1RPT"].append(z_out);   
+           FishPool_Low_1Cell1RPT["Err_1Cell1RPT"].append(err_BoL);
+           FishPool_Low_1Cell1RPT["Fit_1Cell1RPT"].append(Fit_1Cell1RPT); 
+           FishPool_Low_1Cell1RPT["Cap_1Cell1RPT"].append(Cap_out);
+           FishPool_Low_1Cell1RPT["Cap_NESi_1Cell1RPT"].append(Cap_out[4]); 
+           FishPool_Low_1Cell1RPT["Cap_NEto_1Cell1RPT"].append(Cap_out[2]);
