@@ -770,6 +770,9 @@ class ParticleLithiumIonParameters(BaseParameters):
         self.c_max = pybamm.Parameter(
             f"{pref}Maximum concentration in {domain} electrode [mol.m-3]"
         )
+        self.c_max = pybamm.Parameter(
+            f"{pref}Minimum concentration in {domain} electrode [mol.m-3]"
+        )
 
         # Particle-size distribution parameters
         self.R_min_dim = self.geo.R_min_dim

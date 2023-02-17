@@ -333,6 +333,38 @@ class Simulation:
                     )
                 )
 
+        # add discharge capacity events to the model
+        if "Discharge capacity cut-off [A.h]" in op:
+            # The discharge capacity event should be positive at the start of
+            # charge/discharge. We use the sign of the current or power input to
+            # figure out whether the discharge capacity event is greater than the 
+            # starting discharge capacity (charge) or less (discharge) and set the
+            # sign of the event accordingly
+            if op["type"] == "CCCV":
+                inp = -1
+            elif op["type"] == "power":
+                inp = op["Power input [W]"]
+            else:
+                inp = op["Current input [A]"]
+            sign = np.sign(inp)
+            if sign > 0:
+                name = "Discharge"
+            else:
+                name = "Charge"
+            if sign != 0:
+                # Event should be positive at initial conditions for both
+                # charge and discharge
+                new_model.events.append(
+                    pybamm.Event(
+                        f"{name} discharge capacity cut-off [A.h] [experiment]",
+                        sign
+                        * (
+                            new_model.variables["Discharge capacity [A.h]"]
+                            - pybamm.InputParameter("Discharge capacity cut-off [A.h]")
+                        ),
+                    )
+                )
+
         # Keep the min and max voltages as safeguards but add some tolerances
         # so that they are not triggered before the voltage limits in the
         # experiment

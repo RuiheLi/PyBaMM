@@ -1290,6 +1290,7 @@ def get_parameter_values():
         # negative electrode
         "Negative electrode conductivity [S.m-1]": 215.0,
         "Maximum concentration in negative electrode [mol.m-3]": 32544.0,
+        "Minimum concentration in negative electrode [mol.m-3]": 0,
         "Negative electrode diffusivity [m2.s-1]"
         "": graphite_LGM50_diffusivity_ORegan2022,
         "Negative electrode OCP [V]": graphite_LGM50_ocp_OKane2023,
@@ -1330,6 +1331,7 @@ def get_parameter_values():
         "Positive electrode conductivity [S.m-1]"
         "": nmc_LGM50_electronic_conductivity_ORegan2022,
         "Maximum concentration in positive electrode [mol.m-3]": 52787.0,
+        "Minimum concentration in positive electrode [mol.m-3]": 12727.0,
         "Positive electrode diffusivity [m2.s-1]": nmc_LGM50_diffusivity_ORegan2022,
         "Positive electrode OCP [V]": nmc_LGM50_ocp_OKane2023,
         "Positive electrode porosity": 0.335,
