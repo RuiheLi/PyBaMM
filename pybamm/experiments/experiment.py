@@ -18,6 +18,8 @@ examples = """
     Charge at 1 C until 4.1V,
     Hold at 4.1 V until 50 mA,
     Hold at 3V until C/50,
+    Discharge at 1C until 1.5 Ah,
+    Hold at 4.2 V until 0.75 Ah,
     Run US06 (A),
     Run US06 (A) for 20 seconds,
     Run US06 (V) for 45 minutes,
@@ -281,6 +283,8 @@ class Experiment:
                 electric["type"] = "voltage"
             elif unit == "W":
                 electric["type"] = "power"
+            elif unit == "Ah":
+                electric["type"] = "discharge capacity"
             return electric
 
     def extend_drive_cycle(self, drive_cycle, end_time):
@@ -351,6 +355,10 @@ class Experiment:
                 # e.g. C/2
                 unit = value_unit[0]
                 value = 1 / float(value_unit[2:])
+            elif "Ah" in value_unit:
+                # e.g. 1Ah
+                value = float(value_unit[:-2])
+                unit = "Ah"
             else:
                 unit = value_unit[-1:]
                 if "m" in value_unit:
@@ -368,9 +376,11 @@ class Experiment:
                 return {"Voltage input [V]": float(value), "unit": unit}
             elif unit == "W":
                 return {"Power input [W]": sign * float(value), "unit": unit}
+            elif unit == "Ah":
+                return {"Discharge capacity input [A.h]": float(value), "unit": unit}
             else:
                 raise ValueError(
-                    """units must be 'C', 'A', 'mA', 'V', 'W' or 'mW', not '{}'.
+                    """units must be 'C', 'A', 'mA', 'V', 'W', 'mW' or 'Ah', not '{}'.
                     For example: {}
                     """.format(
                         unit, examples
