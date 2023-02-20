@@ -1022,7 +1022,7 @@ def cracking_rate_Ai2020(T_dim):
     return k_cr * arrhenius
 
 
-def graphite_LGM50_ocp_OKane2023(sto):
+def graphite_LGM50_delithiation_ocp_OKane2023(sto):
     """
     LG M50 Graphite delithiation open-circuit potential as a function of stochiometry.
     Fitted to unpublished measurements taken by Kieran O'Regan.
@@ -1050,7 +1050,35 @@ def graphite_LGM50_ocp_OKane2023(sto):
     return u_eq
 
 
-def nmc_LGM50_ocp_OKane2023(sto):
+def graphite_LGM50_lithiation_ocp_OKane2023(sto):
+    """
+    LG M50 Graphite lithiation open-circuit potential as a function of stochiometry.
+    Fitted to unpublished measurements taken by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open circuit potential
+    """
+
+    u_eq = (
+        0.5476 * pybamm.exp(-422.4 * sto)
+        + 0.5705 * pybamm.exp(-36.89 * sto)
+        + 0.1336
+        - 0.04758 * pybamm.tanh(13.88 * (sto - 0.2101))
+        - 0.01761 * pybamm.tanh(36.2 * (sto - 0.5639))
+        - 0.0169 * pybamm.tanh(11.42 * (sto - 1))
+    )
+
+    return u_eq
+
+
+def nmc_LGM50_lithiation_ocp_OKane2023(sto):
     """
     LG M50 NMC lithiation open-circuit potential as a function of stoichiometry.
     Fitted to unpublished measurements by Kieran O'Regan.
@@ -1071,6 +1099,32 @@ def nmc_LGM50_ocp_OKane2023(sto):
         - 0.03269 * pybamm.tanh(19.83 * (sto - 0.5424))
         - 18.23 * pybamm.tanh(14.33 * (sto - 0.2771))
         + 18.05 * pybamm.tanh(14.46 * (sto - 0.2776))
+    )
+
+    return U
+
+
+def nmc_LGM50_delithiation_ocp_OKane2023(sto):
+    """
+    LG M50 NMC delithiation open-circuit potential as a function of stoichiometry.
+    Fitted to unpublished measurements by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open-circuit potential
+    """
+
+    U = (
+        -0.7836 * sto
+        + 4.513
+        - 0.03432 * pybamm.tanh(19.83 * (sto - 0.5424))
+        - 19.35 * pybamm.tanh(14.33 * (sto - 0.2771))
+        + 19.17 * pybamm.tanh(14.45 * (sto - 0.2776))
     )
 
     return U
@@ -1293,7 +1347,11 @@ def get_parameter_values():
         "Minimum concentration in negative electrode [mol.m-3]": 0,
         "Negative electrode diffusivity [m2.s-1]"
         "": graphite_LGM50_diffusivity_ORegan2022,
-        "Negative electrode OCP [V]": graphite_LGM50_ocp_OKane2023,
+        "Negative electrode OCP [V]": graphite_LGM50_delithiation_ocp_OKane2023,
+        "Negative electrode delithiation OCP [V]"
+        "": graphite_LGM50_delithiation_ocp_OKane2023,
+        "Negative electrode lithiation OCP [V]"
+        "": graphite_LGM50_lithiation_ocp_OKane2023,
         "Negative electrode porosity": 0.25,
         "Negative electrode active material volume fraction": 0.75,
         "Negative particle radius [m]": 5.86e-06,
@@ -1333,7 +1391,9 @@ def get_parameter_values():
         "Maximum concentration in positive electrode [mol.m-3]": 52787.0,
         "Minimum concentration in positive electrode [mol.m-3]": 12727.0,
         "Positive electrode diffusivity [m2.s-1]": nmc_LGM50_diffusivity_ORegan2022,
-        "Positive electrode OCP [V]": nmc_LGM50_ocp_OKane2023,
+        "Positive electrode OCP [V]": nmc_LGM50_lithiation_ocp_OKane2023,
+        "Positive electrode delithiation OCP [V]": nmc_LGM50_delithiation_ocp_OKane2023,
+        "Positive electrode lithiation OCP [V]": nmc_LGM50_lithiation_ocp_OKane2023,
         "Positive electrode porosity": 0.335,
         "Positive electrode active material volume fraction": 0.665,
         "Positive particle radius [m]": 5.22e-06,
