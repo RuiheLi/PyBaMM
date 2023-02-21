@@ -235,10 +235,11 @@ def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
 # Define a function to calculate based on previous solution
 def Run_Model_Base_On_Last_Solution( 
     Model  , Sol , Para_update, ModelExperiment, 
-    Update_Cycles,Temper_i ,mesh_par,submesh_strech):
+    Update_Cycles,Temper_i ,mesh_list,submesh_strech):
     # Use Sulzer's method: inplace = false
     # Important line: define new model based on previous solution
-    Ratio_CeLi = Para_update["Ratio of Li-ion concentration change in electrolyte consider solvent consumption"]
+    Ratio_CeLi = Para_update[
+        "Ratio of Li-ion concentration change in electrolyte consider solvent consumption"]
     dict_short = {}; 
     list_short = []
     # update 220808 to satisfy random model option:
@@ -269,11 +270,11 @@ def Run_Model_Base_On_Last_Solution(
     
     var = pb.standard_spatial_vars  
     var_pts = {
-        var.x_n: 20,  
-        var.x_s: 10,  
-        var.x_p: 20,  
-        var.r_n: int(mesh_par),  
-        var.r_p: int(mesh_par),  
+        var.x_n: int(mesh_list[0]),  
+        var.x_s: int(mesh_list[1]),  
+        var.x_p: int(mesh_list[2]),  
+        var.r_n: int(mesh_list[3]),  
+        var.r_p: int(mesh_list[4]),  
         }
     submesh_types = Model.default_submesh_types
     if submesh_strech == "nan":
@@ -311,7 +312,7 @@ def Run_Model_Base_On_Last_Solution(
 
 def Run_Model_Base_On_Last_Solution_RPT( 
     Model  , Sol,  Para_update, 
-    ModelExperiment ,Update_Cycles, Temper_i,mesh_par,submesh_strech):
+    ModelExperiment ,Update_Cycles, Temper_i,mesh_list,submesh_strech):
     # Use Sulzer's method: inplace = false
     Ratio_CeLi = Para_update["Ratio of Li-ion concentration change in electrolyte consider solvent consumption"]
     # print("Model is now using average EC Concentration of:",Para_update['Bulk solvent concentration [mol.m-3]'])
@@ -347,7 +348,12 @@ def Run_Model_Base_On_Last_Solution_RPT(
     Para_update.update(   {'Ambient temperature [K]':Temper_i });
     
     var = pb.standard_spatial_vars  
-    var_pts = {var.x_n: 20,  var.x_s: 10,  var.x_p: 20,  var.r_n: int(mesh_par),  var.r_p: int(mesh_par),  }
+    var_pts = {
+        var.x_n: int(mesh_list[0]),  
+        var.x_s: int(mesh_list[1]),  
+        var.x_p: int(mesh_list[2]),  
+        var.r_n: int(mesh_list[3]),  
+        var.r_p: int(mesh_list[4]),  }
     submesh_types = Model.default_submesh_types
     if submesh_strech == "nan":
         pass
@@ -398,7 +404,7 @@ def GetScan(
     Ratio_excess,cs_Neg_Init,Diff_SEI,R_SEI,Bulk_Sol_Con,
     D_Li_inSEI,c_Li_inte_ref,
     Diff_EC,k_SEI,LAMcr_prop,Crack_rate,
-    Couple_SEI_LiP,k_LiP,Temper,MESH_PAR):
+    Couple_SEI_LiP,k_LiP,Temper,mesh_list):
     import numpy as np
     TotalScan =(
         len(Ratio_excess)*
@@ -415,7 +421,7 @@ def GetScan(
         len(Couple_SEI_LiP)*
         len(k_LiP)*
         len(Temper)*
-        len(MESH_PAR) 
+        len(mesh_list) 
         ) ;
     DatePack_scan = np.full([TotalScan,16], 0.0);
     index = 0;
@@ -433,7 +439,7 @@ def GetScan(
                                                 for Couple_SEI_LiP_i in Couple_SEI_LiP:
                                                     for k_LiP_i in k_LiP:
                                                         for Temper_i in Temper:
-                                                            for mesh_par in MESH_PAR:
+                                                            for mesh_list in mesh_list:
                                                                 index +=  1;
                                                                 DatePack_scan[index-1] = [
                                                                     index,
@@ -444,7 +450,7 @@ def GetScan(
                                                                     Diff_EC_i,k_SEI_i,           # 
                                                                     LAMcr_prop_i,Crack_rate_i,   #
                                                                     Couple_SEI_LiP_i,k_LiP_i,Temper_i,
-                                                                    mesh_par];
+                                                                    mesh_list];
     return TotalScan, DatePack_scan
 
 def recursive_scan(mylist,kvs, key_list, acc):
@@ -483,9 +489,9 @@ def Para_init(Para_dict):
     if Para_dict_used.__contains__("RPT temperature"):
         Temper_RPT = Para_dict_used["RPT temperature"] + 273.15 # update: change to K 
         Para_dict_used.pop("RPT temperature")
-    if Para_dict_used.__contains__("Particle mesh points"):
-        mesh_par = Para_dict_used["Particle mesh points"]  
-        Para_dict_used.pop("Particle mesh points")
+    if Para_dict_used.__contains__("Mesh list"):
+        mesh_list = Para_dict_used["Mesh list"]  
+        Para_dict_used.pop("Mesh list")
     if Para_dict_used.__contains__("Exponential mesh stretch"):
         submesh_strech = Para_dict_used["Exponential mesh stretch"]  
         Para_dict_used.pop("Exponential mesh stretch")
@@ -525,7 +531,7 @@ def Para_init(Para_dict):
 
     CyclePack = [ 
         Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
-        Temper_i,Temper_RPT,mesh_par,submesh_strech,model_options];
+        Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options];
     
     for key, value in Para_dict_used.items():
         # risk: will update parameter that doesn't exist, so need to make sure the name is right 
@@ -598,7 +604,7 @@ def Get_initial_cap(Para_dict_i,Neg1SOC_in,Pos1SOC_in,):
     [
         Total_Cycles,Cycle_bt_RPT,Update_Cycles,
         RPT_Cycles,Temper_i,Temper_RPT,
-        mesh_par,submesh_strech,
+        mesh_list,submesh_strech,
         model_options] = CyclePack;
 
     # define experiment
@@ -614,11 +620,11 @@ def Get_initial_cap(Para_dict_i,Neg1SOC_in,Pos1SOC_in,):
 
     var = pb.standard_spatial_vars  
     var_pts = {
-        var.x_n: 20,  
-        var.x_s: 10,  
-        var.x_p: 20,  
-        var.r_n: int(mesh_par),  
-        var.r_p: int(mesh_par),  }       
+        var.x_n: int(mesh_list[0]),  
+        var.x_s: int(mesh_list[1]),  
+        var.x_p: int(mesh_list[2]),  
+        var.r_n: int(mesh_list[3]),  
+        var.r_p: int(mesh_list[4]),  }       
     submesh_types = Model_0.default_submesh_types
     if submesh_strech == "nan":
         pass
@@ -656,9 +662,9 @@ def Get_initial_cap(Para_dict_i,Neg1SOC_in,Pos1SOC_in,):
             Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[-1] - 
             Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[0]) 
         Neg1SOC.append(
-            Sol_0.cycles[i].steps[0]["Negative electrode SOC"].entries[0]) 
+            Sol_0.cycles[i].steps[0]["Negative electrode stoichiometry"].entries[0]) 
         Pos1SOC.append(
-            Sol_0.cycles[i].steps[0]["Positive electrode SOC"].entries[0]) 
+            Sol_0.cycles[i].steps[0]["Positive electrode stoichiometry"].entries[0]) 
         
     return Sol_0, Cap, Neg1SOC, Pos1SOC
 
@@ -668,7 +674,7 @@ def Get_initial_cap2(Para_dict_i):
     [
         Total_Cycles,Cycle_bt_RPT,Update_Cycles,
         RPT_Cycles,Temper_i,Temper_RPT,
-        mesh_par,submesh_strech,
+        mesh_list,submesh_strech,
         model_options] = CyclePack;
 
     # define experiment
@@ -684,11 +690,11 @@ def Get_initial_cap2(Para_dict_i):
 
     var = pb.standard_spatial_vars  
     var_pts = {
-        var.x_n: 20,  
-        var.x_s: 10,  
-        var.x_p: 20,  
-        var.r_n: int(mesh_par),  
-        var.r_p: int(mesh_par),  }       
+        var.x_n: int(mesh_list[0]),  
+        var.x_s: int(mesh_list[1]),  
+        var.x_p: int(mesh_list[2]),  
+        var.r_n: int(mesh_list[3]),  
+        var.r_p: int(mesh_list[4]),  }       
     submesh_types = Model_0.default_submesh_types
     if submesh_strech == "nan":
         pass
@@ -714,18 +720,18 @@ def Get_initial_cap2(Para_dict_i):
             Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[-1] - 
             Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[0]) 
         Neg1SOC.append(
-            Sol_0.cycles[i].steps[0]["Negative electrode SOC"].entries[0]) 
+            Sol_0.cycles[i].steps[0]["Negative electrode stoichiometry"].entries[0]) 
         Pos1SOC.append(
-            Sol_0.cycles[i].steps[0]["Positive electrode SOC"].entries[0]) 
+            Sol_0.cycles[i].steps[0]["Positive electrode stoichiometry"].entries[0]) 
         
     return Sol_0,Cap, Neg1SOC, Pos1SOC
 
 # define the model and run break-in cycle - 
-# input parameter: model_options, Experiment_Breakin, Para_0, mesh_par, submesh_strech
+# input parameter: model_options, Experiment_Breakin, Para_0, mesh_list, submesh_strech
 # output: Sol_0 , Model_0, Call_Breakin
 def Run_Breakin(
     model_options, Experiment_Breakin, 
-    Para_0, mesh_par, submesh_strech):
+    Para_0, mesh_list, submesh_strech):
 
     Model_0 = pb.lithium_ion.DFN(options=model_options ) #
     # update 220926 - add diffusivity and conductivity as variables:
@@ -737,11 +743,11 @@ def Run_Breakin(
     Model_0.variables["Electrolyte conductivity [S.m-1]"] = sigma_e(c_e, T)
     var = pb.standard_spatial_vars  
     var_pts = {
-        var.x_n: 20,  
-        var.x_s: 10,  
-        var.x_p: 20,  
-        var.r_n: int(mesh_par),  
-        var.r_p: int(mesh_par),  }       
+        var.x_n: int(mesh_list[0]),  
+        var.x_s: int(mesh_list[1]),  
+        var.x_p: int(mesh_list[2]),  
+        var.r_n: int(mesh_list[3]),  
+        var.r_p: int(mesh_list[4]),  }       
     submesh_types = Model_0.default_submesh_types
     if submesh_strech == "nan":
         pass
@@ -1037,10 +1043,10 @@ def Plot_Cyc_RPT_4(my_dict_RPT,Niall_data,Scan_i,Temper_i,model_options,BasicPat
 
     Num_subplot = 2;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-    axs[0].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDsta Positive electrode SOC"] ,'-o',label="Start" )
-    axs[0].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend Positive electrode SOC"] ,'-^',label="End" )
-    axs[1].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDsta Negative electrode SOC"],'-o',label="Start" )
-    axs[1].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend Negative electrode SOC"],'-^',label="End" )
+    axs[0].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDsta Positive electrode stoichiometry"] ,'-o',label="Start" )
+    axs[0].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend Positive electrode stoichiometry"] ,'-^',label="End" )
+    axs[1].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDsta Negative electrode stoichiometry"],'-o',label="Start" )
+    axs[1].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend Negative electrode stoichiometry"],'-^',label="End" )
     for i in range(0,2):
         axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
         axs[i].set_ylabel("SOC",   fontdict={'family':'DejaVu Sans','size':fs})
@@ -1187,7 +1193,7 @@ def Run_P2_till_Fail(
     [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
     CyclePack,Para_0 = Para_init(Para_dict_i)
     [Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
-        Temper_i,Temper_RPT,mesh_par,submesh_strech,model_options] = CyclePack;
+        Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options] = CyclePack;
     [keys_all_RPT,keys_all_AGE] = keys_all
     str_exp_AGE_text  = str(exp_AGE_text);
     str_exp_RPT_text  = str(exp_RPT_text);
@@ -1243,7 +1249,7 @@ def Run_P2_till_Fail(
             timeout_val=Timeout_text)
         Result_list_breakin  = timeout_RPT(
             model_options, Experiment_Breakin, 
-            Para_0, mesh_par, submesh_strech)
+            Para_0, mesh_list, submesh_strech)
         [Model_0,Sol_0,Call_Breakin] = Result_list_breakin
         if Call_Breakin.success == False:
             print("Fail due to Experiment error or infeasible")
@@ -1293,7 +1299,7 @@ def Run_P2_till_Fail(
                         timeout_val=Timeout_text)
                     Result_list_AGE = timeout_AGE( 
                         Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
-                        Update_Cycles,Temper_i,mesh_par,submesh_strech )
+                        Update_Cycles,Temper_i,mesh_list,submesh_strech )
                     [Model_Dry_i, Sol_Dry_i , Call_Age ] = Result_list_AGE
                     #print(f"Temperature for ageing is now: {Temper_i}")  
                     if Call_Age.success == False:
@@ -1344,7 +1350,7 @@ def Run_P2_till_Fail(
                 Result_list_RPT = timeout_RPT(
                     Model_Dry_old  , Sol_Dry_old ,   
                     Paraupdate,      Experiment_RPT, RPT_Cycles, 
-                    Temper_RPT ,mesh_par ,submesh_strech
+                    Temper_RPT ,mesh_list ,submesh_strech
                 )
                 [Model_Dry_i, Sol_Dry_i,Call_RPT]  = Result_list_RPT
                 #print(f"Temperature for RPT is now: {Temper_RPT}")  
@@ -1466,7 +1472,7 @@ def Run_P2_Opt_Timeout(
     [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
     CyclePack,Para_0 = Para_init(Para_dict_i)
     [Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
-        Temper_i,Temper_RPT,mesh_par,submesh_strech,model_options] = CyclePack;
+        Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options] = CyclePack;
     [keys_all_RPT,keys_all_AGE] = keys_all
     str_exp_AGE_text  = str(exp_AGE_text);
     str_exp_RPT_text  = str(exp_RPT_text);
@@ -1523,11 +1529,11 @@ def Run_P2_Opt_Timeout(
                 timeout_val=Timeout_text)
             Result_list_breakin  = timeout_RPT(
                 model_options, Experiment_Breakin, 
-                Para_0, mesh_par, submesh_strech)
+                Para_0, mesh_list, submesh_strech)
         else:
             Result_list_breakin  = Run_Breakin(
                 model_options, Experiment_Breakin, 
-                Para_0, mesh_par, submesh_strech)
+                Para_0, mesh_list, submesh_strech)
         [Model_0,Sol_0,Call_Breakin] = Result_list_breakin
         if Return_Sol == True:
             Sol_RPT.append(Sol_0)
@@ -1581,11 +1587,11 @@ def Run_P2_Opt_Timeout(
                             timeout_val=Timeout_text)
                         Result_list_AGE = timeout_AGE( 
                             Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
-                            Update_Cycles,Temper_i,mesh_par,submesh_strech )
+                            Update_Cycles,Temper_i,mesh_list,submesh_strech )
                     else:
                         Result_list_AGE = Run_Model_Base_On_Last_Solution( 
                             Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
-                            Update_Cycles,Temper_i,mesh_par,submesh_strech )
+                            Update_Cycles,Temper_i,mesh_list,submesh_strech )
                     [Model_Dry_i, Sol_Dry_i , Call_Age ] = Result_list_AGE
                     if Return_Sol == True:
                         Sol_AGE.append(Sol_Dry_i)
@@ -1639,13 +1645,13 @@ def Run_P2_Opt_Timeout(
                     Result_list_RPT = timeout_RPT(
                         Model_Dry_old  , Sol_Dry_old ,   
                         Paraupdate,      Experiment_RPT, RPT_Cycles, 
-                        Temper_RPT ,mesh_par ,submesh_strech
+                        Temper_RPT ,mesh_list ,submesh_strech
                     )
                 else:
                     Result_list_RPT = Run_Model_Base_On_Last_Solution_RPT(
                         Model_Dry_old  , Sol_Dry_old ,   
                         Paraupdate,      Experiment_RPT, RPT_Cycles, 
-                        Temper_RPT ,mesh_par ,submesh_strech
+                        Temper_RPT ,mesh_list ,submesh_strech
                     )
                 [Model_Dry_i, Sol_Dry_i,Call_RPT]  = Result_list_RPT
                 if Return_Sol == True:
@@ -1765,7 +1771,7 @@ def Run_model_wwo_dry_out(
     [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
     CyclePack,Para_0 = Para_init(Para_dict_i)
     [Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
-        Temper_i,Temper_RPT,mesh_par,submesh_strech,model_options] = CyclePack;
+        Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options] = CyclePack;
     [keys_all_RPT,keys_all_AGE] = keys_all;
 
     Scan_i = int(index_xlsx);
@@ -1820,11 +1826,11 @@ def Run_model_wwo_dry_out(
 
         var = pb.standard_spatial_vars  
         var_pts = {
-            var.x_n: 20,  
-            var.x_s: 10,  
-            var.x_p: 20,  
-            var.r_n: int(mesh_par),  
-            var.r_p: int(mesh_par),  }       
+            var.x_n: int(mesh_list[0]),  
+            var.x_s: int(mesh_list[1]),  
+            var.x_p: int(mesh_list[2]),  
+            var.r_n: int(mesh_list[3]),  
+            var.r_p: int(mesh_list[4]),  }       
         submesh_types = Model_0.default_submesh_types
         if submesh_strech == "nan":
             pass
@@ -1939,7 +1945,7 @@ def Run_model_wwo_dry_out(
                 # 3rd: run model based on new parameter and last updated solution Model  , Sol, Ratio_CeLi, Para_update, ModelExperiment, SaveAs_Cycles
                 Model_Dry_i, Sol_Dry_i   = Run_Model_Base_On_Last_Solution( 
                     Model_Dry_old  , Sol_Dry_old ,  
-                    Paraupdate ,Experiment_Long, Update_Cycles,Temper_i,mesh_par,submesh_strech )
+                    Paraupdate ,Experiment_Long, Update_Cycles,Temper_i,mesh_list,submesh_strech )
                 Para_0_Dry_old = Paraupdate;       Model_Dry_old = Model_Dry_i;      Sol_Dry_old = Sol_Dry_i;   
                 
                 if (k==0 and i==0) or (k==SaveTimes-1 and i==Small_Loop-1):
@@ -1984,7 +1990,7 @@ def Run_model_wwo_dry_out(
             Model_Dry_i, Sol_Dry_i  = Run_Model_Base_On_Last_Solution_RPT( 
                 Model_Dry_old  , Sol_Dry_old ,   
                 Paraupdate,      Experiment_RPT, RPT_Cycles, 
-                Temper_RPT ,mesh_par ,submesh_strech )     
+                Temper_RPT ,mesh_list ,submesh_strech )     
             #if k == SaveTimes-1:  # post-process for last RPT cycle
             my_dict_RPT_old = my_dict_RPT; del my_dict_RPT
             my_dict_RPT = GetSol_dict (my_dict_RPT_old,keys_all_RPT, Sol_Dry_i, 
@@ -2185,10 +2191,10 @@ def Run_model_wwo_dry_out(
 
             Num_subplot = 2;
             fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-            axs[0].plot(cycles, my_dict_RPT["CDsta Positive electrode SOC"] ,'-o',label="Start" )
-            axs[0].plot(cycles, my_dict_RPT["CDend Positive electrode SOC"] ,'-^',label="End" )
-            axs[1].plot(cycles, my_dict_RPT["CDsta Negative electrode SOC"],'-o',label="Start" )
-            axs[1].plot(cycles, my_dict_RPT["CDend Negative electrode SOC"],'-^',label="End" )
+            axs[0].plot(cycles, my_dict_RPT["CDsta Positive electrode stoichiometry"] ,'-o',label="Start" )
+            axs[0].plot(cycles, my_dict_RPT["CDend Positive electrode stoichiometry"] ,'-^',label="End" )
+            axs[1].plot(cycles, my_dict_RPT["CDsta Negative electrode stoichiometry"],'-o',label="Start" )
+            axs[1].plot(cycles, my_dict_RPT["CDend Negative electrode stoichiometry"],'-^',label="End" )
             for i in range(0,2):
                 axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
                 axs[i].set_ylabel("SOC",   fontdict={'family':'DejaVu Sans','size':fs})
