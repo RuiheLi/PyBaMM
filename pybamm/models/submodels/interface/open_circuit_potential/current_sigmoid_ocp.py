@@ -9,10 +9,15 @@ class CurrentSigmoidOpenCircuitPotential(BaseOpenCircuitPotential):
     def get_coupled_variables(self, variables):
         current = variables["Total current density"]
         k = 100
-        m_lith = pybamm.sigmoid(current, 0, k)  # for lithation (current < 0)
-        m_delith = 1 - m_lith  # for delithiation (current > 0)
-
         Domain = self.domain.capitalize()
+
+        if Domain == "Negative":
+            m_lith = pybamm.sigmoid(current, 0, k)  # for lithation (current < 0)
+            m_delith = 1 - m_lith  # for delithiation (current > 0)
+        elif Domain == "Positive":
+            m_delith = pybamm.sigmoid(current, 0, k)  # for delithation (current < 0)
+            m_lith = 1 - m_delith  # for lithiation (current > 0)
+
         phase_name = self.phase_name
 
         if self.reaction == "lithium-ion main":

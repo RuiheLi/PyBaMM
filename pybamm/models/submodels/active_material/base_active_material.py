@@ -63,13 +63,12 @@ class BaseModel(pybamm.BaseSubModel):
             # Update electrode capacity variables
             L = self.domain_param.L
             c_s_max = self.phase_param.c_max
-            c_s_min = self.phase_param.c_min
 
             C = (
                 pybamm.yz_average(eps_solid_av)
                 * L
                 * param.A_cc
-                * (c_s_max - c_s_min)
+                * c_s_max
                 * param.F
                 / 3600
             )
