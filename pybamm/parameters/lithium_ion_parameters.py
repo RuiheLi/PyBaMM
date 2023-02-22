@@ -803,7 +803,7 @@ class ParticleLithiumIonParameters(BaseParameters):
 
         eps_s_av = pybamm.xyz_average(self.epsilon_s)
         self.elec_loading = (
-            eps_s_av * self.domain_param.L * (self.c_max - self.c_min) * main.F / 3600
+            eps_s_av * self.domain_param.L * self.c_max * main.F / 3600
         )
         self.Q_init = self.elec_loading * main.A_cc
 
