@@ -1,39 +1,10 @@
-""" 
-Updated: 221113
-Variables to set as input:
 
-
-Key Output:
-
-also establish a folder to store data and .png
-
-control parameter for different degradation mechanisms: 
-for sei on cracks:
-    Negative electrode cracking rate # function or 3.9e-20, Ai_2020 add temperature dependency
-    Positive electrode cracking rate # function or 3.9e-20
-    Outer SEI solvent diffusivity [m2.s-1] # 1.7e-20
-    Bulk solvent concentration [mol.m-3] # 2326
-for LAM due to cracks:
-    Negative electrode LAM constant propotional term # default 1e-3
-    Positive electrode LAM constant propotional term # default 1e-3
-for solvent-diffusion limited sei: - Mark Ruihe change to ec-reaction limited now
-    Outer SEI solvent diffusivity [m2.s-1] # 1.7e-20
-    Bulk solvent concentration [mol.m-3] # 2326
-for ec reaction limited sei:
-    EC diffusivity [m2.s-1]	# default 2e-18
-    EC initial concentration in electrolyte [mol.m-3] # default 4541, set as default
-    SEI kinetic rate constant [m.s-1] # default 1e-12
-for interstitial-diffusion limited:
-    Inner SEI lithium interstitial diffusivity [m2.s-1] # default 1e-12 
-    Lithium interstitial reference concentration [mol.m-3] # default 15 (doesn't matter)
-
-
-further add-on: more data plot?
-"""
 import pybamm as pb;import pandas as pd   ;import numpy as np;import os;
 import matplotlib.pyplot as plt;import os;#import imageio
 from scipy.io import savemat,loadmat;from pybamm import constants,exp,sqrt;
 import matplotlib as mpl; 
+from multiprocessing import Queue, Process, set_start_method
+from queue import Empty
 fs=17; 
 font = {'family' : 'DejaVu Sans','size': fs}
 mpl.rc('font', **font)
@@ -41,6 +12,96 @@ import openpyxl
 import traceback
 import random;import time, signal
 
+def electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs):
+    c = c_e / 1000  # mol.m-3 -> mol.l
+    p1, p2, p3, p4, p5, p6 = coeffs
+    A = p1 * (1 + (T - p2))
+    B = 1 + p3 * pybamm.sqrt(c) + p4 * (1 + p5 * pybamm.exp(1000 / T)) * c
+    C = 1 + c**4 * (p6 * pybamm.exp(1000 / T))
+    sigma_e = A * c * B / C  # mS.cm-1
+
+    return sigma_e / 10
+
+def electrolyte_diffusivity_base_Landesfeind2019(c_e, T, coeffs):
+    c = c_e / 1000  # mol.m-3 -> mol.l
+    p1, p2, p3, p4 = coeffs
+    A = p1 * pybamm.exp(p2 * c)
+    B = pybamm.exp(p3 / T)
+    C = pybamm.exp(p4 * c / T)
+    D_e = A * B * C * 1e-10  # m2/s
+
+    return D_e
+def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019(c_e, T):
+    coeffs = np.array([1.01e3, 1.01, -1.56e3, -4.87e2])
+
+    return electrolyte_diffusivity_base_Landesfeind2019(c_e, T, coeffs)
+
+def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019(c_e, T):
+    coeffs = np.array([5.21e-1, 2.28e2, -1.06, 3.53e-1, -3.59e-3, 1.48e-3])
+
+    return electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs)
+
+def electrolyte_conductivity_Valoen2005(c_e, T):
+    # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    # mS/cm to S/m
+    return (1e-3 / 1e-2) * (
+        c_e
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    )
+def electrolyte_diffusivity_Valoen2005(c_e, T):
+    # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
+
+    T_g = 229 + 5 * c_e
+    D_0 = -4.43 - 54 / (T - T_g)
+    D_1 = -0.22
+
+    # cm2/s to m2/s
+    # note, in the Valoen paper, ln means log10, so its inverse is 10^x
+    return (10 ** (D_0 + D_1 * c_e)) * 1e-4
+###################################################################
+#############    From Patrick from Github        ##################
+###################################################################
+class TimeoutFunc(object):
+    def __init__(self, func, timeout=None, timeout_val=None):
+        assert callable(func), 'Positional argument 1 must be a callable method'
+        self.func = func
+        self.timeout = timeout
+        self.timeout_val = timeout_val
+
+    def _queued_f(self, *args, queue, **kwargs):
+        Result_List = self.func(*args, **kwargs)
+        try:
+            queue.put(Result_List)
+        except BrokenPipeError as exc:
+            pass
+
+    def __call__(self, *args, **kwargs):
+        q = Queue(1)
+        p = Process(target=self._queued_f, args=args,
+            kwargs={**kwargs, 'queue': q})
+        p.daemon = True
+        p.start()
+        try:
+            Result_List = q.get(timeout=self.timeout)
+        except Empty as exc: 
+            # todo: need to incooperate other cases such as pybamm.expression_tree.exceptions.ModelError,
+            #      pybamm.expression_tree.exceptions.SolverError
+            p.terminate()
+            Call_ref = RioCallback() 
+            Result_List = [
+                self.timeout_val,
+                self.timeout_val,
+                Call_ref]
+        return Result_List  
 ###################################################################
 #############    New functions from P3 - 221113        ############
 ###################################################################
@@ -230,10 +291,11 @@ def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
 # Define a function to calculate based on previous solution
 def Run_Model_Base_On_Last_Solution( 
     Model  , Sol , Para_update, ModelExperiment, 
-    Update_Cycles,Temper_i ,mesh_par,submesh_strech):
+    Update_Cycles,Temper_i ,mesh_list,submesh_strech):
     # Use Sulzer's method: inplace = false
     # Important line: define new model based on previous solution
-    Ratio_CeLi = Para_update["Ratio of Li-ion concentration change in electrolyte consider solvent consumption"]
+    Ratio_CeLi = Para_update[
+        "Ratio of Li-ion concentration change in electrolyte consider solvent consumption"]
     dict_short = {}; 
     list_short = []
     # update 220808 to satisfy random model option:
@@ -264,11 +326,11 @@ def Run_Model_Base_On_Last_Solution(
     
     var = pb.standard_spatial_vars  
     var_pts = {
-        var.x_n: 20,  
-        var.x_s: 10,  
-        var.x_p: 20,  
-        var.r_n: int(mesh_par),  
-        var.r_p: int(mesh_par),  
+        var.x_n: int(mesh_list[0]),  
+        var.x_s: int(mesh_list[1]),  
+        var.x_p: int(mesh_list[2]),  
+        var.r_n: int(mesh_list[3]),  
+        var.r_p: int(mesh_list[4]),  
         }
     submesh_types = Model.default_submesh_types
     if submesh_strech == "nan":
@@ -288,16 +350,32 @@ def Run_Model_Base_On_Last_Solution(
         var_pts = var_pts,
         submesh_types=submesh_types
     )
-    Sol_new = Simnew.solve(
-        calc_esoh=False,
-        save_at_cycles = Update_Cycles,
-        callbacks=Call_Age) # save every several cycles, can save RAM greatly
+    try:
+        Sol_new = Simnew.solve(
+            calc_esoh=False,
+            save_at_cycles = Update_Cycles,
+            callbacks=Call_Age)
+    except (
+        pb.expression_tree.exceptions.ModelError,
+        pb.expression_tree.exceptions.SolverError
+        ) as e:
+        Sol_new = "Model error or solver error"
+    else:
+        # add 230221
+        Sol_new['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
+        """ for step in Sol_new.cycles[0].steps:
+            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
+            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1]
+        for step in Sol_new.cycles[-1].steps:
+            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
+            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1] """
     # print("Solved this model in {}".format(ModelTimer.time()))
-    return Model_new, Sol_new,Call_Age
+    Result_list = [Model_new, Sol_new,Call_Age]
+    return Result_list
 
 def Run_Model_Base_On_Last_Solution_RPT( 
     Model  , Sol,  Para_update, 
-    ModelExperiment ,Update_Cycles, Temper_i,mesh_par,submesh_strech):
+    ModelExperiment ,Update_Cycles, Temper_i,mesh_list,submesh_strech):
     # Use Sulzer's method: inplace = false
     Ratio_CeLi = Para_update["Ratio of Li-ion concentration change in electrolyte consider solvent consumption"]
     # print("Model is now using average EC Concentration of:",Para_update['Bulk solvent concentration [mol.m-3]'])
@@ -333,10 +411,15 @@ def Run_Model_Base_On_Last_Solution_RPT(
     Para_update.update(   {'Ambient temperature [K]':Temper_i });
     
     var = pb.standard_spatial_vars  
-    var_pts = {var.x_n: 20,  var.x_s: 10,  var.x_p: 20,  var.r_n: int(mesh_par),  var.r_p: int(mesh_par),  }
+    var_pts = {
+        var.x_n: int(mesh_list[0]),  
+        var.x_s: int(mesh_list[1]),  
+        var.x_p: int(mesh_list[2]),  
+        var.r_n: int(mesh_list[3]),  
+        var.r_p: int(mesh_list[4]),  }
     submesh_types = Model.default_submesh_types
     if submesh_strech == "nan":
-            pass
+        pass
     else:
         particle_mesh = pb.MeshGenerator(
             pb.Exponential1DSubMesh, 
@@ -352,12 +435,28 @@ def Run_Model_Base_On_Last_Solution_RPT(
         submesh_types=submesh_types
     )
     Call_RPT = RioCallback()  # define callback
-    Sol_new = Simnew.solve(
-        calc_esoh=False,
-        save_at_cycles = Update_Cycles,
-        callbacks=Call_RPT) # save every several cycles, can save RAM greatly
+    try:
+        Sol_new = Simnew.solve(
+            calc_esoh=False,
+            save_at_cycles = Update_Cycles,
+            callbacks=Call_RPT) 
+    except (
+        pb.expression_tree.exceptions.ModelError,
+        pb.expression_tree.exceptions.SolverError
+        ) as e:
+        Sol_new = "Model error or solver error"
+    else:
+        # add 230221
+        Sol_new['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
+        """ for step in Sol_new.cycles[0].steps:
+            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
+            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1]
+        for step in Sol_new.cycles[-1].steps:
+            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
+            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1] """
     # print("Solved this model in {}".format(ModelTimer.time()))
-    return Model_new, Sol_new,Call_RPT
+    Result_List_RPT = [Model_new, Sol_new,Call_RPT]
+    return Result_List_RPT
 
 def write_excel_xlsx(path, sheet_name, value):
     import numpy as np
@@ -370,59 +469,6 @@ def write_excel_xlsx(path, sheet_name, value):
             sheet.cell(row=i + 1, column=j + 1, value=str(value[i][j]))  # 行，列，值 这里是从1开始计数的
     workbook.save(path)  # 一定要保存
     print("Successfully create a excel file")
-# From 22-08-15, this function is replaced by recursive_scan
-def GetScan(
-    Ratio_excess,cs_Neg_Init,Diff_SEI,R_SEI,Bulk_Sol_Con,
-    D_Li_inSEI,c_Li_inte_ref,
-    Diff_EC,k_SEI,LAMcr_prop,Crack_rate,
-    Couple_SEI_LiP,k_LiP,Temper,MESH_PAR):
-    import numpy as np
-    TotalScan =(
-        len(Ratio_excess)*
-        len(cs_Neg_Init)*
-        len(Diff_SEI)*
-        len(R_SEI)*
-        len(Bulk_Sol_Con)*
-        len(D_Li_inSEI)*
-        len(c_Li_inte_ref)*
-        len(Diff_EC)*          # 
-        len(k_SEI)*            #
-        len(LAMcr_prop)*       #
-        len(Crack_rate)*       #
-        len(Couple_SEI_LiP)*
-        len(k_LiP)*
-        len(Temper)*
-        len(MESH_PAR) 
-        ) ;
-    DatePack_scan = np.full([TotalScan,16], 0.0);
-    index = 0;
-    for Ratio_excess_i in Ratio_excess:
-        for cs_Neg_Init_i in cs_Neg_Init:
-            for Diff_SEI_i in Diff_SEI:
-                for R_SEI_i in R_SEI:
-                    for Bulk_Sol_Con_i in Bulk_Sol_Con:
-                        for D_Li_inSEI_i in D_Li_inSEI:
-                            for c_Li_inte_ref_i in c_Li_inte_ref:
-                                for Diff_EC_i in Diff_EC:
-                                    for k_SEI_i in k_SEI:
-                                        for LAMcr_prop_i in LAMcr_prop:
-                                            for Crack_rate_i in Crack_rate:
-                                                for Couple_SEI_LiP_i in Couple_SEI_LiP:
-                                                    for k_LiP_i in k_LiP:
-                                                        for Temper_i in Temper:
-                                                            for mesh_par in MESH_PAR:
-                                                                index +=  1;
-                                                                DatePack_scan[index-1] = [
-                                                                    index,
-                                                                    Ratio_excess_i,
-                                                                    cs_Neg_Init_i,Diff_SEI_i,
-                                                                    R_SEI_i,Bulk_Sol_Con_i,
-                                                                    D_Li_inSEI_i,c_Li_inte_ref_i,
-                                                                    Diff_EC_i,k_SEI_i,           # 
-                                                                    LAMcr_prop_i,Crack_rate_i,   #
-                                                                    Couple_SEI_LiP_i,k_LiP_i,Temper_i,
-                                                                    mesh_par];
-    return TotalScan, DatePack_scan
 
 def recursive_scan(mylist,kvs, key_list, acc):
     # 递归终止条件
@@ -460,9 +506,9 @@ def Para_init(Para_dict):
     if Para_dict_used.__contains__("RPT temperature"):
         Temper_RPT = Para_dict_used["RPT temperature"] + 273.15 # update: change to K 
         Para_dict_used.pop("RPT temperature")
-    if Para_dict_used.__contains__("Particle mesh points"):
-        mesh_par = Para_dict_used["Particle mesh points"]  
-        Para_dict_used.pop("Particle mesh points")
+    if Para_dict_used.__contains__("Mesh list"):
+        mesh_list = Para_dict_used["Mesh list"]  
+        Para_dict_used.pop("Mesh list")
     if Para_dict_used.__contains__("Exponential mesh stretch"):
         submesh_strech = Para_dict_used["Exponential mesh stretch"]  
         Para_dict_used.pop("Exponential mesh stretch")
@@ -471,17 +517,6 @@ def Para_init(Para_dict):
     if Para_dict_used.__contains__("Model option"):
         model_options = Para_dict_used["Model option"]  
         Para_dict_used.pop("Model option")
-    # Mark Ruihe - updated 221113 - from P3
-    if Para_dict_used.__contains__("Func Electrolyte conductivity [S.m-1]"):
-        Para_0.update({
-            "Electrolyte conductivity [S.m-1]": 
-            eval(Para_dict_used["Func Electrolyte conductivity [S.m-1]"])})  
-        Para_dict_used.pop("Func Electrolyte conductivity [S.m-1]")
-    if Para_dict_used.__contains__("Func Electrolyte diffusivity [m2.s-1]"):
-        Para_0.update({
-            "Electrolyte diffusivity [m2.s-1]": 
-            eval(Para_dict_used["Func Electrolyte diffusivity [m2.s-1]"])})
-        Para_dict_used.pop("Func Electrolyte diffusivity [m2.s-1]")
 
     if Para_dict_used.__contains__("Initial Neg SOC"):
         c_Neg1SOC_in = (
@@ -502,14 +537,18 @@ def Para_init(Para_dict):
 
     CyclePack = [ 
         Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
-        Temper_i,Temper_RPT,mesh_par,submesh_strech,model_options];
-    
+        Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options];
+    # Mark Ruihe - updated 230222 - from P3
     for key, value in Para_dict_used.items():
-        # risk: will update parameter that doesn't exist, so need to make sure the name is right 
-        Para_0.update({key: value},check_already_exists=False)
+        # risk: will update parameter that doesn't exist, 
+        # so need to make sure the name is right 
+        if isinstance(value, str):
+            Para_0.update({key: eval(value)})
+            #Para_dict_used.pop(key)
+        else:
+            Para_0.update({key: value},check_already_exists=False)
+
     return CyclePack,Para_0
-
-
 
 # Add 220808 - to simplify the post-processing
 def GetSol_dict (my_dict, keys_all, Sol, 
@@ -538,8 +577,10 @@ def GetSol_dict (my_dict, keys_all, Sol,
                     Sol.cycles[cycle_no].steps[step_no][key].entries[-1]
                     - 
                     Sol.cycles[cycle_no].steps[step_no][key].entries[0])
+            elif key in ["Throughput capacity [A.h]"]: # 
+                my_dict[key].append(Sol[key].entries[-1])
             elif key[0:5] in ["CDend","CCend","CVend","REend",
-                    "CDsta","CCsta","CVsta","REsta",]:
+                            "CDsta","CCsta","CVsta","REsta",]:
                 step_no = eval("step_{}".format(key[0:2]))
                 if key[2:5] == "sta":
                     my_dict[key].append  (
@@ -567,7 +608,6 @@ def GetSol_dict (my_dict, keys_all, Sol,
                         Sol.cycles[cycle_no].steps[step_no][key[6:]].entries[:,-1])
     return my_dict                              
 
-
 ############## Get initial cap ############## 
 # Input: just parameter set
 # Output: 0% and 100% SOC of neg/pos; cap at last RPT cycle
@@ -578,7 +618,7 @@ def Get_initial_cap(Para_dict_i,Neg1SOC_in,Pos1SOC_in,):
     [
         Total_Cycles,Cycle_bt_RPT,Update_Cycles,
         RPT_Cycles,Temper_i,Temper_RPT,
-        mesh_par,submesh_strech,
+        mesh_list,submesh_strech,
         model_options] = CyclePack;
 
     # define experiment
@@ -594,11 +634,11 @@ def Get_initial_cap(Para_dict_i,Neg1SOC_in,Pos1SOC_in,):
 
     var = pb.standard_spatial_vars  
     var_pts = {
-        var.x_n: 20,  
-        var.x_s: 10,  
-        var.x_p: 20,  
-        var.r_n: int(mesh_par),  
-        var.r_p: int(mesh_par),  }       
+        var.x_n: int(mesh_list[0]),  
+        var.x_s: int(mesh_list[1]),  
+        var.x_p: int(mesh_list[2]),  
+        var.r_n: int(mesh_list[3]),  
+        var.r_p: int(mesh_list[4]),  }       
     submesh_types = Model_0.default_submesh_types
     if submesh_strech == "nan":
         pass
@@ -636,9 +676,9 @@ def Get_initial_cap(Para_dict_i,Neg1SOC_in,Pos1SOC_in,):
             Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[-1] - 
             Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[0]) 
         Neg1SOC.append(
-            Sol_0.cycles[i].steps[0]["Negative electrode SOC"].entries[0]) 
+            Sol_0.cycles[i].steps[0]["Negative electrode stoichiometry"].entries[0]) 
         Pos1SOC.append(
-            Sol_0.cycles[i].steps[0]["Positive electrode SOC"].entries[0]) 
+            Sol_0.cycles[i].steps[0]["Positive electrode stoichiometry"].entries[0]) 
         
     return Sol_0, Cap, Neg1SOC, Pos1SOC
 
@@ -648,7 +688,7 @@ def Get_initial_cap2(Para_dict_i):
     [
         Total_Cycles,Cycle_bt_RPT,Update_Cycles,
         RPT_Cycles,Temper_i,Temper_RPT,
-        mesh_par,submesh_strech,
+        mesh_list,submesh_strech,
         model_options] = CyclePack;
 
     # define experiment
@@ -664,11 +704,11 @@ def Get_initial_cap2(Para_dict_i):
 
     var = pb.standard_spatial_vars  
     var_pts = {
-        var.x_n: 20,  
-        var.x_s: 10,  
-        var.x_p: 20,  
-        var.r_n: int(mesh_par),  
-        var.r_p: int(mesh_par),  }       
+        var.x_n: int(mesh_list[0]),  
+        var.x_s: int(mesh_list[1]),  
+        var.x_p: int(mesh_list[2]),  
+        var.r_n: int(mesh_list[3]),  
+        var.r_p: int(mesh_list[4]),  }       
     submesh_types = Model_0.default_submesh_types
     if submesh_strech == "nan":
         pass
@@ -694,18 +734,18 @@ def Get_initial_cap2(Para_dict_i):
             Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[-1] - 
             Sol_0.cycles[i].steps[0]["Discharge capacity [A.h]"].entries[0]) 
         Neg1SOC.append(
-            Sol_0.cycles[i].steps[0]["Negative electrode SOC"].entries[0]) 
+            Sol_0.cycles[i].steps[0]["Negative electrode stoichiometry"].entries[0]) 
         Pos1SOC.append(
-            Sol_0.cycles[i].steps[0]["Positive electrode SOC"].entries[0]) 
+            Sol_0.cycles[i].steps[0]["Positive electrode stoichiometry"].entries[0]) 
         
     return Sol_0,Cap, Neg1SOC, Pos1SOC
 
 # define the model and run break-in cycle - 
-# input parameter: model_options, Experiment_Breakin, Para_0, mesh_par, submesh_strech
+# input parameter: model_options, Experiment_Breakin, Para_0, mesh_list, submesh_strech
 # output: Sol_0 , Model_0, Call_Breakin
 def Run_Breakin(
     model_options, Experiment_Breakin, 
-    Para_0, mesh_par, submesh_strech):
+    Para_0, mesh_list, submesh_strech):
 
     Model_0 = pb.lithium_ion.DFN(options=model_options ) #
     # update 220926 - add diffusivity and conductivity as variables:
@@ -717,11 +757,11 @@ def Run_Breakin(
     Model_0.variables["Electrolyte conductivity [S.m-1]"] = sigma_e(c_e, T)
     var = pb.standard_spatial_vars  
     var_pts = {
-        var.x_n: 20,  
-        var.x_s: 10,  
-        var.x_p: 20,  
-        var.r_n: int(mesh_par),  
-        var.r_p: int(mesh_par),  }       
+        var.x_n: int(mesh_list[0]),  
+        var.x_s: int(mesh_list[1]),  
+        var.x_p: int(mesh_list[2]),  
+        var.r_n: int(mesh_list[3]),  
+        var.r_p: int(mesh_list[4]),  }       
     submesh_types = Model_0.default_submesh_types
     if submesh_strech == "nan":
         pass
@@ -738,9 +778,18 @@ def Run_Breakin(
         var_pts=var_pts,
         submesh_types=submesh_types) #mode="safe"
     Call_Breakin = RioCallback()
-    Sol_0    = Sim_0.solve(calc_esoh=False,callbacks=Call_Breakin)
+    try:
+        Sol_0    = Sim_0.solve(calc_esoh=False,callbacks=Call_Breakin)
+    except (
+        pb.expression_tree.exceptions.ModelError,
+        pb.expression_tree.exceptions.SolverError
+        ) as e:
+        Sol_0 = "Model error or solver error"
+    else:
+        pass
+    Result_list_breakin = [Model_0,Sol_0,Call_Breakin]
 
-    return Model_0,Sol_0,Call_Breakin
+    return Result_list_breakin
 
 # Input: Para_0
 # Output: mdic_dry, Para_0
@@ -854,7 +903,8 @@ def Update_mdic_dry(Data_Pack,mdic_dry):
 def Get_Values_Excel(
     model_options,my_dict_RPT,mdic_dry,
     DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
-    str_exp_RPT_text):
+    str_exp_RPT_text,str_error_AGE_final,
+    str_error_RPT):
     if model_options.__contains__("SEI on cracks"):
             LossCap_seioncrack = my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"][-1]
     else:
@@ -903,99 +953,155 @@ def Get_Values_Excel(
         str(Vol_Elely_Tot_All_final), 
         str(Vol_Elely_JR_All_final),
         str(Width_all_final),
+        str_error_AGE_final, # Mark Ruihe
+        str_error_RPT   # Mark Ruihe
         ])
     return values        
 
-def Plot_Cyc_RPT_4(my_dict_RPT,Niall_data,Scan_i,Temper_i,model_options,BasicPath, Target,fs,dpi):
-    Num_subplot = 3;
-    fig, axs = plt.subplots(1,Num_subplot, figsize=(18,4.8),tight_layout=True)
+# Function to read exp
+def Read_Exp(BasicPath,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
+    Exp_Any_AllData  = {}
+    for cell in Exp_Any_Cell:
+        Exp_Any_AllData[cell] = {} # one cell
+        # For extracted directly measured capacity, resistance, etc.
+        Exp_Any_AllData[cell]["Extract Data"] = pd.read_csv(
+            BasicPath+Exp_Path[i]+
+            f"{Exp_head[i]} - cell {cell} ({Exp_Any_Temp[cell]}degC) - Extracted Data.csv", 
+            index_col=0)
+        # Read for DMA results, further a dictionary
+        Exp_Any_AllData[cell]["DMA"] = {}
+        Exp_Any_AllData[cell]["DMA"]["Cap_Offset"]=pd.read_csv(
+            BasicPath+Exp_Path[i]+ "DMA Output/" + f"cell {cell}/" + 
+            f"{Exp_head[i]} - Capacity and offset data from OCV-fitting for cell {cell}.csv", 
+            index_col=0)
+        Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]=pd.read_csv(
+            BasicPath+Exp_Path[i]+ "DMA Output/" + f"cell {cell}/" + 
+            f"{Exp_head[i]} - DM data from OCV-fitting for cell {cell}.csv", 
+            index_col=0)
+        Exp_Any_AllData[cell]["DMA"]["Fit_SOC"]=pd.read_csv(
+            BasicPath+Exp_Path[i]+ "DMA Output/" + f"cell {cell}/" + 
+            f"{Exp_head[i]} - fitting parameters from OCV-fitting for cell {cell}.csv", 
+            index_col=0)
+        Exp_Any_AllData[cell]["DMA"]["RMSE"]=pd.read_csv(
+            BasicPath+Exp_Path[i]+ "DMA Output/" + f"cell {cell}/" + 
+            f"{Exp_head[i]} - RMSE data from OCV-fitting for cell {cell}.csv", 
+            index_col=0)
+    print("Finish reading Experiment!")
+    return Exp_Any_AllData
+
+# plot inside the function:
+def Plot_Cyc_RPT_4(
+        my_dict_RPT,
+        Exp_Any_AllData,Temp_Cell_Exp, Plot_Exp,  # need to be specific for one expeirment
+        Scan_i,
+        Temper_i,model_options,BasicPath, Target,fs,dpi):
+    Num_subplot = 5;
+    fig, axs = plt.subplots(Num_subplot,1, figsize=(6,13),tight_layout=True)
     axs[0].plot(
-        my_dict_RPT["Cycle_RPT"], 
-        my_dict_RPT["Discharge capacity [A.h]"],     
+        my_dict_RPT['Throughput capacity [kA.h]'], 
+        my_dict_RPT['CDend SOH [%]'],     
         '-o', label="Scan=" + str(Scan_i) )
-    if Temper_i  == 40 + 273.15:       
-        axs[0].plot(Niall_data['F_Cap_all'][:,2],Niall_data['F_Cap_all'][:,5]/1e3, '-^',  label='Cell F' )
-        axs[0].plot(Niall_data['G_Cap_all'][:,2],Niall_data['G_Cap_all'][:,5]/1e3, '-^',  label='Cell G' )
-        axs[0].plot(Niall_data['H_Cap_all'][:,2],Niall_data['H_Cap_all'][:,5]/1e3, '-^',  label='Cell H' )
-    elif Temper_i  == 25 + 273.15: 
-        axs[0].plot(Niall_data['D_Cap_all'][:,2],Niall_data['D_Cap_all'][:,5]/1e3, '-^',  label='Cell D' )
-        axs[0].plot(Niall_data['E_Cap_all'][:,2],Niall_data['E_Cap_all'][:,5]/1e3, '-^',  label='Cell E' )
-    elif Temper_i  == 10 + 273.15: 
-        axs[0].plot(Niall_data['A_Cap_all'][:,2],Niall_data['A_Cap_all'][:,5]/1e3, '-^',  label='Cell A' )
-        axs[0].plot(Niall_data['B_Cap_all'][:,2],Niall_data['B_Cap_all'][:,5]/1e3, '-^',  label='Cell B' )
-        axs[0].plot(Niall_data['C_Cap_all'][:,2],Niall_data['C_Cap_all'][:,5]/1e3, '-^',  label='Cell C' )
-    else:
-        pass
+    axs[1].plot(
+        my_dict_RPT['Throughput capacity [kA.h]'], 
+        my_dict_RPT["CDend LLI [%]"],'-o', label="total LLI")
     if model_options.__contains__("lithium plating"):
-        axs[1].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend Loss of capacity to lithium plating [A.h]"],'-o', label="LiP - Scan=" + str(Scan_i) )
+        axs[1].plot(
+            my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT["CDend LLI lithium plating [%]"],'--o', label="LiP")
     if model_options.__contains__("SEI"):
-        axs[1].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend Loss of capacity to SEI [A.h]"] ,'-o', label="SEI - Scan" + str(Scan_i) )
+        axs[1].plot(
+            my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT["CDend LLI SEI [%]"] ,'--o', label="SEI")
     if model_options.__contains__("SEI on cracks"):
-        axs[1].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"] ,'-o', label="sei-on-cracks - Scan" + str(Scan_i) )
+        axs[1].plot(
+            my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT["CDend LLI SEI on cracks [%]"] ,'--o', label="SEI-on-cracks")
     axs[2].plot(
-        my_dict_RPT["CDend Throughput capacity [A.h]"], 
-        my_dict_RPT["Discharge capacity [A.h]"],     
-        '-o', label="Scan=" + str(Scan_i) )
-    if Temper_i  == 40:       
-        axs[2].plot(Niall_data['F_Cap_all'][:,3],Niall_data['F_Cap_all'][:,5]/1e3, '-^',  label='Cell F' )
-        axs[2].plot(Niall_data['G_Cap_all'][:,3],Niall_data['G_Cap_all'][:,5]/1e3, '-^',  label='Cell G' )
-        axs[2].plot(Niall_data['H_Cap_all'][:,3],Niall_data['H_Cap_all'][:,5]/1e3, '-^',  label='Cell H' )
-    elif Temper_i  == 25: 
-        axs[2].plot(Niall_data['D_Cap_all'][:,3],Niall_data['D_Cap_all'][:,5]/1e3, '-^',  label='Cell D' )
-        axs[2].plot(Niall_data['E_Cap_all'][:,3],Niall_data['E_Cap_all'][:,5]/1e3, '-^',  label='Cell E' )
-    elif Temper_i  == 10: 
-        axs[2].plot(Niall_data['A_Cap_all'][:,3],Niall_data['A_Cap_all'][:,5]/1e3, '-^',  label='Cell A' )
-        axs[2].plot(Niall_data['B_Cap_all'][:,3],Niall_data['B_Cap_all'][:,5]/1e3, '-^',  label='Cell B' )
-        axs[2].plot(Niall_data['C_Cap_all'][:,3],Niall_data['C_Cap_all'][:,5]/1e3, '-^',  label='Cell C' )
-    else:
-        pass
+        my_dict_RPT["Throughput capacity [kA.h]"], 
+        my_dict_RPT["CDend LAM_ne [%]"],     '-o', ) 
+    axs[3].plot(
+        my_dict_RPT["Throughput capacity [kA.h]"], 
+        my_dict_RPT["CDend LAM_pe [%]"],     '-o',  ) 
+    axs[4].plot(
+        my_dict_RPT["Throughput capacity [kA.h]"], 
+        np.array(my_dict_RPT["CDend Local ECM resistance [Ohm]"])*1e3,     '-o', ) 
+    # Plot Charge Throughput (A.h) vs SOH
+    color_exp = [0, 0, 0,0.7]; marker_exp = "v";
+    Exp_temp_i_cell = Temp_Cell_Exp[str(int(Temper_i- 273.15))]
+    if Plot_Exp == True:
+        for cell in Exp_temp_i_cell:
+            axs[0].plot(
+                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
+                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["SoH"])*100,
+                color=color_exp,marker=marker_exp,label=f"Cell {cell}") 
+            axs[1].plot(
+                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
+                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LLI"])*100,
+                color=color_exp,marker=marker_exp,label=f"Cell {cell}")  
+            axs[2].plot(
+                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
+                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LAM NE_tot"])*100,
+                color=color_exp,marker=marker_exp, )
+            axs[3].plot(
+                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
+                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LAM PE"])*100,
+                color=color_exp,marker=marker_exp,)
+    axs[0].set_ylabel("SOH %")
+    axs[1].set_ylabel("LLI %")
+    axs[2].set_ylabel("LAM NE %")
+    axs[3].set_ylabel("LAM PE %")
+    axs[4].set_ylabel(r"Lump resistance [m$\Omega$]")
+    axs[4].set_xlabel("Charge Throughput (kA.h)")
     for i in range(0,Num_subplot):
-        axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
-        axs[i].set_ylabel("Capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})
         labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
         axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-        axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
-        axs[i].set_title("Discharge capacity",   fontdict={'family':'DejaVu Sans','size':fs+1})
-    axs[2].set_xlabel("Throughput capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})   
-    axs[1].set_title("Capacity loss to LiP and SEI",   fontdict={'family':'DejaVu Sans','size':fs+1})
-    plt.savefig(BasicPath + Target+ str(Scan_i)+"/Cap-LLI.png", dpi=dpi)
+    axs[4].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
+    axs[0].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
+    axs[1].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
+    fig.suptitle(
+        f"Scan {str(Scan_i)}-{str(int(Temper_i- 273.15))}"+r"$^\circ$C - Summary", fontsize=fs+2)
+
+    plt.savefig(BasicPath + Target+ str(Scan_i)+f"/{str(int(Temper_i- 273.15))}degC Cap-LLI.png", dpi=dpi)
 
     if model_options.__contains__("SEI on cracks"):
-        fs=17;Num_subplot = 2;
+        Num_subplot = 2;
         fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-        axs[0].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],     '-o', label="Scan=" + str(Scan_i) )
-        axs[1].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend X-averaged negative electrode roughness ratio"],'-o', label="Scan=" + str(Scan_i) )
+        axs[0].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],     '-o', label="Scan=" + str(Scan_i) )
+        axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDend X-averaged negative electrode roughness ratio"],'-o', label="Scan=" + str(Scan_i) )
         axs[0].set_ylabel("SEI on cracks thickness [m]",   fontdict={'family':'DejaVu Sans','size':fs})
         axs[1].set_ylabel("Roughness ratio",   fontdict={'family':'DejaVu Sans','size':fs})
         for i in range(0,Num_subplot):
-            axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
+            axs[i].set_xlabel("Charge Throughput (kA.h)",   fontdict={'family':'DejaVu Sans','size':fs})
             labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
             axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
             axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
         axs[0].set_title("X-avg tot Neg SEI on cracks thickness",   fontdict={'family':'DejaVu Sans','size':fs+1})
         axs[1].set_title("X-avg Neg roughness ratio",   fontdict={'family':'DejaVu Sans','size':fs+1})
-        plt.savefig(BasicPath + Target+ str(Scan_i)+"/Cracks related.png", dpi=dpi)
+        plt.savefig(BasicPath + Target+ str(Scan_i)+f"/{str(int(Temper_i- 273.15))}degC - Cracks related.png", dpi=dpi)
 
         Num_subplot = 2;
         fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-        axs[1].plot(my_dict_RPT["Cycle_RPT"], 
+        axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend Negative electrode capacity [A.h]"][0]
             -
             my_dict_RPT["CDend Negative electrode capacity [A.h]"],'-o',label="Neg Scan=" + str(Scan_i))
-        axs[1].plot(my_dict_RPT["Cycle_RPT"], 
+        axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend Positive electrode capacity [A.h]"][0]
             -
             my_dict_RPT["CDend Positive electrode capacity [A.h]"],'-^',label="Pos Scan=" + str(Scan_i))
-        axs[0].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],                  '-o',label="Scan="+ str(Scan_i))
+        axs[0].plot(
+            my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],                  
+            '-o',label="Scan="+ str(Scan_i))
         for i in range(0,1):
-            axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
+            axs[i].set_xlabel("Charge Throughput (kA.h)",   fontdict={'family':'DejaVu Sans','size':fs})
             labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
             axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
             axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
         axs[0].set_ylabel("SEI on cracks thickness [m]",   fontdict={'family':'DejaVu Sans','size':fs})
         axs[0].set_title("CDend X-avg tot SEI on cracks thickness",   fontdict={'family':'DejaVu Sans','size':fs+1})
         for i in range(1,2):
-            axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
+            axs[i].set_xlabel("Charge Throughput (kA.h)",   fontdict={'family':'DejaVu Sans','size':fs})
             axs[i].set_ylabel("Capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})
             labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
             axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
@@ -1004,26 +1110,27 @@ def Plot_Cyc_RPT_4(my_dict_RPT,Niall_data,Scan_i,Temper_i,model_options,BasicPat
         plt.savefig(BasicPath + Target+ str(Scan_i)+"/LAM-IR.png", dpi=dpi)
 
     Num_subplot = 2;
-    fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-    axs[0].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDsta Positive electrode SOC"] ,'-o',label="Start" )
-    axs[0].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend Positive electrode SOC"] ,'-^',label="End" )
-    axs[1].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDsta Negative electrode SOC"],'-o',label="Start" )
-    axs[1].plot(my_dict_RPT["Cycle_RPT"], my_dict_RPT["CDend Negative electrode SOC"],'-^',label="End" )
+    fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
+    axs[0].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDsta Positive electrode stoichiometry"] ,'-o',label="Start" )
+    axs[0].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDend Positive electrode stoichiometry"] ,'-^',label="End" )
+    axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDsta Negative electrode stoichiometry"],'-o',label="Start" )
+    axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDend Negative electrode stoichiometry"],'-^',label="End" )
     for i in range(0,2):
-        axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
-        axs[i].set_ylabel("SOC",   fontdict={'family':'DejaVu Sans','size':fs})
+        axs[i].set_xlabel("Charge Throughput (kA.h)",   fontdict={'family':'DejaVu Sans','size':fs})
+        axs[i].set_ylabel("Stoichiometry",   fontdict={'family':'DejaVu Sans','size':fs})
         labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
+        axs[i].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
         axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)     
-    axs[0].set_title("Neg SOC range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
-    axs[1].set_title("Pos SOC range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
-    plt.savefig(BasicPath + Target+ str(Scan_i)+"/SOC_RPT_dis.png", dpi=dpi)
+    axs[0].set_title("Neg Sto. range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
+    axs[1].set_title("Pos Sto. range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
+    plt.savefig(BasicPath + Target+ str(Scan_i)+"/SOC_RPT_dis.png", dpi=dpi) 
 
     return
 
 def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi):
     Num_subplot = 2;
-    fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
+    fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
     axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Porosity"][0],'-o',label="First")
     axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Porosity"][-1],'-^',label="Last"  )
     axs[1].plot(
@@ -1041,13 +1148,14 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi):
     axs[1].set_ylabel("Overpotential [V]",   fontdict={'family':'DejaVu Sans','size':fs})
     for i in range(0,2):
         labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
+        axs[i].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
         axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
     plt.savefig(BasicPath + Target+ str(Scan_i)+"/Por Neg_S_eta.png", dpi=dpi)
 
     if model_options.__contains__("SEI on cracks"):
         Num_subplot = 2;
-        fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
+        fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
         axs[0].plot(my_dict_AGE["x_n [m]"], my_dict_AGE["CDend Negative electrode roughness ratio"][0],'-o',label="First")
         axs[0].plot(my_dict_AGE["x_n [m]"], my_dict_AGE["CDend Negative electrode roughness ratio"][-1],'-^',label="Last"  )
         axs[1].plot(my_dict_AGE["x_n [m]"], my_dict_AGE["CDend Total SEI on cracks thickness [m]"][0],'-o',label="First" )
@@ -1059,12 +1167,13 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi):
         for i in range(0,2):
             axs[i].set_xlabel("Dimensional Neg thickness",   fontdict={'family':'DejaVu Sans','size':fs})
             labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
+            axs[i].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
             axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
             axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
         plt.savefig(BasicPath + Target+ str(Scan_i)+"/Cracks related spatial.png", dpi=dpi)
 
     Num_subplot = 2;
-    fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
+    fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
     axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte concentration [mol.m-3]"][0],'-o',label="First")
     axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte concentration [mol.m-3]"][-1],'-^',label="Last"  )
     axs[1].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte potential [V]"][0],'-o',label="First" )
@@ -1076,12 +1185,13 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi):
     for i in range(0,2):
         axs[i].set_xlabel("Dimensional Cell thickness",   fontdict={'family':'DejaVu Sans','size':fs})
         labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
+        axs[i].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
         axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
     plt.savefig(BasicPath + Target+ str(Scan_i)+"/Electrolyte concentration and potential.png", dpi=dpi)
     
     Num_subplot = 2;
-    fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
+    fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
     axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte diffusivity [m2.s-1]"][0],'-o',label="First")
     axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte diffusivity [m2.s-1]"][-1],'-^',label="Last"  )
     axs[1].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte conductivity [S.m-1]"][0],'-o',label="First" )
@@ -1093,6 +1203,7 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi):
     for i in range(0,2):
         axs[i].set_xlabel("Dimensional Cell thickness",   fontdict={'family':'DejaVu Sans','size':fs})
         labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
+        axs[i].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
         axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
     plt.savefig(BasicPath + Target+ str(Scan_i)+"/Electrolyte diffusivity and conductivity.png", dpi=dpi)
@@ -1110,7 +1221,7 @@ def Plot_Dryout(
     mdic_dry["CeEC_All"]= CeEC_All
 
     Num_subplot = 3;
-    fig, axs = plt.subplots(1,Num_subplot, figsize=(18,4.8),tight_layout=True)
+    fig, axs = plt.subplots(1,Num_subplot, figsize=(12,3.2),tight_layout=True)
     axs[0].plot(Cyc_Update_Index, mdic_dry["Vol_EC_consumed_All"],'-o',label="EC consumed")
     axs[0].plot(Cyc_Update_Index, mdic_dry["Vol_Elely_need_All"],'-.',label="Elely needed")
     axs[0].plot(Cyc_Update_Index, mdic_dry["Vol_Elely_add_All"],'-s',label="Elely added")
@@ -1134,234 +1245,33 @@ def Plot_Dryout(
     return
 
 
-# Add run till fail functions from P3
-def Run_P2_till_Fail(
-      index_xlsx, Para_dict_i,   Path_pack , 
-      keys_all,   exp_text_list, exp_index_pack , Niall_data ):
+def Run_P2_Opt_Timeout(
+    index_xlsx, Para_dict_i,   Path_pack ,  fs,
+    keys_all,   exp_text_list, exp_index_pack , 
+    Exp_Any_AllData,Temp_Cell_Exp, Plot_Exp,   # = true or false
+    Timeout,Return_Sol ):
+
+    ##########################################################
+    ##############    Part-0: Log of the scripts    ##########
+    ##########################################################
+    # add 221205: if Timeout=='True', use Patrick's version, disable pool
+    #             else, use pool to accelerate 
+    # add Return_Sol, on HPC, always set to False, as it is useless, 
+    # add 230221: do sol_new['Throughput capacity [A.h]'].entries += sol_old['Throughput capacity [A.h]'].entries 
+    #             and for "Throughput energy [W.h]", when use Model.set_initial_conditions_from
+    #             this is done inside the two functions Run_Model_Base_On_Last_Solution(_RPT)
 
     ##########################################################
     ##############    Part-1: Initialization    ##############
     ##########################################################
-    ModelTimer = pb.Timer()
-    Scan_i = int(index_xlsx)
-    print('Start Now! Scan %d.' % Scan_i)  
-
-    # Un-pack data:
-    [cycle_no,step_AGE_CD,step_AGE_CC,step_AGE_CV,
-        step_RPT_CD,step_RPT_RE , step_RPT_CC ] = exp_index_pack;
-    [exp_AGE_text, exp_RPT_text,] = exp_text_list;
-    [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
-    CyclePack,Para_0 = Para_init(Para_dict_i)
-    [Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
-        Temper_i,Temper_RPT,mesh_par,submesh_strech,model_options] = CyclePack;
-    [keys_all_RPT,keys_all_AGE] = keys_all
-    str_exp_AGE_text  = str(exp_AGE_text);
-    str_exp_RPT_text  = str(exp_RPT_text);
-
-    # define experiment
-    Experiment_Long   = pb.Experiment( exp_AGE_text * Update_Cycles  )  
-    Experiment_RPT    = pb.Experiment( exp_RPT_text * RPT_Cycles     ) 
-    Experiment_Breakin= pb.Experiment( exp_RPT_text * RPT_Cycles     )
-
-    #####  index definition ######################
-    Small_Loop =  int(Cycle_bt_RPT/Update_Cycles);   
-    SaveTimes = int(Total_Cycles/Cycle_bt_RPT);   
-
-    # initialize my_dict for outputs
-    my_dict_RPT = {}
-    for keys in keys_all_RPT:
-        for key in keys:
-            my_dict_RPT[key]=[];
-    my_dict_AGE = {}; 
-    for keys in keys_all_AGE:
-        for key in keys:
-            my_dict_AGE[key]=[];
-    my_dict_RPT["Cycle_RPT"] = []; my_dict_AGE["Cycle_AGE"] = []; 
-    Cyc_Update_Index     =[]; 
-            
-    # update 220924: merge DryOut and Int_ElelyExces_Ratio
-    temp_Int_ElelyExces_Ratio =  Para_0["Initial electrolyte excessive amount ratio"] 
-    ce_EC_0 = Para_0['EC initial concentration in electrolyte [mol.m-3]'] # used to calculate ce_EC_All
-    if temp_Int_ElelyExces_Ratio < 1:
-        Int_ElelyExces_Ratio = -1;
-        DryOut = "Off";
-    else:
-        Int_ElelyExces_Ratio = temp_Int_ElelyExces_Ratio;
-        DryOut = "On";
-    print(f"Scan {Scan_i}: DryOut = {DryOut}")
-    if DryOut == "On":  
-        mdic_dry,Para_0 = Initialize_mdic_dry(Para_0,Int_ElelyExces_Ratio)
-    else:
-        mdic_dry ={}
-
-    ##########################################################
-    ##############    Part-2: Run model         ##############
-    ##########################################################
-    ##########################################################
-    ##########    2-1: Define model and run break-in cycle
-    try:  
-        Model_0,Sol_0,Call_Breakin = Run_Breakin(
-            model_options, Experiment_Breakin, 
-            Para_0, mesh_par, submesh_strech)
-        if Call_Breakin.success == False:
-            1/0
-    except:
-        print(f"Scan {Scan_i}: Fail break-in cycle, need to exit the whole scan now but do not know how!")
-        str_error_Breakin = traceback.format_exc() 
-        Flag_Breakin = False
-    else:
-        print(f"Scan {Scan_i}: Finish break-in cycle")
-        # post-process for break-in cycle
-        my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_0, 
-            cycle_no, step_RPT_CD , step_RPT_CC , step_RPT_RE, step_AGE_CV   )
-        cycle_count =0; 
-        my_dict_RPT["Cycle_RPT"].append(cycle_count)
-        Cyc_Update_Index.append(cycle_count);
-        Flag_Breakin = True
-
-    
-    #############################################################
-    #######   2-2: Write a big loop to finish the long experiment    
-    if Flag_Breakin == True: 
-        k=0
-        # Para_All.append(Para_0);Model_All.append(Model_0);Sol_All_i.append(Sol_0); 
-        Para_0_Dry_old = Para_0;     Model_Dry_old = Model_0  ; Sol_Dry_old = Sol_0;   del Model_0,Sol_0
-        while k < SaveTimes:    
-            i=0    
-            while i < Small_Loop:
-                if DryOut == "On":
-                    Data_Pack,Paraupdate   = Cal_new_con_Update (  Sol_Dry_old,   Para_0_Dry_old )
-                if DryOut == "Off":
-                    Paraupdate = Para_0
-                # Run aging cycle:
-                try:
-                    Model_Dry_i, Sol_Dry_i , Call_Age  = Run_Model_Base_On_Last_Solution( 
-                        Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
-                        Update_Cycles,Temper_i,mesh_par,submesh_strech )
-                    print(f"Temperature for ageing is now: {Temper_i}")  
-                    if Call_Age.success == False:
-                        1/0
-                except:
-                    str_error_AGE = traceback.format_exc() 
-                    print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} ageing cycles due to {str_error_AGE}")
-                    break
-                else:
-                    Para_0_Dry_old = Paraupdate;       Model_Dry_old = Model_Dry_i;      Sol_Dry_old = Sol_Dry_i;   
-                    del Paraupdate,Model_Dry_i,Sol_Dry_i
-                    # post-process for first ageing cycle and every -1 ageing cycle
-                    if k==0 and i==0:    
-                        my_dict_AGE = GetSol_dict (my_dict_AGE,keys_all_AGE, Sol_Dry_old, 
-                            0, step_AGE_CD , step_AGE_CC , step_RPT_RE, step_AGE_CV   )     
-                        my_dict_AGE["Cycle_AGE"].append(1)
-                    my_dict_AGE = GetSol_dict (my_dict_AGE,keys_all_AGE, Sol_Dry_old, 
-                        cycle_no, step_AGE_CD , step_AGE_CC , step_RPT_RE, step_AGE_CV   )    
-                    cycle_count +=  Update_Cycles; 
-                    my_dict_AGE["Cycle_AGE"].append(cycle_count)           
-                    Cyc_Update_Index.append(cycle_count)
-                    if DryOut == "On":
-                        mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
-                    i += 1;   
-            # run RPT, and also update parameters (otherwise will have problems)
-            if DryOut == "On":
-                Data_Pack , Paraupdate  = Cal_new_con_Update (  Sol_Dry_old,   Para_0_Dry_old   )
-            if DryOut == "Off":
-                Paraupdate = Para_0     
-            try:
-                Model_Dry_i, Sol_Dry_i,Call_RPT  = Run_Model_Base_On_Last_Solution_RPT( 
-                    Model_Dry_old  , Sol_Dry_old ,   
-                    Paraupdate,      Experiment_RPT, RPT_Cycles, 
-                    Temper_RPT ,mesh_par ,submesh_strech )  
-                print(f"Temperature for RPT is now: {Temper_RPT}")  
-                if Call_RPT.success == False:
-                    1/0 
-            except:
-                str_error_RPT = traceback.format_exc() 
-                print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles, due to {str_error_RPT}")
-                break
-            else:
-                my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_Dry_i, 
-                    cycle_no, step_RPT_CD , step_RPT_CC , step_RPT_RE, step_AGE_CV   )
-                my_dict_RPT["Cycle_RPT"].append(cycle_count)
-                Cyc_Update_Index.append(cycle_count)
-                if DryOut == "On":
-                    mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
-                Para_0_Dry_old = Paraupdate;    Model_Dry_old = Model_Dry_i  ;     Sol_Dry_old = Sol_Dry_i    ;   
-                del Paraupdate,Model_Dry_i,Sol_Dry_i
-            k += 1 
-    ############################################################# 
-    #########   An extremely bad case: cannot even finish breakin
-    if Flag_Breakin == False: 
-        value_list_temp = list(Para_dict_i.values())
-        values = []
-        for value_list_temp_i in value_list_temp:
-            values.append(str(value_list_temp_i))
-        values.insert(0,str(Scan_i));
-        values.insert(1,DryOut);
-        values.extend([
-            str_exp_AGE_text,
-            str_exp_RPT_text,
-            "nan","nan",
-            "nan","nan", 
-            "nan","nan",
-            "nan","nan",
-            "nan",str_error_Breakin])
-        values = [values,]
-        print(str_error_Breakin)
-        print("Fail in {}".format(ModelTimer.time())) 
-        book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
-        sheet_name_xlsx =  str(Scan_i);
-        write_excel_xlsx(
-            BasicPath + Target+book_name_xlsx_seperate, 
-            sheet_name_xlsx, values)
-    ##########################################################
-    ##############   Part-3: Post-prosessing    ##############
-    ##########################################################
-    # Newly add (220517): save plots, not just a single line in excel file:     
-    # Newly add (221114): make plotting as functions
-    # Niall_data = loadmat( 'Extracted_all_cell.mat'
-    else:
-        if not os.path.exists(BasicPath + Target + str(Scan_i)):
-            os.mkdir(BasicPath + Target + str(Scan_i) );
-        dpi= 100; fs = 17;
-        ##########################################################
-        #########      3-1: Plot cycle,location, Dryout related 
-        Plot_Cyc_RPT_4(my_dict_RPT,Niall_data,Scan_i,Temper_i,model_options,BasicPath, Target,fs,dpi)
-        Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi)
-        if DryOut == "On":
-            Plot_Dryout(Cyc_Update_Index,mdic_dry,ce_EC_0,Scan_i,BasicPath, Target,fs,dpi)
-        ##########################################################
-        #########      3-2: Save data as .mat 
-        my_dict_RPT["Cyc_Update_Index"] = Cyc_Update_Index
-        my_dict_RPT["SaveTimes"]    = SaveTimes
-        midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
-        savemat(BasicPath + Target+ str(Scan_i) + '/' + str(Scan_i)+ '-StructDara_for_Mat.mat',midc_merge)  
-        ##########################################################
-        #########      3-3: Save summary to excel 
-        values=Get_Values_Excel(
-            model_options,my_dict_RPT,mdic_dry,
-            DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
-            str_exp_RPT_text)
-        values = [values,]
-        book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
-        sheet_name_xlsx =  str(Scan_i);
-        write_excel_xlsx(
-            BasicPath + Target+book_name_xlsx_seperate, 
-            sheet_name_xlsx, values)
-        print("Succeed doing something in {}".format(ModelTimer.time()))
-        print('This is the end of No.', Scan_i, ' scan')
-
-# update 221205: return sol for easy check and debug, based on Return_Sol=True or False
-def Run_P2_Save_Sol(
-      index_xlsx, Para_dict_i,   Path_pack , 
-      keys_all,   exp_text_list, exp_index_pack , Niall_data, Return_Sol ):
-
-    ##########################################################
-    ##############    Part-1: Initialization    ##############
-    ##########################################################
+    font = {'family' : 'DejaVu Sans','size'   : fs}
+    mpl.rc('font', **font)
     ModelTimer = pb.Timer()
     Scan_i = int(index_xlsx)
     print('Start Now! Scan %d.' % Scan_i)  
     Sol_RPT = [];  Sol_AGE = [];
+    # pb.set_logging_level('INFO') # show more information!
+    # set_start_method('fork') # from Patrick
 
     # Un-pack data:
     [cycle_no,step_AGE_CD,step_AGE_CC,step_AGE_CV,
@@ -1370,7 +1280,7 @@ def Run_P2_Save_Sol(
     [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
     CyclePack,Para_0 = Para_init(Para_dict_i)
     [Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
-        Temper_i,Temper_RPT,mesh_par,submesh_strech,model_options] = CyclePack;
+        Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options] = CyclePack;
     [keys_all_RPT,keys_all_AGE] = keys_all
     str_exp_AGE_text  = str(exp_AGE_text);
     str_exp_RPT_text  = str(exp_RPT_text);
@@ -1415,18 +1325,39 @@ def Run_P2_Save_Sol(
     ##############    Part-2: Run model         ##############
     ##########################################################
     ##########################################################
+    Timeout_text = 'I timed out'
     ##########    2-1: Define model and run break-in cycle
     try:  
-        Model_0,Sol_0,Call_Breakin = Run_Breakin(
-            model_options, Experiment_Breakin, 
-            Para_0, mesh_par, submesh_strech)
+        Timelimit = int(3600*2)
+        # the following turns on for HPC only!
+        if Timeout == True:
+            timeout_RPT = TimeoutFunc(
+                Run_Breakin, 
+                timeout=Timelimit, 
+                timeout_val=Timeout_text)
+            Result_list_breakin  = timeout_RPT(
+                model_options, Experiment_Breakin, 
+                Para_0, mesh_list, submesh_strech)
+        else:
+            Result_list_breakin  = Run_Breakin(
+                model_options, Experiment_Breakin, 
+                Para_0, mesh_list, submesh_strech)
+        [Model_0,Sol_0,Call_Breakin] = Result_list_breakin
         if Return_Sol == True:
             Sol_RPT.append(Sol_0)
         if Call_Breakin.success == False:
+            print("Fail due to Experiment error or infeasible")
             1/0
-    except:
-        print(f"Scan {Scan_i}: Fail break-in cycle, need to exit the whole scan now but do not know how!")
-        str_error_Breakin = traceback.format_exc() 
+        if Sol_0 == Timeout_text: # to do: distinguish different failure cases
+            print("Fail due to Timeout")
+            1/0
+        if Sol_0 == "Model error or solver error":
+            print("Fail due to Model error or solver error")
+            1/0
+    except ZeroDivisionError as e:
+        str_error_Breakin = str(e)
+        print(f"Scan {Scan_i}: Fail break-in cycle, need to exit the whole scan now due to {str_error_Breakin} but do not know how!")
+        
         Flag_Breakin = False
     else:
         print(f"Scan {Scan_i}: Finish break-in cycle")
@@ -1437,8 +1368,8 @@ def Run_P2_Save_Sol(
         my_dict_RPT["Cycle_RPT"].append(cycle_count)
         Cyc_Update_Index.append(cycle_count);
         Flag_Breakin = True
-
-    
+        
+    Flag_AGE = True; str_error_AGE_final = "Empty";   str_error_RPT = "Empty";
     #############################################################
     #######   2-2: Write a big loop to finish the long experiment    
     if Flag_Breakin == True: 
@@ -1454,17 +1385,39 @@ def Run_P2_Save_Sol(
                     Paraupdate = Para_0
                 # Run aging cycle:
                 try:
-                    Model_Dry_i, Sol_Dry_i , Call_Age  = Run_Model_Base_On_Last_Solution( 
-                        Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
-                        Update_Cycles,Temper_i,mesh_par,submesh_strech )
+                    Timelimit = int(3600*2)
+                    if Timeout == True:
+                        timeout_AGE = TimeoutFunc(
+                            Run_Model_Base_On_Last_Solution, 
+                            timeout=Timelimit, 
+                            timeout_val=Timeout_text)
+                        Result_list_AGE = timeout_AGE( 
+                            Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
+                            Update_Cycles,Temper_i,mesh_list,submesh_strech )
+                    else:
+                        Result_list_AGE = Run_Model_Base_On_Last_Solution( 
+                            Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
+                            Update_Cycles,Temper_i,mesh_list,submesh_strech )
+                    [Model_Dry_i, Sol_Dry_i , Call_Age ] = Result_list_AGE
                     if Return_Sol == True:
                         Sol_AGE.append(Sol_Dry_i)
-                    print(f"Temperature for ageing is now: {Temper_i}")  
+                    #print(f"Temperature for ageing is now: {Temper_i}")  
                     if Call_Age.success == False:
+                        print("Fail due to Experiment error or infeasible")
+                        str_error_AGE = "Experiment error or infeasible"
                         1/0
-                except:
-                    str_error_AGE = traceback.format_exc() 
+                    if Sol_Dry_i == Timeout_text: # fail due to timeout
+                        print("Fail due to Timeout")
+                        str_error_AGE = "Timeout"
+                        1/0
+                    if Sol_Dry_i == "Model error or solver error":
+                        print("Fail due to Model error or solver error")
+                        str_error_AGE = "Model error or solver error"
+                        1/0
+                except ZeroDivisionError as e:
                     print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} ageing cycles due to {str_error_AGE}")
+                    Flag_AGE = False
+                    str_error_AGE_final = str_error_AGE
                     break
                 else:
                     Para_0_Dry_old = Paraupdate;       Model_Dry_old = Model_Dry_i;      Sol_Dry_old = Sol_Dry_i;   
@@ -1479,6 +1432,7 @@ def Run_P2_Save_Sol(
                     cycle_count +=  Update_Cycles; 
                     my_dict_AGE["Cycle_AGE"].append(cycle_count)           
                     Cyc_Update_Index.append(cycle_count)
+                    print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} ageing cycles")
                     if DryOut == "On":
                         mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
                     i += 1;   
@@ -1488,17 +1442,40 @@ def Run_P2_Save_Sol(
             if DryOut == "Off":
                 Paraupdate = Para_0     
             try:
-                Model_Dry_i, Sol_Dry_i,Call_RPT  = Run_Model_Base_On_Last_Solution_RPT( 
-                    Model_Dry_old  , Sol_Dry_old ,   
-                    Paraupdate,      Experiment_RPT, RPT_Cycles, 
-                    Temper_RPT ,mesh_par ,submesh_strech )  
+                Timelimit = int(3600*2)
+                if Timeout == True:
+                    timeout_RPT = TimeoutFunc(
+                        Run_Model_Base_On_Last_Solution_RPT, 
+                        timeout=Timelimit, 
+                        timeout_val=Timeout_text)
+                    Result_list_RPT = timeout_RPT(
+                        Model_Dry_old  , Sol_Dry_old ,   
+                        Paraupdate,      Experiment_RPT, RPT_Cycles, 
+                        Temper_RPT ,mesh_list ,submesh_strech
+                    )
+                else:
+                    Result_list_RPT = Run_Model_Base_On_Last_Solution_RPT(
+                        Model_Dry_old  , Sol_Dry_old ,   
+                        Paraupdate,      Experiment_RPT, RPT_Cycles, 
+                        Temper_RPT ,mesh_list ,submesh_strech
+                    )
+                [Model_Dry_i, Sol_Dry_i,Call_RPT]  = Result_list_RPT
                 if Return_Sol == True:
                     Sol_RPT.append(Sol_Dry_i)
-                print(f"Temperature for RPT is now: {Temper_RPT}")  
+                #print(f"Temperature for RPT is now: {Temper_RPT}")  
                 if Call_RPT.success == False:
+                    print("Fail due to Experiment error or infeasible")
+                    str_error_RPT = "Experiment error or infeasible"
                     1/0 
-            except:
-                str_error_RPT = traceback.format_exc() 
+                if Sol_Dry_i == Timeout_text:
+                    print("Fail due to Timeout")
+                    str_error_RPT = "Timeout"
+                    1/0
+                if Sol_Dry_i == "Model error or solver error":
+                    print("Fail due to Model error or solver error")
+                    str_error_RPT = "Model error or solver error"
+                    1/0
+            except ZeroDivisionError as e:
                 print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles, due to {str_error_RPT}")
                 break
             else:
@@ -1506,10 +1483,13 @@ def Run_P2_Save_Sol(
                     cycle_no, step_RPT_CD , step_RPT_CC , step_RPT_RE, step_AGE_CV   )
                 my_dict_RPT["Cycle_RPT"].append(cycle_count)
                 Cyc_Update_Index.append(cycle_count)
+                print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} RPT cycles")
                 if DryOut == "On":
                     mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
                 Para_0_Dry_old = Paraupdate;    Model_Dry_old = Model_Dry_i  ;     Sol_Dry_old = Sol_Dry_i    ;   
                 del Paraupdate,Model_Dry_i,Sol_Dry_i
+                if Flag_AGE == False:
+                    break
             k += 1 
     ############################################################# 
     #########   An extremely bad case: cannot even finish breakin
@@ -1536,10 +1516,10 @@ def Run_P2_Save_Sol(
         write_excel_xlsx(
             BasicPath + Target+book_name_xlsx_seperate, 
             sheet_name_xlsx, values)
+        
         midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
 
         return midc_merge,Sol_RPT,Sol_AGE
-            
     ##########################################################
     ##############   Part-3: Post-prosessing    ##############
     ##########################################################
@@ -1549,11 +1529,52 @@ def Run_P2_Save_Sol(
     else:
         if not os.path.exists(BasicPath + Target + str(Scan_i)):
             os.mkdir(BasicPath + Target + str(Scan_i) );
-        dpi= 100; fs = 17;
+        dpi= 100;
+        # Update 230221 - Add model LLI, LAM manually 
+        my_dict_RPT['Throughput capacity [kA.h]'] = (
+            np.array(my_dict_RPT['Throughput capacity [A.h]'])/1e3).tolist()
+        my_dict_RPT['CDend SOH [%]'] = ((
+            np.array(my_dict_RPT["Discharge capacity [A.h]"])
+            /my_dict_RPT["Discharge capacity [A.h]"][0])*100).tolist()
+        my_dict_RPT["CDend LAM_ne [%]"] = ((1-
+            np.array(my_dict_RPT['CDend Negative electrode capacity [A.h]'])
+            /my_dict_RPT['CDend Negative electrode capacity [A.h]'][0])*100).tolist()
+        my_dict_RPT["CDend LAM_pe [%]"] = ((1-
+            np.array(my_dict_RPT['CDend Positive electrode capacity [A.h]'])
+            /my_dict_RPT['CDend Positive electrode capacity [A.h]'][0])*100).tolist()
+        my_dict_RPT["CDend LLI [%]"] = ((1-
+            np.array(my_dict_RPT["CDend Total lithium capacity in particles [A.h]"])
+            /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
+        if model_options.__contains__("SEI"):
+            my_dict_RPT["CDend LLI SEI [%]"] = ((
+                np.array(
+                    my_dict_RPT["CDend Loss of capacity to SEI [A.h]"]-
+                    my_dict_RPT["CDend Loss of capacity to SEI [A.h]"][0]
+                    )
+                /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
+        if model_options.__contains__("SEI on cracks"):
+            my_dict_RPT["CDend LLI SEI on cracks [%]"] = ((
+                np.array(
+                    my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"]-
+                    my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"][0]
+                    )
+                /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
+        if model_options.__contains__("lithium plating"):
+            my_dict_RPT["CDend LLI lithium plating [%]"] = ((
+                np.array(
+                    my_dict_RPT["CDend Loss of capacity to lithium plating [A.h]"]-
+                    my_dict_RPT["CDend Loss of capacity to lithium plating [A.h]"][0]
+                    )
+                /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
+  
         ##########################################################
         #########      3-1: Plot cycle,location, Dryout related 
-        Plot_Cyc_RPT_4(my_dict_RPT,Niall_data,Scan_i,Temper_i,model_options,BasicPath, Target,fs,dpi)
-        Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi)
+        Plot_Cyc_RPT_4(
+            my_dict_RPT,
+            Exp_Any_AllData,Temp_Cell_Exp, Plot_Exp ,  # =True or False,
+            Scan_i,Temper_i,model_options,BasicPath, Target,fs,dpi)
+        if len(my_dict_AGE["CDend Porosity"])>1:
+            Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi)
         if DryOut == "On":
             Plot_Dryout(Cyc_Update_Index,mdic_dry,ce_EC_0,Scan_i,BasicPath, Target,fs,dpi)
         ##########################################################
@@ -1567,7 +1588,9 @@ def Run_P2_Save_Sol(
         values=Get_Values_Excel(
             model_options,my_dict_RPT,mdic_dry,
             DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
-            str_exp_RPT_text)
+            str_exp_RPT_text,
+            str_error_AGE_final,
+            str_error_RPT)
         values = [values,]
         book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
         sheet_name_xlsx =  str(Scan_i);
@@ -1576,608 +1599,71 @@ def Run_P2_Save_Sol(
             sheet_name_xlsx, values)
         print("Succeed doing something in {}".format(ModelTimer.time()))
         print('This is the end of No.', Scan_i, ' scan')
-
         return midc_merge,Sol_RPT,Sol_AGE
 
-# Run model with electrolyte dry out
-def Run_model_wwo_dry_out(
-      index_xlsx, Para_dict_i,   Path_pack , 
-      keys_all,   exp_text_list, exp_index_pack , Niall_data ):
-
-    ModelTimer = pb.Timer()
-
-    # Un-pack data:
-    [cycle_no,step_AGE_CD,step_AGE_CC,step_AGE_CV,
-        step_RPT_CD,step_RPT_RE , step_RPT_CC ] = exp_index_pack;
-    [exp_AGE_text, exp_RPT_text,] = exp_text_list;
-    [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
-    CyclePack,Para_0 = Para_init(Para_dict_i)
-    [Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
-        Temper_i,Temper_RPT,mesh_par,submesh_strech,model_options] = CyclePack;
-    [keys_all_RPT,keys_all_AGE] = keys_all;
-
-    Scan_i = int(index_xlsx);
-    str_model_options = str(model_options);
-    str_exp_AGE_text  = str(exp_AGE_text);
-    str_exp_RPT_text  = str(exp_RPT_text);
-
-    # define experiment
-    Experiment_Long   = pb.Experiment( exp_AGE_text * Update_Cycles  )  
-    Experiment_RPT    = pb.Experiment( exp_RPT_text * RPT_Cycles     ) 
-    Experiment_Breakin= pb.Experiment( exp_RPT_text * RPT_Cycles     )
-
-    ################ Important: index definition #################################
-    Small_Loop =  int(Cycle_bt_RPT/Update_Cycles);   
-    SaveTimes = int(Total_Cycles/Cycle_bt_RPT);   
-    index = list(np.arange(1,SaveTimes+1)*(Small_Loop+RPT_Cycles)-1); #index.insert(0,0)  # get all last ageing cycle before RPT, plus the first RPT test
-    index2= list(np.arange(0,SaveTimes+1)*(Small_Loop+RPT_Cycles));         # get all RPT test
-    cycles = np.arange(0,SaveTimes+1)*Cycle_bt_RPT; 
-    cycles3 = list(np.arange(1,SaveTimes+1)*(Cycle_bt_RPT));
-
-    # initialize my_dict for outputs
-    my_dict_RPT = {}; 
-    for keys in keys_all_RPT:
-        for key in keys:
-            my_dict_RPT[key]=[];
-    my_dict_AGE = {}; 
-    for keys in keys_all_AGE:
-        for key in keys:
-            my_dict_AGE[key]=[];
-            
-    # update 2209-24: merge DryOut and Int_ElelyExces_Ratio
-    temp_Int_ElelyExces_Ratio =  Para_0["Initial electrolyte excessive amount ratio"] 
-    if temp_Int_ElelyExces_Ratio < 1:
-        Int_ElelyExces_Ratio = -1;
-        DryOut = "Off";
-    else:
-        Int_ElelyExces_Ratio = temp_Int_ElelyExces_Ratio;
-        DryOut = "On";
-    print(DryOut)
-    try:             
-        # define the model and run break-in cycle
-        Model_0 = pb.lithium_ion.DFN(options=model_options ) #
-
-        # update 220926 - add diffusivity and conductivity as variables:
-        c_e = Model_0.variables["Electrolyte concentration [mol.m-3]"]
-        T = Model_0.variables["Cell temperature [K]"]
-        D_e = Para_0["Electrolyte diffusivity [m2.s-1]"]
-        sigma_e = Para_0["Electrolyte conductivity [S.m-1]"]
-        Model_0.variables["Electrolyte diffusivity [m2.s-1]"] = D_e(c_e, T)
-        Model_0.variables["Electrolyte conductivity [S.m-1]"] = sigma_e(c_e, T)
 
 
-        var = pb.standard_spatial_vars  
-        var_pts = {
-            var.x_n: 20,  
-            var.x_s: 10,  
-            var.x_p: 20,  
-            var.r_n: int(mesh_par),  
-            var.r_p: int(mesh_par),  }       
-        submesh_types = Model_0.default_submesh_types
-        if submesh_strech == "nan":
-            pass
-        else:
-            particle_mesh = pb.MeshGenerator(
-                pb.Exponential1DSubMesh, 
-                submesh_params={"side": "right", "stretch": submesh_strech})
-            submesh_types["negative particle"] = particle_mesh
-            submesh_types["positive particle"] = particle_mesh 
-        Sim_0    = pb.Simulation(
-            Model_0,        experiment = Experiment_Breakin,
-            parameter_values = Para_0,
-            solver = pb.CasadiSolver(),
-            var_pts=var_pts,
-            submesh_types=submesh_types) #mode="safe"
-        Sol_0    = Sim_0.solve(calc_esoh=False)
-        print("Finish the break-in cycle")
 
-        if DryOut == "On":    ######################   initialize for post-processing before running subsequent model   
-            Vol_Elely_Tot_All  = [];       Vol_Elely_JR_All =[];         Vol_Pore_tot_All =[];
-            Ratio_CeEC_All     = [];       Ratio_CeLi_All = [];          Ratio_Dryout_All =[];
-            Vol_EC_consumed_All= [];       Vol_Elely_need_All = [];      Width_all        =[];
-            Vol_Elely_add_All  = [];       Vol_Pore_decrease_All =[];    Test_V_All=[];                 
-            Test_V2_All=[];                c_e_r_new_All=[];             c_EC_r_new_All=[]; 
-            T_0                  =  Para_0['Initial temperature [K]']
-            Porosity_Neg_0       =  Para_0['Negative electrode porosity']  
-            Porosity_Pos_0       =  Para_0['Positive electrode porosity']  
-            Porosity_Sep_0       =  Para_0['Separator porosity']  
-            cs_Neg_Max           =  Para_0["Maximum concentration in negative electrode [mol.m-3]"];
-            L_p                  =  Para_0["Positive electrode thickness [m]"]
-            L_n                  =  Para_0["Negative electrode thickness [m]"]
-            L_s                  =  Para_0["Separator thickness [m]"]
-            L_y                  =  Para_0["Electrode width [m]"]
-            Para_0.update({'Initial Electrode width [m]':L_y}, check_already_exists=False)
-            L_y_0                =  Para_0["Initial Electrode width [m]"]
-            L_z                  =  Para_0["Electrode height [m]"]
-            Para_0.update({'Initial Electrode height [m]':L_z}, check_already_exists=False)
-            L_z_0                =  Para_0["Initial Electrode height [m]"]
-            
-            Vol_Elely_Tot        =  ( L_n*Porosity_Neg_0 +  L_p*Porosity_Pos_0  +  L_s*Porosity_Sep_0  )  * L_y_0 * L_z_0 * Int_ElelyExces_Ratio # Set initial electrolyte amount [L] 
-            Vol_Elely_JR         =  ( L_n*Porosity_Neg_0 +  L_p*Porosity_Pos_0  +  L_s*Porosity_Sep_0  )  * L_y_0 * L_z_0
-            Vol_Pore_tot         =  ( L_n*Porosity_Neg_0 +  L_p*Porosity_Pos_0  +  L_s*Porosity_Sep_0  )  * L_y_0 * L_z_0
-            Ratio_CeEC           =  1.0; Ratio_CeLi =  1.0  ;Ratio_Dryout         =  1.0
-            Vol_EC_consumed      =  0;Vol_Elely_need       =  0;Vol_Elely_add        =  0
-            Vol_Pore_decrease    =  0;Test_V2 = 0; Test_V = 0;
-            print('Initial electrolyte amount is ', Vol_Elely_Tot*1e6, 'mL') 
-            Para_0.update(
-                {'Current total electrolyte volume in jelly roll [m3]':
-                Vol_Elely_JR}, check_already_exists=False)
-            Para_0.update(
-                {'Current total electrolyte volume in whole cell [m3]':
-                Vol_Elely_Tot}, check_already_exists=False)   
-            
-            Vol_Elely_Tot_All.append(Vol_Elely_Tot*1e6);            
-            Vol_Elely_JR_All.append(Vol_Elely_JR*1e6);     
-            Vol_Pore_tot_All.append(Vol_Pore_tot*1e6);           
-            Ratio_CeEC_All.append(Ratio_CeEC);                      
-            Ratio_CeLi_All.append(Ratio_CeLi);             
-            Ratio_Dryout_All.append(Ratio_Dryout);
-            Vol_EC_consumed_All.append(Vol_EC_consumed*1e6);        
-            Vol_Elely_need_All.append(Vol_Elely_need*1e6);     
-            Width_all.append(L_y_0);
-            Vol_Elely_add_All.append(Vol_Elely_add*1e6);            
-            Vol_Pore_decrease_All.append(Vol_Pore_decrease*1e6);
-            Test_V_All.append(Test_V*1e6); 
-            Test_V2_All.append(Test_V2*1e6); 
-            c_e_r_new_All.append(1000.0); 
-            c_EC_r_new_All.append(Para_0['EC initial concentration in electrolyte [mol.m-3]']); 
-        
-        # post-process for break-in cycle
-        my_dict_RPT_old = my_dict_RPT; del my_dict_RPT
-        my_dict_RPT = GetSol_dict (my_dict_RPT_old,keys_all_RPT, Sol_0, 
-            cycle_no, step_RPT_CD , step_RPT_CC , step_RPT_RE, step_AGE_CV   )
 
-        # Para_All.append(Para_0);                                Model_All.append(Model_0);    Sol_All_i.append(Sol_0); 
-        Para_0_Dry_old = Para_0;     Model_Dry_old = Model_0  ; Sol_Dry_old = Sol_0;   del Model_0,Sol_0
-        if DryOut == "On":
-            del Para_0
-        #Step3: Write a big loop to finish the long experiment,    
-        Cyc_Update_Index     =[]; cycle_count =0; Cyc_Update_Index.append(cycle_count);
-        k=0; 
-        while k < SaveTimes:    # biggest loop, 
-            i=0;     cap_i = 0;
-            while i < Small_Loop:
-                # run ageing cycles, and update parameters (have another version not update)
-                if DryOut == "On":
-                    Data_Pack,Paraupdate   = Cal_new_con_Update (  Sol_Dry_old,   Para_0_Dry_old )
-                    [
-                        Vol_EC_consumed, 
-                        Vol_Elely_need, 
-                        Test_V, 
-                        Test_V2, 
-                        Vol_Elely_add, 
-                        Vol_Elely_Tot_new, 
-                        Vol_Elely_JR_new, 
-                        Vol_Pore_tot_new, 
-                        Vol_Pore_decrease, 
-                        c_e_r_new, c_EC_r_new,
-                        Ratio_Dryout, Ratio_CeEC_JR, 
-                        Ratio_CeLi_JR,
-                        Width_new, ]= Data_Pack;
-                    # Append single object to All object     
-                    Vol_Elely_Tot_All.append(Vol_Elely_Tot_new*1e6);    Vol_Elely_JR_All.append(Vol_Elely_JR_new*1e6);     Vol_Pore_tot_All.append(Vol_Pore_tot_new*1e6);           
-                    Ratio_CeEC_All.append(Ratio_CeEC_JR);               Ratio_CeLi_All.append(Ratio_CeLi_JR);                 Ratio_Dryout_All.append(Ratio_Dryout);
-                    Vol_EC_consumed_All.append(Vol_EC_consumed*1e6);    Vol_Elely_need_All.append(Vol_Elely_need*1e6);     Width_all.append(Width_new);
-                    Vol_Elely_add_All.append(Vol_Elely_add*1e6);        Vol_Pore_decrease_All.append(Vol_Pore_decrease*1e6);
-                    Test_V_All.append(Test_V*1e6); Test_V2_All.append(Test_V2*1e6); 
-                    c_e_r_new_All.append(c_e_r_new); c_EC_r_new_All.append(c_EC_r_new); 
-                if DryOut == "Off":
-                    Paraupdate = Para_0;
 
-                # 3rd: run model based on new parameter and last updated solution Model  , Sol, Ratio_CeLi, Para_update, ModelExperiment, SaveAs_Cycles
-                Model_Dry_i, Sol_Dry_i   = Run_Model_Base_On_Last_Solution( 
-                    Model_Dry_old  , Sol_Dry_old ,  
-                    Paraupdate ,Experiment_Long, Update_Cycles,Temper_i,mesh_par,submesh_strech )
-                Para_0_Dry_old = Paraupdate;       Model_Dry_old = Model_Dry_i;      Sol_Dry_old = Sol_Dry_i;   
-                
-                if (k==0 and i==0) or (k==SaveTimes-1 and i==Small_Loop-1):
-                    # post-process for first or last ageing cycle
-                    my_dict_AGE_old = my_dict_AGE; del my_dict_AGE
-                    my_dict_AGE = GetSol_dict (my_dict_AGE_old,keys_all_AGE, Sol_Dry_i, 
-                        cycle_no, step_AGE_CD , step_AGE_CC , step_RPT_RE, step_AGE_CV   )
 
-                del Paraupdate,Model_Dry_i,Sol_Dry_i
-                i += 1;   cycle_count +=  Update_Cycles; 
-                Cyc_Update_Index.append(cycle_count);
 
-            # run RPT, and also update parameters (otherwise will have problems)
-            if DryOut == "On":
-                Data_Pack , Paraupdate  = Cal_new_con_Update (  Sol_Dry_old,   Para_0_Dry_old   )
-                [
-                        Vol_EC_consumed, 
-                        Vol_Elely_need, 
-                        Test_V, 
-                        Test_V2, 
-                        Vol_Elely_add, 
-                        Vol_Elely_Tot_new, 
-                        Vol_Elely_JR_new, 
-                        Vol_Pore_tot_new, 
-                        Vol_Pore_decrease, 
-                        c_e_r_new, c_EC_r_new,
-                        Ratio_Dryout, Ratio_CeEC_JR, 
-                        Ratio_CeLi_JR,
-                        Width_new, ]= Data_Pack;
-                # Append solvent consumption model related variables     
-                Vol_Elely_Tot_All.append(Vol_Elely_Tot_new*1e6);    Vol_Elely_JR_All.append(Vol_Elely_JR_new*1e6);     Vol_Pore_tot_All.append(Vol_Pore_tot_new*1e6);           
-                Ratio_CeEC_All.append(Ratio_CeEC_JR);                  Ratio_CeLi_All.append(Ratio_CeLi_JR);                 Ratio_Dryout_All.append(Ratio_Dryout);
-                Vol_EC_consumed_All.append(Vol_EC_consumed*1e6);    Vol_Elely_need_All.append(Vol_Elely_need*1e6);     Width_all.append(Width_new);
-                Vol_Elely_add_All.append(Vol_Elely_add*1e6);        Vol_Pore_decrease_All.append(Vol_Pore_decrease*1e6); 
-                Test_V_All.append(Test_V*1e6); Test_V2_All.append(Test_V2*1e6); 
-                c_e_r_new_All.append(c_e_r_new); c_EC_r_new_All.append(c_EC_r_new); 
-            if DryOut == "Off":
-                    Paraupdate = Para_0;
 
-            Cyc_Update_Index.append(cycle_count);
 
-            Model_Dry_i, Sol_Dry_i  = Run_Model_Base_On_Last_Solution_RPT( 
-                Model_Dry_old  , Sol_Dry_old ,   
-                Paraupdate,      Experiment_RPT, RPT_Cycles, 
-                Temper_RPT ,mesh_par ,submesh_strech )     
-            #if k == SaveTimes-1:  # post-process for last RPT cycle
-            my_dict_RPT_old = my_dict_RPT; del my_dict_RPT
-            my_dict_RPT = GetSol_dict (my_dict_RPT_old,keys_all_RPT, Sol_Dry_i, 
-                cycle_no, step_RPT_CD , step_RPT_CC , step_RPT_RE, step_AGE_CV   )
 
-            Para_0_Dry_old = Paraupdate;    Model_Dry_old = Model_Dry_i  ;                 
-            Sol_Dry_old = Sol_Dry_i    ;   del Paraupdate,Model_Dry_i,Sol_Dry_i
-            k += 1;    Cyc_Update_Index =Cyc_Update_Index; 
-    except:
-        #data = openpyxl.load_workbook(BasicPath + Target + book_name_xlsx)   
-        str_error = traceback.format_exc()      
-        #table = data.get_sheet_by_name(sheet_name_xlsx)
-        #nrows = table.max_row  # 获得行数
-        #ncolumns = table.max_column  # 获得列数
-        value_list_temp = list(Para_dict_i.values())
-        values = []
-        for value_list_temp_i in value_list_temp:
-            values.append(str(value_list_temp_i))
-        values.insert(0,str(Scan_i));
-        values.insert(1,DryOut);
-        values.extend([
-            str_exp_AGE_text,
-            str_exp_RPT_text,
-            "nan","nan",
-            "nan","nan", 
-            "nan","nan",
-            "nan","nan",
-            "nan",str_error])
-        values = [values,]     # add a list bracket to ensure proper write
-        """ for i in range(1, len(values)+1):
-            for j in range(1, len(values[i-1])+1):
-                table.cell(nrows+i, j).value = values[i-1][j-1]     
-        data.save(BasicPath + Target + book_name_xlsx)  """
-        print(str_error)
-        print("Fail in {}".format(ModelTimer.time())) 
-        book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
-        sheet_name_xlsx =  str(Scan_i);
-        write_excel_xlsx(
-            BasicPath + Target+book_name_xlsx_seperate, 
-            sheet_name_xlsx, values)
-    else:
-        # Finish everything, try to write into excel with real results or 
-        """ data = openpyxl.load_workbook(BasicPath + Target+ book_name_xlsx)         
-        table = data.get_sheet_by_name('Results')
-        nrows = table.max_row  # 获得行数
-        ncolumns = table.max_column  # 获得列数 """
-        if model_options.__contains__("SEI on cracks"):
-            LossCap_seioncrack = my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"][-1]
-        else:
-            LossCap_seioncrack = "nan"
-        if model_options.__contains__("lithium plating"):
-            LossCap_LiP = my_dict_RPT["CDend Loss of capacity to lithium plating [A.h]"][-1]
-        else:
-            LossCap_LiP = "nan"
-        if model_options.__contains__("SEI"):
-            LossCap_SEI = my_dict_RPT["CDend Loss of capacity to SEI [A.h]"][-1]
-        else:
-            LossCap_SEI = "nan"
-        if DryOut == "On":
-            Vol_Elely_Tot_All_final = Vol_Elely_Tot_All[-1];
-            Vol_Elely_JR_All_final  = Vol_Elely_JR_All[-1];
-            Width_all_final         = Width_all[-1];
-        else:
-            Vol_Elely_Tot_All_final = "nan"
-            Vol_Elely_JR_All_final  = "nan"
-            Width_all_final         = "nan"
-        value_list_temp = list(Para_dict_i.values())
-        values = []
-        for value_list_temp_i in value_list_temp:
-            values.append(str(value_list_temp_i))
-        values.insert(0,str(Scan_i));
-        values.insert(1,DryOut);
-        values.extend([
-            str_exp_AGE_text,
-            str_exp_RPT_text,
-            str(my_dict_RPT["Discharge capacity [A.h]"][0] 
-            - 
-            my_dict_RPT["Discharge capacity [A.h]"][-1]),
 
-            str(LossCap_LiP),
-            str(LossCap_SEI),
-            str(LossCap_seioncrack),
 
-            str(my_dict_RPT["CDend Negative electrode capacity [A.h]"][0] 
-            - 
-            my_dict_RPT["CDend Negative electrode capacity [A.h]"][-1]),
 
-            str(my_dict_RPT["CDend Positive electrode capacity [A.h]"][0] 
-            - 
-            my_dict_RPT["CDend Positive electrode capacity [A.h]"][-1]),
 
-            str(Vol_Elely_Tot_All_final), 
-            str(Vol_Elely_JR_All_final),
-            str(Width_all_final),
-            ])
-        
-        print("Succeed in {}".format(ModelTimer.time()))
-        print('This is the ', Scan_i, ' scan')
-        if not os.path.exists(BasicPath + Target + str(Scan_i)):
-            os.mkdir(BasicPath + Target + str(Scan_i) );
-        
-        # Newly add (220517): save plots, not just a single line in excel file:     
-        # Fig. 1 how much capacity is loss, how much is due to SEI and LiP?
-        # Niall_data = loadmat( 'Extracted_all_cell.mat')
-        for mm in range(0,1):
-            fs=17;Num_subplot = 3;
-            fig, axs = plt.subplots(1,Num_subplot, figsize=(18,4.8),tight_layout=True)
-            axs[0].plot(cycles, my_dict_RPT["Discharge capacity [A.h]"],     '-o', label="Scan=" + str(Scan_i) )
-            if Temper_i  == 40:       
-                axs[0].plot(Niall_data['F_Cap_all'][:,2],Niall_data['F_Cap_all'][:,5]/1e3, '-^',  label='Cell F' )
-                axs[0].plot(Niall_data['G_Cap_all'][:,2],Niall_data['G_Cap_all'][:,5]/1e3, '-^',  label='Cell G' )
-                axs[0].plot(Niall_data['H_Cap_all'][:,2],Niall_data['H_Cap_all'][:,5]/1e3, '-^',  label='Cell H' )
-            elif Temper_i  == 25: 
-                axs[0].plot(Niall_data['D_Cap_all'][:,2],Niall_data['D_Cap_all'][:,5]/1e3, '-^',  label='Cell D' )
-                axs[0].plot(Niall_data['E_Cap_all'][:,2],Niall_data['E_Cap_all'][:,5]/1e3, '-^',  label='Cell E' )
-            elif Temper_i  == 10: 
-                axs[0].plot(Niall_data['A_Cap_all'][:,2],Niall_data['A_Cap_all'][:,5]/1e3, '-^',  label='Cell A' )
-                axs[0].plot(Niall_data['B_Cap_all'][:,2],Niall_data['B_Cap_all'][:,5]/1e3, '-^',  label='Cell B' )
-                axs[0].plot(Niall_data['C_Cap_all'][:,2],Niall_data['C_Cap_all'][:,5]/1e3, '-^',  label='Cell C' )
-            else:
-                pass
-            if model_options.__contains__("lithium plating"):
-                axs[1].plot(cycles, my_dict_RPT["CDend Loss of capacity to lithium plating [A.h]"],'-o', label="LiP - Scan=" + str(Scan_i) )
-            if model_options.__contains__("SEI"):
-                axs[1].plot(cycles, my_dict_RPT["CDend Loss of capacity to SEI [A.h]"] ,'-o', label="SEI - Scan" + str(Scan_i) )
-            if model_options.__contains__("SEI on cracks"):
-                axs[1].plot(cycles, my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"] ,'-o', label="sei-on-cracks - Scan" + str(Scan_i) )
-            axs[2].plot(
-                my_dict_RPT["CDend Throughput capacity [A.h]"], 
-                my_dict_RPT["Discharge capacity [A.h]"],     
-                '-o', label="Scan=" + str(Scan_i) )
-            if Temper_i  == 40:       
-                axs[2].plot(Niall_data['F_Cap_all'][:,3],Niall_data['F_Cap_all'][:,5]/1e3, '-^',  label='Cell F' )
-                axs[2].plot(Niall_data['G_Cap_all'][:,3],Niall_data['G_Cap_all'][:,5]/1e3, '-^',  label='Cell G' )
-                axs[2].plot(Niall_data['H_Cap_all'][:,3],Niall_data['H_Cap_all'][:,5]/1e3, '-^',  label='Cell H' )
-            elif Temper_i  == 25: 
-                axs[2].plot(Niall_data['D_Cap_all'][:,3],Niall_data['D_Cap_all'][:,5]/1e3, '-^',  label='Cell D' )
-                axs[2].plot(Niall_data['E_Cap_all'][:,3],Niall_data['E_Cap_all'][:,5]/1e3, '-^',  label='Cell E' )
-            elif Temper_i  == 10: 
-                axs[2].plot(Niall_data['A_Cap_all'][:,3],Niall_data['A_Cap_all'][:,5]/1e3, '-^',  label='Cell A' )
-                axs[2].plot(Niall_data['B_Cap_all'][:,3],Niall_data['B_Cap_all'][:,5]/1e3, '-^',  label='Cell B' )
-                axs[2].plot(Niall_data['C_Cap_all'][:,3],Niall_data['C_Cap_all'][:,5]/1e3, '-^',  label='Cell C' )
-            else:
-                pass
-            for i in range(0,Num_subplot):
-                axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
-                axs[i].set_ylabel("Capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})
-                labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
-                axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-                axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
-                axs[i].set_title("Discharge capacity",   fontdict={'family':'DejaVu Sans','size':fs+1})
-            axs[2].set_xlabel("Throughput capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})   
-            axs[1].set_title("Capacity loss to LiP and SEI",   fontdict={'family':'DejaVu Sans','size':fs+1})
-            plt.savefig(BasicPath + Target+ str(Scan_i)+"/Cap-LLI.png", dpi=100)
 
-            if model_options.__contains__("SEI on cracks"):
-                fs=17;Num_subplot = 2;
-                fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-                axs[0].plot(cycles, my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],     '-o', label="Scan=" + str(Scan_i) )
-                axs[1].plot(cycles, my_dict_RPT["CDend X-averaged negative electrode roughness ratio"],'-o', label="Scan=" + str(Scan_i) )
-                axs[0].set_ylabel("SEI on cracks thickness [m]",   fontdict={'family':'DejaVu Sans','size':fs})
-                axs[1].set_ylabel("Roughness ratio",   fontdict={'family':'DejaVu Sans','size':fs})
-                for i in range(0,Num_subplot):
-                    axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
-                    labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
-                    axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-                    axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
-                axs[0].set_title("X-avg tot Neg SEI on cracks thickness",   fontdict={'family':'DejaVu Sans','size':fs+1})
-                axs[1].set_title("X-avg Neg roughness ratio",   fontdict={'family':'DejaVu Sans','size':fs+1})
-                plt.savefig(BasicPath + Target+ str(Scan_i)+"/Cracks related.png", dpi=100)
 
-                Num_subplot = 2;
-                fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-                axs[1].plot(cycles, 
-                    my_dict_RPT["CDend Negative electrode capacity [A.h]"][0]
-                    -
-                    my_dict_RPT["CDend Negative electrode capacity [A.h]"],'-o',label="Neg Scan=" + str(Scan_i))
-                axs[1].plot(cycles, 
-                    my_dict_RPT["CDend Positive electrode capacity [A.h]"][0]
-                    -
-                    my_dict_RPT["CDend Positive electrode capacity [A.h]"],'-^',label="Pos Scan=" + str(Scan_i))
-                axs[0].plot(cycles, my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],                  '-o',label="Scan="+ str(Scan_i))
-                for i in range(0,1):
-                    axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
-                    labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
-                    axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-                    axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
-                axs[0].set_ylabel("SEI on cracks thickness [m]",   fontdict={'family':'DejaVu Sans','size':fs})
-                axs[0].set_title("CDend X-avg tot SEI on cracks thickness",   fontdict={'family':'DejaVu Sans','size':fs+1})
-                for i in range(1,2):
-                    axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
-                    axs[i].set_ylabel("Capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})
-                    labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
-                    axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-                    axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
-                axs[1].set_title("LAM of Neg and Pos",   fontdict={'family':'DejaVu Sans','size':fs+1})
-                plt.savefig(BasicPath + Target+ str(Scan_i)+"/LAM-IR.png", dpi=100)
 
-            Num_subplot = 2;
-            fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-            axs[0].plot(cycles, my_dict_RPT["CDsta Positive electrode SOC"] ,'-o',label="Start" )
-            axs[0].plot(cycles, my_dict_RPT["CDend Positive electrode SOC"] ,'-^',label="End" )
-            axs[1].plot(cycles, my_dict_RPT["CDsta Negative electrode SOC"],'-o',label="Start" )
-            axs[1].plot(cycles, my_dict_RPT["CDend Negative electrode SOC"],'-^',label="End" )
-            for i in range(0,2):
-                axs[i].set_xlabel("Cycle numbers",   fontdict={'family':'DejaVu Sans','size':fs})
-                axs[i].set_ylabel("SOC",   fontdict={'family':'DejaVu Sans','size':fs})
-                labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
-                axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-                axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)     
-            axs[0].set_title("Neg SOC range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
-            axs[1].set_title("Pos SOC range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
-            plt.savefig(BasicPath + Target+ str(Scan_i)+"/SOC_RPT_dis.png", dpi=100)
 
-            Num_subplot = 2;
-            fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-            axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Porosity"][0],'-o',label="First")
-            axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Porosity"][-1],'-^',label="Last"  )
-            axs[1].plot(
-                my_dict_AGE["x_n [m]"],
-                my_dict_AGE["CDend Negative electrode reaction overpotential [V]"][0],'-o',label="First" )
-            axs[1].plot(
-                my_dict_AGE["x_n [m]"],
-                my_dict_AGE["CDend Negative electrode reaction overpotential [V]"][-1],'-^',label="Last" )
 
-            axs[0].set_xlabel("Dimensional Cell thickness",   fontdict={'family':'DejaVu Sans','size':fs})
-            axs[1].set_xlabel("Dimensional Neg thickness",   fontdict={'family':'DejaVu Sans','size':fs})
-            axs[0].set_title("Porosity",   fontdict={'family':'DejaVu Sans','size':fs+1})
-            axs[1].set_title("Neg electrode reaction overpotential",   fontdict={'family':'DejaVu Sans','size':fs+1})
-            axs[0].set_ylabel("Porosity",   fontdict={'family':'DejaVu Sans','size':fs})
-            axs[1].set_ylabel("Overpotential [V]",   fontdict={'family':'DejaVu Sans','size':fs})
-            for i in range(0,2):
-                labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
-                axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-                axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
-            plt.savefig(BasicPath + Target+ str(Scan_i)+"/Por Neg_S_eta.png", dpi=100)
 
-            if model_options.__contains__("SEI on cracks"):
-                Num_subplot = 2;
-                fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-                axs[0].plot(my_dict_AGE["x_n [m]"], my_dict_AGE["CDend Negative electrode roughness ratio"][0],'-o',label="First")
-                axs[0].plot(my_dict_AGE["x_n [m]"], my_dict_AGE["CDend Negative electrode roughness ratio"][-1],'-^',label="Last"  )
-                axs[1].plot(my_dict_AGE["x_n [m]"], my_dict_AGE["CDend Total SEI on cracks thickness [m]"][0],'-o',label="First" )
-                axs[1].plot(my_dict_AGE["x_n [m]"], my_dict_AGE["CDend Total SEI on cracks thickness [m]"][-1],'-^',label="Last" )
-                axs[0].set_title("Tot Neg SEI on cracks thickness",   fontdict={'family':'DejaVu Sans','size':fs+1})
-                axs[1].set_title("Neg roughness ratio",   fontdict={'family':'DejaVu Sans','size':fs+1})
-                axs[0].set_ylabel("SEI on cracks thickness [m]",   fontdict={'family':'DejaVu Sans','size':fs})
-                axs[1].set_ylabel("Roughness ratio",   fontdict={'family':'DejaVu Sans','size':fs})
-                for i in range(0,2):
-                    axs[i].set_xlabel("Dimensional Neg thickness",   fontdict={'family':'DejaVu Sans','size':fs})
-                    labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
-                    axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-                    axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
-                plt.savefig(BasicPath + Target+ str(Scan_i)+"/Cracks related spatial.png", dpi=100)
 
-            Num_subplot = 2;
-            fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-            axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte concentration [mol.m-3]"][0],'-o',label="First")
-            axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte concentration [mol.m-3]"][-1],'-^',label="Last"  )
-            axs[1].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte potential [V]"][0],'-o',label="First" )
-            axs[1].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte potential [V]"][-1],'-^',label="Last" )
-            axs[0].set_title("Electrolyte concentration",   fontdict={'family':'DejaVu Sans','size':fs+1})
-            axs[1].set_title("Electrolyte potential",   fontdict={'family':'DejaVu Sans','size':fs+1})
-            axs[0].set_ylabel("Concentration [mol.m-3]",   fontdict={'family':'DejaVu Sans','size':fs})
-            axs[1].set_ylabel("Potential [V]",   fontdict={'family':'DejaVu Sans','size':fs})
-            for i in range(0,2):
-                axs[i].set_xlabel("Dimensional Cell thickness",   fontdict={'family':'DejaVu Sans','size':fs})
-                labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
-                axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-                axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
-            plt.savefig(BasicPath + Target+ str(Scan_i)+"/Electrolyte concentration and potential.png", dpi=100)
-            
-            Num_subplot = 2;
-            fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-            axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte diffusivity [m2.s-1]"][0],'-o',label="First")
-            axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte diffusivity [m2.s-1]"][-1],'-^',label="Last"  )
-            axs[1].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte conductivity [S.m-1]"][0],'-o',label="First" )
-            axs[1].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte conductivity [S.m-1]"][-1],'-^',label="Last" )
-            axs[0].set_title("Electrolyte diffusivity",   fontdict={'family':'DejaVu Sans','size':fs+1})
-            axs[1].set_title("Electrolyte conductivity",   fontdict={'family':'DejaVu Sans','size':fs+1})
-            axs[0].set_ylabel("Diffusivity [m2.s-1]",   fontdict={'family':'DejaVu Sans','size':fs})
-            axs[1].set_ylabel("Conductivity [S.m-1]",   fontdict={'family':'DejaVu Sans','size':fs})
-            for i in range(0,2):
-                axs[i].set_xlabel("Dimensional Cell thickness",   fontdict={'family':'DejaVu Sans','size':fs})
-                labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
-                axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-                axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
-            plt.savefig(BasicPath + Target+ str(Scan_i)+"/Electrolyte diffusivity and conductivity.png", dpi=100)
-            
 
-            if DryOut == "On":
-                Num_subplot = 3;
-                fig, axs = plt.subplots(1,Num_subplot, figsize=(18,4.8),tight_layout=True)
-                axs[0].plot(Cyc_Update_Index, Vol_EC_consumed_All,'-o',label="EC consumed")
-                axs[0].plot(Cyc_Update_Index, Vol_Elely_need_All,'-.',label="Elely needed")
-                axs[0].plot(Cyc_Update_Index, Vol_Elely_add_All,'-s',label="Elely added")
-                axs[0].plot(Cyc_Update_Index, Vol_Pore_decrease_All,'--',label="Pore decreased")
-                axs[1].plot(Cyc_Update_Index, Vol_Elely_Tot_All,     '-o', label="Total electrolyte in cell" )
-                axs[1].plot(Cyc_Update_Index, Vol_Elely_JR_All,     '--', label="Total electrolyte in JR" )
-                axs[1].plot(Cyc_Update_Index, Vol_Pore_tot_All,     '-s', label="Total pore in JR" )
-                axs[2].plot(Cyc_Update_Index, Ratio_Dryout_All,     '-s', label="Dry out ratio" )
-                axs[2].set_ylabel("Ratio",   fontdict={'family':'DejaVu Sans','size':fs})
-                axs[2].set_xlabel("Cycle number",   fontdict={'family':'DejaVu Sans','size':fs})
-                axs[2].set_title("Dry out ratio",   fontdict={'family':'DejaVu Sans','size':fs+1})
-                for i in range(0,2):
-                    axs[i].set_xlabel("Cycle number",   fontdict={'family':'DejaVu Sans','size':fs})
-                    axs[i].set_ylabel("Volume [mL]",   fontdict={'family':'DejaVu Sans','size':fs})
-                    axs[i].set_title("Volume",   fontdict={'family':'DejaVu Sans','size':fs+1})
-                    labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
-                    axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-                    axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
-                plt.savefig(BasicPath + Target+ str(Scan_i)+"/Volume_total.png", dpi=100)
-        
-        # Newly add (220706): save data, not just a single line in excel file:
-        Bulk_Sol_Con_i = Para_0_Dry_old['EC initial concentration in electrolyte [mol.m-3]']
-        mdic_cycles = {
-            "cycles": cycles,
-            "Cyc_Update_Index":Cyc_Update_Index,
-            "SaveTimes": SaveTimes,
-        }
-        if DryOut == "On":
-            for mm in range(0,1):
-                CeEC_All =np.full(np.size(Ratio_CeEC_All),Bulk_Sol_Con_i); 
-                for i in range(1,np.size(Ratio_CeEC_All)):
-                    for k in range(0,i):
-                        CeEC_All[i] *= Ratio_CeEC_All[k];        
-            mdic_dry = {
-                "CeEC_All": CeEC_All,
-                "c_EC_r_new_All": c_EC_r_new_All,
-                "c_e_r_new_All": c_e_r_new_All,
-                "Ratio_CeEC_All":Ratio_CeEC_All ,  
-                "Ratio_CeLi_All":Ratio_CeLi_All  ,       
-                "Ratio_Dryout_All":Ratio_Dryout_All,
 
-                "Vol_Elely_Tot_All": Vol_Elely_Tot_All,
-                "Vol_Elely_JR_All": Vol_Elely_JR_All,
-                "Vol_Pore_tot_All": Vol_Pore_tot_All,            
-                "Vol_EC_consumed_All": Vol_EC_consumed_All,
-                "Vol_Elely_need_All":Vol_Elely_need_All,
-                "Width_all":Width_all,
-                "Vol_Elely_add_All":Vol_Elely_add_All,
-                "Vol_Pore_decrease_All":Vol_Pore_decrease_All,
-                "Test_V_All":Test_V_All,
-                "Test_V2_All":Test_V2_All,
-            }
-            midc_merge = {**my_dict_RPT, **mdic_cycles,**mdic_dry}
-        else:
-            midc_merge = {**my_dict_RPT, **mdic_cycles}
 
-        savemat(BasicPath + Target+ str(Scan_i) + '/' + str(Scan_i)+ '-StructDara_for_Mat.mat',midc_merge)   
-        savemat(BasicPath + Target+ str(Scan_i) + '/' + str(Scan_i)+ '-for_AGE_only.mat',my_dict_AGE)   
 
-        values = [values,]
-        """ 
-        for i in range(1, len(values)+1):
-            for j in range(1, len(values[i-1])+1):
-                table.cell(nrows+i, j).value = values[i-1][j-1]     
-        data.save(BasicPath + Target+ book_name_xlsx)     """
-        book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
-        sheet_name_xlsx =  str(Scan_i);
-        write_excel_xlsx(
-            BasicPath + Target+book_name_xlsx_seperate, 
-            sheet_name_xlsx, values)
 
-        
-        
-        
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
