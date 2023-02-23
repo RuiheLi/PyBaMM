@@ -11,6 +11,67 @@ mpl.rc('font', **font)
 import openpyxl
 import traceback
 import random;import time, signal
+
+
+def electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs):
+    c = c_e / 1000  # mol.m-3 -> mol.l
+    p1, p2, p3, p4, p5, p6 = coeffs
+    A = p1 * (1 + (T - p2))
+    B = 1 + p3 * pybamm.sqrt(c) + p4 * (1 + p5 * pybamm.exp(1000 / T)) * c
+    C = 1 + c**4 * (p6 * pybamm.exp(1000 / T))
+    sigma_e = A * c * B / C  # mS.cm-1
+
+    return sigma_e / 10
+
+
+def electrolyte_diffusivity_base_Landesfeind2019(c_e, T, coeffs):
+    c = c_e / 1000  # mol.m-3 -> mol.l
+    p1, p2, p3, p4 = coeffs
+    A = p1 * pybamm.exp(p2 * c)
+    B = pybamm.exp(p3 / T)
+    C = pybamm.exp(p4 * c / T)
+    D_e = A * B * C * 1e-10  # m2/s
+
+    return D_e
+def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019(c_e, T):
+    coeffs = np.array([1.01e3, 1.01, -1.56e3, -4.87e2])
+
+    return electrolyte_diffusivity_base_Landesfeind2019(c_e, T, coeffs)
+
+
+def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019(c_e, T):
+    coeffs = np.array([5.21e-1, 2.28e2, -1.06, 3.53e-1, -3.59e-3, 1.48e-3])
+
+    return electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs)
+
+
+
+def electrolyte_conductivity_Valoen2005(c_e, T):
+    # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    # mS/cm to S/m
+    return (1e-3 / 1e-2) * (
+        c_e
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    )
+def electrolyte_diffusivity_Valoen2005(c_e, T):
+    # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
+
+    T_g = 229 + 5 * c_e
+    D_0 = -4.43 - 54 / (T - T_g)
+    D_1 = -0.22
+
+    # cm2/s to m2/s
+    # note, in the Valoen paper, ln means log10, so its inverse is 10^x
+    return (10 ** (D_0 + D_1 * c_e)) * 1e-4
 ###################################################################
 #############    From Patrick from Github        ##################
 ###################################################################
@@ -307,7 +368,12 @@ def Run_Model_Base_On_Last_Solution(
     else:
         # add 230221
         Sol_new['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
-        Sol_new['Throughput energy [W.h]'].entries += Sol['Throughput energy [W.h]'].entries[-1]
+        """ for step in Sol_new.cycles[0].steps:
+            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
+            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1]
+        for step in Sol_new.cycles[-1].steps:
+            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
+            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1] """
     # print("Solved this model in {}".format(ModelTimer.time()))
     Result_list = [Model_new, Sol_new,Call_Age]
     return Result_list
@@ -387,7 +453,12 @@ def Run_Model_Base_On_Last_Solution_RPT(
     else:
         # add 230221
         Sol_new['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
-        Sol_new['Throughput energy [W.h]'].entries += Sol['Throughput energy [W.h]'].entries[-1]
+        """ for step in Sol_new.cycles[0].steps:
+            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
+            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1]
+        for step in Sol_new.cycles[-1].steps:
+            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
+            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1] """
     # print("Solved this model in {}".format(ModelTimer.time()))
     Result_List_RPT = [Model_new, Sol_new,Call_RPT]
     return Result_List_RPT
@@ -504,17 +575,6 @@ def Para_init(Para_dict):
     if Para_dict_used.__contains__("Model option"):
         model_options = Para_dict_used["Model option"]  
         Para_dict_used.pop("Model option")
-    # Mark Ruihe - updated 221113 - from P3
-    if Para_dict_used.__contains__("Func Electrolyte conductivity [S.m-1]"):
-        Para_0.update({
-            "Electrolyte conductivity [S.m-1]": 
-            eval(Para_dict_used["Func Electrolyte conductivity [S.m-1]"])})  
-        Para_dict_used.pop("Func Electrolyte conductivity [S.m-1]")
-    if Para_dict_used.__contains__("Func Electrolyte diffusivity [m2.s-1]"):
-        Para_0.update({
-            "Electrolyte diffusivity [m2.s-1]": 
-            eval(Para_dict_used["Func Electrolyte diffusivity [m2.s-1]"])})
-        Para_dict_used.pop("Func Electrolyte diffusivity [m2.s-1]")
 
     if Para_dict_used.__contains__("Initial Neg SOC"):
         c_Neg1SOC_in = (
@@ -536,10 +596,16 @@ def Para_init(Para_dict):
     CyclePack = [ 
         Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
         Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options];
-    
+    # Mark Ruihe - updated 230222 - from P3
     for key, value in Para_dict_used.items():
-        # risk: will update parameter that doesn't exist, so need to make sure the name is right 
-        Para_0.update({key: value},check_already_exists=False)
+        # risk: will update parameter that doesn't exist, 
+        # so need to make sure the name is right 
+        if isinstance(value, str):
+            Para_0.update({key: eval(value)})
+            #Para_dict_used.pop(key)
+        else:
+            Para_0.update({key: value},check_already_exists=False)
+
     return CyclePack,Para_0
 
 # Add 220808 - to simplify the post-processing
@@ -569,6 +635,8 @@ def GetSol_dict (my_dict, keys_all, Sol,
                     Sol.cycles[cycle_no].steps[step_no][key].entries[-1]
                     - 
                     Sol.cycles[cycle_no].steps[step_no][key].entries[0])
+            elif key in ["Throughput capacity [A.h]"]: # 
+                my_dict[key].append(Sol[key].entries[-1])
             elif key[0:5] in ["CDend","CCend","CVend","REend",
                             "CDsta","CCsta","CVsta","REsta",]:
                 step_no = eval("step_{}".format(key[0:2]))
@@ -976,64 +1044,66 @@ def Read_Exp(BasicPath,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
             BasicPath+Exp_Path[i]+ "DMA Output/" + f"cell {cell}/" + 
             f"{Exp_head[i]} - RMSE data from OCV-fitting for cell {cell}.csv", 
             index_col=0)
+    print("Finish reading Experiment!")
     return Exp_Any_AllData
 
 # plot inside the function:
 def Plot_Cyc_RPT_4(
         my_dict_RPT,
-        Exp_Any_AllData,Temp_Cell_Exp,   # need to be specific for one expeirment
+        Exp_Any_AllData,Temp_Cell_Exp, Plot_Exp,  # need to be specific for one expeirment
         Scan_i,
         Temper_i,model_options,BasicPath, Target,fs,dpi):
     Num_subplot = 5;
     fig, axs = plt.subplots(Num_subplot,1, figsize=(6,13),tight_layout=True)
     axs[0].plot(
-        my_dict_RPT['CDend Throughput capacity [kA.h]'], 
+        my_dict_RPT['Throughput capacity [kA.h]'], 
         my_dict_RPT['CDend SOH [%]'],     
         '-o', label="Scan=" + str(Scan_i) )
     axs[1].plot(
-        my_dict_RPT['CDend Throughput capacity [kA.h]'], 
+        my_dict_RPT['Throughput capacity [kA.h]'], 
         my_dict_RPT["CDend LLI [%]"],'-o', label="total LLI")
     if model_options.__contains__("lithium plating"):
         axs[1].plot(
-            my_dict_RPT['CDend Throughput capacity [kA.h]'], 
+            my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LLI lithium plating [%]"],'--o', label="LiP")
     if model_options.__contains__("SEI"):
         axs[1].plot(
-            my_dict_RPT['CDend Throughput capacity [kA.h]'], 
+            my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LLI SEI [%]"] ,'--o', label="SEI")
     if model_options.__contains__("SEI on cracks"):
         axs[1].plot(
-            my_dict_RPT['CDend Throughput capacity [kA.h]'], 
+            my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LLI SEI on cracks [%]"] ,'--o', label="SEI-on-cracks")
     axs[2].plot(
-        my_dict_RPT["CDend Throughput capacity [kA.h]"], 
+        my_dict_RPT["Throughput capacity [kA.h]"], 
         my_dict_RPT["CDend LAM_ne [%]"],     '-o', ) 
     axs[3].plot(
-        my_dict_RPT["CDend Throughput capacity [kA.h]"], 
+        my_dict_RPT["Throughput capacity [kA.h]"], 
         my_dict_RPT["CDend LAM_pe [%]"],     '-o',  ) 
     axs[4].plot(
-        my_dict_RPT["CDend Throughput capacity [kA.h]"], 
+        my_dict_RPT["Throughput capacity [kA.h]"], 
         np.array(my_dict_RPT["CDend Local ECM resistance [Ohm]"])*1e3,     '-o', ) 
     # Plot Charge Throughput (A.h) vs SOH
     color_exp = [0, 0, 0,0.7]; marker_exp = "v";
     Exp_temp_i_cell = Temp_Cell_Exp[str(int(Temper_i- 273.15))]
-    for cell in Exp_temp_i_cell:
-        axs[0].plot(
-            np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
-            np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["SoH"])*100,
-            color=color_exp,marker=marker_exp,label=f"Cell {cell}") 
-        axs[1].plot(
-            np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
-            np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LLI"])*100,
-            color=color_exp,marker=marker_exp,label=f"Cell {cell}")  
-        axs[2].plot(
-            np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
-            np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LAM NE_tot"])*100,
-            color=color_exp,marker=marker_exp, )
-        axs[3].plot(
-            np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
-            np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LAM PE"])*100,
-            color=color_exp,marker=marker_exp,)
+    if Plot_Exp == True:
+        for cell in Exp_temp_i_cell:
+            axs[0].plot(
+                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
+                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["SoH"])*100,
+                color=color_exp,marker=marker_exp,label=f"Cell {cell}") 
+            axs[1].plot(
+                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
+                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LLI"])*100,
+                color=color_exp,marker=marker_exp,label=f"Cell {cell}")  
+            axs[2].plot(
+                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
+                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LAM NE_tot"])*100,
+                color=color_exp,marker=marker_exp, )
+            axs[3].plot(
+                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
+                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LAM PE"])*100,
+                color=color_exp,marker=marker_exp,)
     axs[0].set_ylabel("SOH %")
     axs[1].set_ylabel("LLI %")
     axs[2].set_ylabel("LAM NE %")
@@ -1054,8 +1124,8 @@ def Plot_Cyc_RPT_4(
     if model_options.__contains__("SEI on cracks"):
         Num_subplot = 2;
         fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-        axs[0].plot(my_dict_RPT['CDend Throughput capacity [kA.h]'], my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],     '-o', label="Scan=" + str(Scan_i) )
-        axs[1].plot(my_dict_RPT['CDend Throughput capacity [kA.h]'], my_dict_RPT["CDend X-averaged negative electrode roughness ratio"],'-o', label="Scan=" + str(Scan_i) )
+        axs[0].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],     '-o', label="Scan=" + str(Scan_i) )
+        axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDend X-averaged negative electrode roughness ratio"],'-o', label="Scan=" + str(Scan_i) )
         axs[0].set_ylabel("SEI on cracks thickness [m]",   fontdict={'family':'DejaVu Sans','size':fs})
         axs[1].set_ylabel("Roughness ratio",   fontdict={'family':'DejaVu Sans','size':fs})
         for i in range(0,Num_subplot):
@@ -1069,16 +1139,16 @@ def Plot_Cyc_RPT_4(
 
         Num_subplot = 2;
         fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-        axs[1].plot(my_dict_RPT['CDend Throughput capacity [kA.h]'], 
+        axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend Negative electrode capacity [A.h]"][0]
             -
             my_dict_RPT["CDend Negative electrode capacity [A.h]"],'-o',label="Neg Scan=" + str(Scan_i))
-        axs[1].plot(my_dict_RPT['CDend Throughput capacity [kA.h]'], 
+        axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend Positive electrode capacity [A.h]"][0]
             -
             my_dict_RPT["CDend Positive electrode capacity [A.h]"],'-^',label="Pos Scan=" + str(Scan_i))
         axs[0].plot(
-            my_dict_RPT['CDend Throughput capacity [kA.h]'], 
+            my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],                  
             '-o',label="Scan="+ str(Scan_i))
         for i in range(0,1):
@@ -1099,10 +1169,10 @@ def Plot_Cyc_RPT_4(
 
     Num_subplot = 2;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
-    axs[0].plot(my_dict_RPT['CDend Throughput capacity [kA.h]'], my_dict_RPT["CDsta Positive electrode stoichiometry"] ,'-o',label="Start" )
-    axs[0].plot(my_dict_RPT['CDend Throughput capacity [kA.h]'], my_dict_RPT["CDend Positive electrode stoichiometry"] ,'-^',label="End" )
-    axs[1].plot(my_dict_RPT['CDend Throughput capacity [kA.h]'], my_dict_RPT["CDsta Negative electrode stoichiometry"],'-o',label="Start" )
-    axs[1].plot(my_dict_RPT['CDend Throughput capacity [kA.h]'], my_dict_RPT["CDend Negative electrode stoichiometry"],'-^',label="End" )
+    axs[0].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDsta Positive electrode stoichiometry"] ,'-o',label="Start" )
+    axs[0].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDend Positive electrode stoichiometry"] ,'-^',label="End" )
+    axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDsta Negative electrode stoichiometry"],'-o',label="Start" )
+    axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDend Negative electrode stoichiometry"],'-^',label="End" )
     for i in range(0,2):
         axs[i].set_xlabel("Charge Throughput (kA.h)",   fontdict={'family':'DejaVu Sans','size':fs})
         axs[i].set_ylabel("Stoichiometry",   fontdict={'family':'DejaVu Sans','size':fs})
@@ -1510,7 +1580,9 @@ def Run_P2_till_Fail(
 
 def Run_P2_Opt_Timeout(
     index_xlsx, Para_dict_i,   Path_pack ,  fs,
-    keys_all,   exp_text_list, exp_index_pack , Exp_Any_AllData,Temp_Cell_Exp, Timeout,Return_Sol ):
+    keys_all,   exp_text_list, exp_index_pack , 
+    Exp_Any_AllData,Temp_Cell_Exp, Plot_Exp,   # = true or false
+    Timeout,Return_Sol ):
 
     ##########################################################
     ##############    Part-0: Log of the scripts    ##########
@@ -1589,7 +1661,7 @@ def Run_P2_Opt_Timeout(
     Timeout_text = 'I timed out'
     ##########    2-1: Define model and run break-in cycle
     try:  
-        Timelimit = int(3600*0.5)
+        Timelimit = int(3600*2)
         # the following turns on for HPC only!
         if Timeout == True:
             timeout_RPT = TimeoutFunc(
@@ -1646,7 +1718,7 @@ def Run_P2_Opt_Timeout(
                     Paraupdate = Para_0
                 # Run aging cycle:
                 try:
-                    Timelimit = int(3600*0.5)
+                    Timelimit = int(3600*2)
                     if Timeout == True:
                         timeout_AGE = TimeoutFunc(
                             Run_Model_Base_On_Last_Solution, 
@@ -1703,7 +1775,7 @@ def Run_P2_Opt_Timeout(
             if DryOut == "Off":
                 Paraupdate = Para_0     
             try:
-                Timelimit = int(3600*0.5)
+                Timelimit = int(3600*2)
                 if Timeout == True:
                     timeout_RPT = TimeoutFunc(
                         Run_Model_Base_On_Last_Solution_RPT, 
@@ -1792,8 +1864,8 @@ def Run_P2_Opt_Timeout(
             os.mkdir(BasicPath + Target + str(Scan_i) );
         dpi= 100;
         # Update 230221 - Add model LLI, LAM manually 
-        my_dict_RPT['CDend Throughput capacity [kA.h]'] = (
-            np.array(my_dict_RPT['CDend Throughput capacity [A.h]'])/1e3).tolist()
+        my_dict_RPT['Throughput capacity [kA.h]'] = (
+            np.array(my_dict_RPT['Throughput capacity [A.h]'])/1e3).tolist()
         my_dict_RPT['CDend SOH [%]'] = ((
             np.array(my_dict_RPT["Discharge capacity [A.h]"])
             /my_dict_RPT["Discharge capacity [A.h]"][0])*100).tolist()
@@ -1832,7 +1904,7 @@ def Run_P2_Opt_Timeout(
         #########      3-1: Plot cycle,location, Dryout related 
         Plot_Cyc_RPT_4(
             my_dict_RPT,
-            Exp_Any_AllData,Temp_Cell_Exp,
+            Exp_Any_AllData,Temp_Cell_Exp, Plot_Exp ,  # =True or False,
             Scan_i,Temper_i,model_options,BasicPath, Target,fs,dpi)
         if len(my_dict_AGE["CDend Porosity"])>1:
             Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi)
@@ -2226,7 +2298,7 @@ def Run_model_wwo_dry_out(
             if model_options.__contains__("SEI on cracks"):
                 axs[1].plot(cycles, my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"] ,'-o', label="sei-on-cracks - Scan" + str(Scan_i) )
             axs[2].plot(
-                my_dict_RPT["CDend Throughput capacity [A.h]"], 
+                my_dict_RPT["Throughput capacity [A.h]"], 
                 my_dict_RPT["Discharge capacity [A.h]"],     
                 '-o', label="Scan=" + str(Scan_i) )
             if Temper_i  == 40:       
