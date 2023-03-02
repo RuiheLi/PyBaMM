@@ -96,8 +96,8 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 for different behaviour in negative and positive electrodes.
             * "particle mechanics" : str
                 Sets the model to account for mechanical effects such as particle
-                swelling and cracking. Can be "none" (default), "swelling only",
-                or "swelling and cracking".
+                swelling and cracking. Can be "none" (default), "constant cracks",
+                "swelling only", or "swelling and cracking".
                 A 2-tuple can be provided for different behaviour in negative and
                 positive electrodes.
             * "particle phases": str
@@ -246,7 +246,12 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 "quadratic profile",
                 "quartic profile",
             ],
-            "particle mechanics": ["none", "swelling only", "swelling and cracking"],
+            "particle mechanics": [
+                "none",
+                "constant cracks",
+                "swelling only",
+                "swelling and cracking",
+            ],
             "particle phases": ["1", "2"],
             "particle shape": ["spherical", "no particles"],
             "particle size": ["single", "distribution"],
