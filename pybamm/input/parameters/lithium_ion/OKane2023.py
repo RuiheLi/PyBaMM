@@ -205,7 +205,7 @@ def electrolyte_TDF_base_Landesfeind2019(c_e, T, coeffs):
     return tdf
 
 
-def electrolyte_transference_number_base_Landesfeind2019(c_e, T, coeffs):
+def electrolyte_t_plus_base_Landesfeind2019(c_e, T, coeffs):
     """
     Transference number of LiPF6 in solvent_X as a function of ion concentration and
     temperature. The data comes from [1].
@@ -1022,84 +1022,6 @@ def cracking_rate_Ai2020(T_dim):
     return k_cr * arrhenius
 
 
-def electrolyte_diffusivity_Nyman2008_arrhenius(c_e, T):
-    """
-    Diffusivity of LiPF6 in EC:EMC (3:7) as a function of ion concentration. The data
-    comes from [1], with Arrhenius temperature dependence added from [2].
-
-    References
-    ----------
-    .. [1] A. Nyman, M. Behm, and G. Lindbergh, "Electrochemical characterisation and
-    modelling of the mass transport phenomena in LiPF6-EC-EMC electrolyte,"
-    Electrochim. Acta, vol. 53, no. 22, pp. 6356–6365, 2008.
-    .. [2] Ecker, Madeleine, et al. "Parameterization of a physico-chemical model of
-    a lithium-ion battery i. determination of parameters." Journal of the
-    Electrochemical Society 162.9 (2015): A1836-A1848.
-
-    Parameters
-    ----------
-    c_e: :class:`pybamm.Symbol`
-        Dimensional electrolyte concentration
-    T: :class:`pybamm.Symbol`
-        Dimensional temperature
-
-    Returns
-    -------
-    :class:`pybamm.Symbol`
-        Solid diffusivity
-    """
-
-    D_c_e = 8.794e-11 * (c_e / 1000) ** 2 - 3.972e-10 * (c_e / 1000) + 4.862e-10
-
-    # Nyman et al. (2008) does not provide temperature dependence
-    # So use temperature dependence from Ecker et al. (2015) instead
-
-    E_D_c_e = 17000
-    arrhenius = pybamm.exp(E_D_c_e / pybamm.constants.R * (1 / 298.15 - 1 / T))
-
-    return D_c_e * arrhenius
-
-
-def electrolyte_conductivity_Nyman2008_arrhenius(c_e, T):
-    """
-    Conductivity of LiPF6 in EC:EMC (3:7) as a function of ion concentration. The data
-    comes from [1], with Arrhenius temperature dependence added from [2].
-
-    References
-    ----------
-    .. [1] A. Nyman, M. Behm, and G. Lindbergh, "Electrochemical characterisation and
-    modelling of the mass transport phenomena in LiPF6-EC-EMC electrolyte,"
-    Electrochim. Acta, vol. 53, no. 22, pp. 6356–6365, 2008.
-    .. [2] Ecker, Madeleine, et al. "Parameterization of a physico-chemical model of
-    a lithium-ion battery i. determination of parameters." Journal of the
-    Electrochemical Society 162.9 (2015): A1836-A1848.
-
-    Parameters
-    ----------
-    c_e: :class:`pybamm.Symbol`
-        Dimensional electrolyte concentration
-    T: :class:`pybamm.Symbol`
-        Dimensional temperature
-
-    Returns
-    -------
-    :class:`pybamm.Symbol`
-        Solid diffusivity
-    """
-
-    sigma_e = (
-        0.1297 * (c_e / 1000) ** 3 - 2.51 * (c_e / 1000) ** 1.5 + 3.329 * (c_e / 1000)
-    )
-
-    # Nyman et al. (2008) does not provide temperature dependence
-    # So use temperature dependence from Ecker et al. (2015) instead
-
-    E_sigma_e = 17000
-    arrhenius = pybamm.exp(E_sigma_e / pybamm.constants.R * (1 / 298.15 - 1 / T))
-
-    return sigma_e * arrhenius
-
-
 def graphite_LGM50_delithiation_ocp_OKane2023(sto):
     """
     LG M50 Graphite delithiation open-circuit potential as a function of stochiometry.
@@ -1245,7 +1167,14 @@ def electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019(c_e, T):
         ]
     )
 
-    return electrolyte_transference_number_base_Landesfeind2019(c_e, T, coeffs)
+    c_lim = pybamm.Scalar(4000)  # solubility limit
+
+    t_plus = (
+        electrolyte_t_plus_base_Landesfeind2019(c_e, T, coeffs) * (c_e <= c_lim) +
+        electrolyte_t_plus_base_Landesfeind2019(c_lim, T, coeffs) * (c_e > c_lim)
+    )
+
+    return t_plus
 
 
 def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019(c_e, T):
@@ -1275,7 +1204,14 @@ def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019(c_e, T):
         [2.57e1, -4.51e1, -1.77e-1, 1.94, 2.95e-1, 3.08e-4, 2.59e-1, -9.46e-3, -4.54e-4]
     )
 
-    return electrolyte_TDF_base_Landesfeind2019(c_e, T, coeffs)
+    c_lim = pybamm.Scalar(4000)  # solubility limit
+
+    TDF = (
+        electrolyte_TDF_base_Landesfeind2019(c_e, T, coeffs) * (c_e <= c_lim) +
+        electrolyte_TDF_base_Landesfeind2019(c_lim, T, coeffs) * (c_e > c_lim)
+    )
+
+    return TDF
 
 
 def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019(c_e, T):
@@ -1303,7 +1239,14 @@ def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019(c_e, T):
     """
     coeffs = np.array([1.01e3, 1.01, -1.56e3, -4.87e2])
 
-    return electrolyte_diffusivity_base_Landesfeind2019(c_e, T, coeffs)
+    c_lim = pybamm.Scalar(4000)  # solubility limit
+
+    D_e = (
+        electrolyte_diffusivity_base_Landesfeind2019(c_e, T, coeffs) * (c_e <= c_lim) +
+        electrolyte_diffusivity_base_Landesfeind2019(c_lim, T, coeffs) * (c_e > c_lim)
+    )
+
+    return D_e
 
 
 def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019(c_e, T):
@@ -1331,7 +1274,14 @@ def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019(c_e, T):
     """
     coeffs = np.array([5.21e-1, 2.28e2, -1.06, 3.53e-1, -3.59e-3, 1.48e-3])
 
-    return electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs)
+    c_lim = pybamm.Scalar(4000)  # solubility limit
+
+    sigma_e = (
+        electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs) * (c_e <= c_lim) +
+        electrolyte_conductivity_base_Landesfeind2019(c_lim, T, coeffs) * (c_e > c_lim)
+    )
+
+    return sigma_e
 
 
 # Call dict via a function to avoid errors when editing in place
