@@ -1167,7 +1167,7 @@ def electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019(c_e, T):
         ]
     )
 
-    c_lim = pybamm.Scalar(4000)  # solubility limit
+    c_lim = pybamm.Scalar(40000)  # solubility limit
 
     t_plus = (
         electrolyte_t_plus_base_Landesfeind2019(c_e, T, coeffs) * (c_e <= c_lim) +
@@ -1204,7 +1204,7 @@ def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019(c_e, T):
         [2.57e1, -4.51e1, -1.77e-1, 1.94, 2.95e-1, 3.08e-4, 2.59e-1, -9.46e-3, -4.54e-4]
     )
 
-    c_lim = pybamm.Scalar(4000)  # solubility limit
+    c_lim = pybamm.Scalar(40000)  # solubility limit
 
     TDF = (
         electrolyte_TDF_base_Landesfeind2019(c_e, T, coeffs) * (c_e <= c_lim) +
@@ -1239,7 +1239,7 @@ def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019(c_e, T):
     """
     coeffs = np.array([1.01e3, 1.01, -1.56e3, -4.87e2])
 
-    c_lim = pybamm.Scalar(4000)  # solubility limit
+    c_lim = pybamm.Scalar(40000)  # solubility limit
 
     D_e = (
         electrolyte_diffusivity_base_Landesfeind2019(c_e, T, coeffs) * (c_e <= c_lim) +
@@ -1274,7 +1274,7 @@ def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019(c_e, T):
     """
     coeffs = np.array([5.21e-1, 2.28e2, -1.06, 3.53e-1, -3.59e-3, 1.48e-3])
 
-    c_lim = pybamm.Scalar(4000)  # solubility limit
+    c_lim = pybamm.Scalar(40000)  # solubility limit
 
     sigma_e = (
         electrolyte_conductivity_base_Landesfeind2019(c_e, T, coeffs) * (c_e <= c_lim) +
