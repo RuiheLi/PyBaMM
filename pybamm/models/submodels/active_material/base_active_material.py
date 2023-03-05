@@ -63,13 +63,12 @@ class BaseModel(pybamm.BaseSubModel):
             # Update electrode capacity variables
             L = self.domain_param.L
             c_s_max = self.phase_param.c_max
-            c_s_min = self.phase_param.c_min
 
             C = (
                 pybamm.yz_average(eps_solid_av)
                 * L
                 * param.A_cc
-                * (c_s_max - c_s_min)
+                * c_s_max
                 * param.F
                 / 3600
             )
@@ -84,10 +83,11 @@ class BaseModel(pybamm.BaseSubModel):
             # R_n, R_p. For a size distribution, calculate the area-weighted
             # mean using the distribution instead. Then the surface area is
             # calculated the same way
-            if self.options["particle size"] == "single":
+            domain_options = getattr(self.options, domain)
+            if domain_options["particle size"] == "single":
                 R = self.phase_param.R
                 R_dim = self.phase_param.R_dimensional
-            elif self.options["particle size"] == "distribution":
+            elif domain_options["particle size"] == "distribution":
                 if self.domain == "negative":
                     R_ = pybamm.standard_spatial_vars.R_n
                 elif self.domain == "positive":

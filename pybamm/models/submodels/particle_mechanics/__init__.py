@@ -1,4 +1,5 @@
 from .base_mechanics import BaseMechanics
+from .constant_cracks import ConstantCracks
 from .crack_propagation import CrackPropagation
 from .swelling_only import SwellingOnly
 from .no_mechanics import NoMechanics

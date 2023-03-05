@@ -219,12 +219,8 @@ class SEIGrowth(BaseModel):
             else:
                 l_cr = variables["Negative particle crack length"]
                 dl_cr = variables["Negative particle cracking rate"]
-            spreading_outer = (
-                dl_cr / l_cr * (self.phase_param.L_outer_crack_0 - L_outer)
-            )
-            spreading_inner = (
-                dl_cr / l_cr * (self.phase_param.L_inner_crack_0 - L_inner)
-            )
+            spreading_outer = -dl_cr / l_cr * L_outer  # mark Simon edit
+            spreading_inner = -dl_cr / l_cr * L_inner  # mark Simon edit
         else:
             spreading_outer = 0
             spreading_inner = 0
