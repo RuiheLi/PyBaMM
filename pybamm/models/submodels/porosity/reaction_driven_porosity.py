@@ -39,7 +39,7 @@ class ReactionDriven(BaseModel):
                 roughness_n = variables["Negative electrode roughness ratio"]
 
                 L_tot = (
-                    (L_sei_n - L_sei_0)
+                    L_sei_n  # mark Simon edit
                     + L_pl_n
                     + L_dead_n
                     + L_sei_cr_n * (roughness_n - 1)

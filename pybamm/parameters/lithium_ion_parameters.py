@@ -87,6 +87,7 @@ class LithiumIonParameters(BaseParameters):
         # Electrical
         self.I_typ = self.elec.I_typ
         self.Q = self.elec.Q
+        self.R_contact = self.elec.R_contact
         self.C_rate = self.elec.C_rate
         self.n_electrodes_parallel = self.elec.n_electrodes_parallel
         self.n_cells = self.elec.n_cells
@@ -981,10 +982,9 @@ class ParticleLithiumIonParameters(BaseParameters):
             self.L_inner_0 = self.L_inner_0_dim / self.L_sei_0_dim
             self.L_outer_0 = self.L_outer_0_dim / self.L_sei_0_dim
 
-            # Dividing by 10000 makes initial condition effectively zero
-            # without triggering division by zero errors
-            self.L_inner_crack_0 = self.L_inner_0 / 10000
-            self.L_outer_crack_0 = self.L_outer_0 / 10000
+            # Hardcode initial SEI on cracks and surface to be equal for now - Simon
+            self.L_inner_crack_0 = self.L_inner_0
+            self.L_outer_crack_0 = self.L_outer_0
 
             # ratio of SEI reaction scale to intercalation reaction
             self.Gamma_SEI = (

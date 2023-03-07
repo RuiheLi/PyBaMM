@@ -347,6 +347,12 @@ class BaseModel(pybamm.BaseBatteryModel):
                     ] = pybamm.particle_mechanics.NoMechanics(
                         self.param, domain, options=self.options, phase="primary"
                     )
+                elif crack == "constant cracks":
+                    self.submodels[
+                        f"{domain} particle mechanics"
+                    ] = pybamm.particle_mechanics.ConstantCracks(
+                        self.param, domain, options=self.options, phase="primary"
+                    )
                 elif crack == "swelling only":
                     self.submodels[
                         f"{domain} particle mechanics"
