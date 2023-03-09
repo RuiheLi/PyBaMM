@@ -2,7 +2,7 @@ import pybamm as pb;import pandas as pd   ;import numpy as np;import os;import m
 from scipy.io import savemat,loadmat;from pybamm import constants,exp;import matplotlib as mpl; fs=17; # or we can set import matplotlib.pyplot as plt then say 'mpl.rc...'
 import openpyxl
 import traceback
-import multiprocessing
+from multiprocessing import Pool   
 import scipy.optimize
 import random;import time, signal
 fs=17;
@@ -19,13 +19,13 @@ pb.set_logging_level("INFO")
 ########################  Input  ########################
 # all values here must be a list, even it is a single object
 Para_dict_All = {
-   "Total ageing cycles":[6,],
-   "Ageing cycles between RPT":[3,],
-   "Update cycles for ageing": [3,],
+   "Total ageing cycles":[4,],
+   "Ageing cycles between RPT":[2,],
+   "Update cycles for ageing": [2,],
    "Cycles within RPT":[1,],
-   "Ageing temperature":[10,25,40],
+   "Ageing temperature":[25,40],
    "RPT temperature":[25,],
-   "Mesh list":[[5,5,5,60,20],],   # Simon uses 30
+   "Mesh list":[[5,5,5,30,20],],   # Simon uses 30
    "Para_Set":[ "OKane2023",], # Li2023_Coupled
    "Model option":[
          {
@@ -80,7 +80,7 @@ Para_dict_list = []
 recursive_scan(Para_dict_list,Para_dict_All, list(Para_dict_All.keys()), {})
 print(f"Total scan case is {len(Para_dict_list)}")
 
-BasicPath = 'c:/Users/rl1120/OneDrive - Imperial College London/SimDataSave/P2_R8_FromSimon'; 
+BasicPath = 'D:/OneDrive - Imperial College London/SimDataSave/P2_R8_FromSimon'; 
 #BasicPath=os.getcwd()
 Target  = '/timeout_mp_1/'
 if not os.path.exists(BasicPath + Target):
@@ -94,24 +94,19 @@ V_max = 4.2;
 V_min = 2.5; 
 charge_time_mins = 60 * 4.86491/5
 exp_AGE_text = [(
-    f"Charge at 0.3 C for {charge_time_mins} minutes",
-    f"Discharge at 1 C until {V_min} V", 
+    "Charge at 1C for 5 seconds",
+    "Discharge at 1C for 5 seconds", 
     ),  ]
 # step index for ageing
 step_AGE_CD =0;   step_AGE_CC =1;   step_AGE_CV =2;
 
 exp_RPT_text = [ (
-    f"Charge at 1C until {V_max} V",  
-    f"Hold at {V_max}V until C/100",
-    f"Discharge at 0.1C until {V_min} V (5 minute period)",  
-    "Rest for 1 hours (5 minute period)",  
-    f"Charge at 0.1C until {V_max} V (5 minute period)",
-    "Rest for 1 hours (5 minute period)",
-    f"Discharge at 1C until {V_min} V",  
-    f"Hold at {V_min} V until C/100",
+    "Discharge at 1C for 5 seconds", 
+    "Rest for 2 seconds", 
+    "Charge at 1C for 5 seconds",
     ) ]
 # step index for RPT
-step_RPT_CD = 2;  step_RPT_RE =3;   step_RPT_CC = 4;  
+step_RPT_CD = 0;  step_RPT_RE =1;   step_RPT_CC = 2;  
 
 exp_text_list = [exp_AGE_text, exp_RPT_text,];
 cycle_no = -1; 
@@ -306,7 +301,7 @@ Color_Cell_All = [
     "F":[1,0,0,0.4],"G":[1,0,0,0.4],"H":[1,0,0,0.4],}]
 
 # Global path 
-Path_NiallDMA = "c:/Users/rl1120/OneDrive - Imperial College London/SimDataSave/InputData/"
+Path_NiallDMA = "D:/OneDrive - Imperial College London/SimDataSave/InputData/"
 index_exp = 1  # index for experiment set, range from 1~5
 Temp_Cell_Exp = Temp_Cell_Exp_All[index_exp-1] # select a cell list through temperature
 Exp_Any_AllData = Read_Exp(
@@ -334,386 +329,211 @@ write_excel_xlsx(
     BasicPath + Target+book_name_xlsx, 
     sheet_name_xlsx, Values_1)   
 
-
-# scan:
-index_list = np.arange(1,len(Para_dict_list)+1,1)
-
-#################### original:  ####################
-####################################################
-# scan:
 fs = 10
-index_list = np.arange(1,len(Para_dict_list)+1,1)
-midc_merge_all = [];Sol_RPT_all = [];Sol_AGE_all = [];
-for index_i, Para_dict_i in zip(index_list,Para_dict_list):
-    midc_merge,Sol_RPT,Sol_AGE = Run_P2_Opt_Timeout(
-        index_i    ,    Para_dict_i,   Path_pack, fs,
-        keys_all,   exp_text_list, exp_index_pack,
-        Exp_Any_AllData,Temp_Cell_Exp,False,
-        True,True,)  
-    midc_merge_all.append(midc_merge)
-    Sol_RPT_all.append(Sol_RPT)
-    Sol_AGE_all.append(Sol_AGE)
 
 #################### need to change:  ####################
 ####################################################
 # task: save the last solution if fail in the middle, so that we can have a closer look
+# build a big class of my own setting, including results
+class TaskConfig:
+    def __init__(self,index_xlsx, Para_dict_i,   Path_pack ,  fs,
+        keys_all,   exp_text_list, exp_index_pack , 
+        Exp_Any_AllData,Temp_Cell_Exp, 
+        Plot_Exp,Timeout,Return_Sol):  # = true or false
 
-def Run_P2_Opt_Timeout(
-    index_xlsx, Para_dict_i,   Path_pack ,  fs,
-    keys_all,   exp_text_list, exp_index_pack , 
-    Exp_Any_AllData,Temp_Cell_Exp, Plot_Exp,   # = true or false
-    Timeout,Return_Sol ):
+        self.Scan_i = int(index_xlsx)
+        CyclePack,Para_0 = Para_init(Para_dict_i) # 
+        [Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
+            Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options] = CyclePack;
+        self.Total_Cycles = Total_Cycles
+        self.Cycle_bt_RPT=Cycle_bt_RPT
+        self.Update_Cycles=Update_Cycles
+        self.RPT_Cycles=RPT_Cycles
+        self.Temper_i=Temper_i
+        self.Temper_RPT=Temper_RPT
+        self.mesh_list=mesh_list
+        self.submesh_strech=submesh_strech
+        self.model_options=model_options
+        [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
+        self.BasicPath = BasicPath
+        self.Target = Target
+        self.book_name_xlsx=book_name_xlsx
+        self.sheet_name_xlsx=sheet_name_xlsx
+        self.fs = fs
+        [keys_all_RPT,keys_all_AGE] = keys_all
+        self.keys_all_RPT=keys_all_RPT
+        self.keys_all_AGE=keys_all_AGE
+        [exp_AGE_text, exp_RPT_text,] = exp_text_list;
+        str_exp_RPT_text  = str(exp_RPT_text);
+        str_exp_AGE_text  = str(exp_AGE_text);
+        self.str_exp_AGE_text = str_exp_AGE_text
+        self.str_exp_RPT_text=str_exp_RPT_text
+        [cycle_no,step_AGE_CD,step_AGE_CC,step_AGE_CV,
+            step_RPT_CD,step_RPT_RE , step_RPT_CC ] = exp_index_pack;
+        self.cycle_no = cycle_no
+        self.step_AGE_CD=step_AGE_CD
+        self.step_AGE_CC=step_AGE_CC
+        self.step_AGE_CV=step_AGE_CV
+        self.step_RPT_CD=step_RPT_CD
+        self.step_RPT_RE=step_RPT_RE
+        self.step_RPT_CC=step_RPT_CC
+        self.Exp_Any_AllData = Exp_Any_AllData
+        self.Temp_Cell_Exp = Temp_Cell_Exp
+        self.Plot_Exp = Plot_Exp
+        self.Timeout = Timeout
+        self.Return_Sol = Return_Sol
+        # define experiment
+        Experiment_Long   = pb.Experiment( exp_AGE_text * Update_Cycles  )  
+        Experiment_RPT    = pb.Experiment( exp_RPT_text * RPT_Cycles     ) 
+        Experiment_Breakin= pb.Experiment( exp_RPT_text * RPT_Cycles     )
 
-    ##########################################################
-    ##############    Part-0: Log of the scripts    ##########
-    ##########################################################
-    # add 221205: if Timeout=='True', use Patrick's version, disable pool
-    #             else, use pool to accelerate 
-    # add Return_Sol, on HPC, always set to False, as it is useless, 
-    # add 230221: do sol_new['Throughput capacity [A.h]'].entries += sol_old['Throughput capacity [A.h]'].entries 
-    #             and for "Throughput energy [W.h]", when use Model.set_initial_conditions_from
-    #             this is done inside the two functions Run_Model_Base_On_Last_Solution(_RPT)
-
-    ##########################################################
-    ##############    Part-1: Initialization    ##############
-    ##########################################################
-    font = {'family' : 'DejaVu Sans','size'   : fs}
-    mpl.rc('font', **font)
-    ModelTimer = pb.Timer()
-    Scan_i = int(index_xlsx)
-    print('Start Now! Scan %d.' % Scan_i)  
-    Sol_RPT = [];  Sol_AGE = [];
-    # pb.set_logging_level('INFO') # show more information!
-    # set_start_method('fork') # from Patrick
-
-    # Un-pack data:
-    [cycle_no,step_AGE_CD,step_AGE_CC,step_AGE_CV,
-        step_RPT_CD,step_RPT_RE , step_RPT_CC ] = exp_index_pack;
-    [exp_AGE_text, exp_RPT_text,] = exp_text_list;
-    [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
-    CyclePack,Para_0 = Para_init(Para_dict_i)
-    [Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
-        Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options] = CyclePack;
-    [keys_all_RPT,keys_all_AGE] = keys_all
-    str_exp_AGE_text  = str(exp_AGE_text);
-    str_exp_RPT_text  = str(exp_RPT_text);
-
-    # define experiment
-    Experiment_Long   = pb.Experiment( exp_AGE_text * Update_Cycles  )  
-    Experiment_RPT    = pb.Experiment( exp_RPT_text * RPT_Cycles     ) 
-    Experiment_Breakin= pb.Experiment( exp_RPT_text * RPT_Cycles     )
-
-    #####  index definition ######################
-    Small_Loop =  int(Cycle_bt_RPT/Update_Cycles);   
-    SaveTimes = int(Total_Cycles/Cycle_bt_RPT);   
-
-    # initialize my_dict for outputs
-    my_dict_RPT = {}
-    for keys in keys_all_RPT:
-        for key in keys:
-            my_dict_RPT[key]=[];
-    my_dict_AGE = {}; 
-    for keys in keys_all_AGE:
-        for key in keys:
-            my_dict_AGE[key]=[];
-    my_dict_RPT["Cycle_RPT"] = []; my_dict_AGE["Cycle_AGE"] = []; 
-    Cyc_Update_Index     =[]; 
-            
-    # update 220924: merge DryOut and Int_ElelyExces_Ratio
-    temp_Int_ElelyExces_Ratio =  Para_0["Initial electrolyte excessive amount ratio"] 
-    ce_EC_0 = Para_0['EC initial concentration in electrolyte [mol.m-3]'] # used to calculate ce_EC_All
-    if temp_Int_ElelyExces_Ratio < 1:
-        Int_ElelyExces_Ratio = -1;
-        DryOut = "Off";
-    else:
-        Int_ElelyExces_Ratio = temp_Int_ElelyExces_Ratio;
-        DryOut = "On";
-    print(f"Scan {Scan_i}: DryOut = {DryOut}")
-    if DryOut == "On":  
-        mdic_dry,Para_0 = Initialize_mdic_dry(Para_0,Int_ElelyExces_Ratio)
-    else:
-        mdic_dry ={}
-
-    ##########################################################
-    ##############    Part-2: Run model         ##############
-    ##########################################################
-    ##########################################################
-    Timeout_text = 'I timed out'
-    ##########    2-1: Define model and run break-in cycle
-    try:  
-        Timelimit = int(3600*2)
-        # the following turns on for HPC only!
-        if Timeout == True:
-            timeout_RPT = TimeoutFunc(
-                Run_Breakin, 
-                timeout=Timelimit, 
-                timeout_val=Timeout_text)
-            Result_list_breakin  = timeout_RPT(
-                model_options, Experiment_Breakin, 
-                Para_0, mesh_list, submesh_strech)
+        #####  index definition ######################
+        Small_Loop =  int(Cycle_bt_RPT/Update_Cycles);   
+        SaveTimes = int(Total_Cycles/Cycle_bt_RPT);
+        self.Experiment_Long=Experiment_Long
+        self.Experiment_RPT=Experiment_RPT
+        self.Experiment_Breakin=Experiment_Breakin
+        self.Small_Loop=Small_Loop
+        self.SaveTimes=SaveTimes
+        # update 220924: merge DryOut and Int_ElelyExces_Ratio
+        temp_Int_ElelyExces_Ratio =  Para_0["Initial electrolyte excessive amount ratio"] 
+        ce_EC_0 = Para_0['EC initial concentration in electrolyte [mol.m-3]'] # used to calculate ce_EC_All
+        if temp_Int_ElelyExces_Ratio < 1:
+            Int_ElelyExces_Ratio = -1;
+            DryOut = "Off";
         else:
-            Result_list_breakin  = Run_Breakin(
-                model_options, Experiment_Breakin, 
-                Para_0, mesh_list, submesh_strech)
-        [Model_0,Sol_0,Call_Breakin] = Result_list_breakin
-        if Return_Sol == True:
-            Sol_RPT.append(Sol_0)
-        if Call_Breakin.success == False:
-            print("Fail due to Experiment error or infeasible")
-            1/0
-        if Sol_0 == Timeout_text: # to do: distinguish different failure cases
-            print("Fail due to Timeout")
-            1/0
-        if Sol_0 == "Model error or solver error":
-            print("Fail due to Model error or solver error")
-            1/0
-    except ZeroDivisionError as e:
-        str_error_Breakin = str(e)
-        print(f"Scan {Scan_i}: Fail break-in cycle, need to exit the whole scan now due to {str_error_Breakin} but do not know how!")
-        
-        Flag_Breakin = False
+            Int_ElelyExces_Ratio = temp_Int_ElelyExces_Ratio;
+            DryOut = "On";  
+        if DryOut == "On":  
+            mdic_dry,Para_0 = Initialize_mdic_dry(Para_0,Int_ElelyExces_Ratio)
+        else:
+            mdic_dry ={}
+        self.DryOut=DryOut
+        print(f"Scan {self.Scan_i}: DryOut = {self.DryOut}")
+        self.Para_0 = Para_0            # most important, the parameter set!!!
+        self.ce_EC_0=ce_EC_0
+        self.Int_ElelyExces_Ratio=Int_ElelyExces_Ratio
+        self.mdic_dry=mdic_dry
+        self.Timeout_text = 'I timed out'
+        # define results:
+        self.Sol_RPT = [];  self.Sol_AGE = [];
+        my_dict_RPT = {};my_dict_AGE = {}; 
+        for keys in keys_all_RPT:
+            for key in keys:
+                my_dict_RPT[key]=[];
+        for keys in keys_all_AGE:
+            for key in keys:
+                my_dict_AGE[key]=[];
+        my_dict_RPT["Cycle_RPT"] = []; my_dict_AGE["Cycle_AGE"] = []; 
+        Cyc_Update_Index     =[]
+        self.midc_merge_all=[]
+        self.my_dict_RPT=my_dict_RPT
+        self.my_dict_AGE=my_dict_AGE
+        self.Cyc_Update_Index=Cyc_Update_Index
+        # output for break-in cycle:
+        self.Model_0=[];
+        self.Sol_0=[];
+        self.Call_Breakin=[]
+
+        self.Flag_Breakin=True
+        self.str_error_Breakin=[]
+        self.Flag_AGE = True; 
+        self.str_error_AGE_final = "Empty"
+        self.str_error_RPT = "Empty"
+        self.Call_Age=[]
+        self.Call_RPT=[]
+
+########### Most important new feature: task_configs ###########
+################################################################
+task_configs = [] # get all configurations
+for index_i, Para_dict_i in zip(index_list,Para_dict_list):
+    task_configs.append(TaskConfig(
+        index_i    ,    Para_dict_i,   Path_pack, fs,
+        keys_all,   exp_text_list, exp_index_pack,
+        Exp_Any_AllData,Temp_Cell_Exp,
+        False,True,True,  ))
+# define the model and run break-in cycle - 
+# input parameter: model_options, Experiment_Breakin, Para_0, mesh_list, submesh_strech
+# output: Sol_0 , Model_0, Call_Breakin
+def run_breakin_single(task_config):
+    task_config.Model_0 = pb.lithium_ion.DFN(options=task_config.model_options ) #
+    # update 220926 - add diffusivity and conductivity as variables:
+    c_e = task_config.Model_0.variables["Electrolyte concentration [mol.m-3]"]
+    T = task_config.Model_0.variables["Cell temperature [K]"]
+    D_e = task_config.Para_0["Electrolyte diffusivity [m2.s-1]"]
+    sigma_e = task_config.Para_0["Electrolyte conductivity [S.m-1]"]
+    task_config.Model_0.variables["Electrolyte diffusivity [m2.s-1]"] = D_e(c_e, T)
+    task_config.Model_0.variables["Electrolyte conductivity [S.m-1]"] = sigma_e(c_e, T)
+    var = pb.standard_spatial_vars  
+    var_pts = {
+        var.x_n: int(task_config.mesh_list[0]),  
+        var.x_s: int(task_config.mesh_list[1]),  
+        var.x_p: int(task_config.mesh_list[2]),  
+        var.r_n: int(task_config.mesh_list[3]),  
+        var.r_p: int(task_config.mesh_list[4]),  }       
+    submesh_types = task_config.Model_0.default_submesh_types
+    if task_config.submesh_strech == "nan":
+        pass
     else:
-        print(f"Scan {Scan_i}: Finish break-in cycle")
-        # post-process for break-in cycle
-        my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_0, 
-            cycle_no, step_RPT_CD , step_RPT_CC , step_RPT_RE, step_AGE_CV   )
-        cycle_count =0; 
-        my_dict_RPT["Cycle_RPT"].append(cycle_count)
-        Cyc_Update_Index.append(cycle_count);
-        Flag_Breakin = True
-        
-    Flag_AGE = True; str_error_AGE_final = "Empty";   str_error_RPT = "Empty";
-    #############################################################
-    #######   2-2: Write a big loop to finish the long experiment    
-    if Flag_Breakin == True: 
-        k=0
-        # Para_All.append(Para_0);Model_All.append(Model_0);Sol_All_i.append(Sol_0); 
-        Para_0_Dry_old = Para_0;     Model_Dry_old = Model_0  ; Sol_Dry_old = Sol_0;   del Model_0,Sol_0
-        while k < SaveTimes:    
-            i=0    
-            while i < Small_Loop:
-                if DryOut == "On":
-                    Data_Pack,Paraupdate   = Cal_new_con_Update (  Sol_Dry_old,   Para_0_Dry_old )
-                if DryOut == "Off":
-                    Paraupdate = Para_0
-                # Run aging cycle:
-                try:
-                    Timelimit = int(3600*2)
-                    if Timeout == True:
-                        timeout_AGE = TimeoutFunc(
-                            Run_Model_Base_On_Last_Solution, 
-                            timeout=Timelimit, 
-                            timeout_val=Timeout_text)
-                        Result_list_AGE = timeout_AGE( 
-                            Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
-                            Update_Cycles,Temper_i,mesh_list,submesh_strech )
-                    else:
-                        Result_list_AGE = Run_Model_Base_On_Last_Solution( 
-                            Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
-                            Update_Cycles,Temper_i,mesh_list,submesh_strech )
-                    [Model_Dry_i, Sol_Dry_i , Call_Age ] = Result_list_AGE
-                    if Return_Sol == True:
-                        Sol_AGE.append(Sol_Dry_i)
-                    #print(f"Temperature for ageing is now: {Temper_i}")  
-                    if Call_Age.success == False:
-                        print("Fail due to Experiment error or infeasible")
-                        str_error_AGE = "Experiment error or infeasible"
-                        1/0
-                    if Sol_Dry_i == Timeout_text: # fail due to timeout
-                        print("Fail due to Timeout")
-                        str_error_AGE = "Timeout"
-                        1/0
-                    if Sol_Dry_i == "Model error or solver error":
-                        print("Fail due to Model error or solver error")
-                        str_error_AGE = "Model error or solver error"
-                        1/0
-                except ZeroDivisionError as e:
-                    print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} ageing cycles due to {str_error_AGE}")
-                    Flag_AGE = False
-                    str_error_AGE_final = str_error_AGE
-                    break
-                else:
-                    Para_0_Dry_old = Paraupdate;       Model_Dry_old = Model_Dry_i;      Sol_Dry_old = Sol_Dry_i;   
-                    del Paraupdate,Model_Dry_i,Sol_Dry_i
-                    # post-process for first ageing cycle and every -1 ageing cycle
-                    if k==0 and i==0:    
-                        my_dict_AGE = GetSol_dict (my_dict_AGE,keys_all_AGE, Sol_Dry_old, 
-                            0, step_AGE_CD , step_AGE_CC , step_RPT_RE, step_AGE_CV   )     
-                        my_dict_AGE["Cycle_AGE"].append(1)
-                    my_dict_AGE = GetSol_dict (my_dict_AGE,keys_all_AGE, Sol_Dry_old, 
-                        cycle_no, step_AGE_CD , step_AGE_CC , step_RPT_RE, step_AGE_CV   )    
-                    cycle_count +=  Update_Cycles; 
-                    my_dict_AGE["Cycle_AGE"].append(cycle_count)           
-                    Cyc_Update_Index.append(cycle_count)
-                    print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} ageing cycles")
-                    if DryOut == "On":
-                        mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
-                    i += 1;   
-            # run RPT, and also update parameters (otherwise will have problems)
-            if DryOut == "On":
-                Data_Pack , Paraupdate  = Cal_new_con_Update (  Sol_Dry_old,   Para_0_Dry_old   )
-            if DryOut == "Off":
-                Paraupdate = Para_0     
-            try:
-                Timelimit = int(3600*2)
-                if Timeout == True:
-                    timeout_RPT = TimeoutFunc(
-                        Run_Model_Base_On_Last_Solution_RPT, 
-                        timeout=Timelimit, 
-                        timeout_val=Timeout_text)
-                    Result_list_RPT = timeout_RPT(
-                        Model_Dry_old  , Sol_Dry_old ,   
-                        Paraupdate,      Experiment_RPT, RPT_Cycles, 
-                        Temper_RPT ,mesh_list ,submesh_strech
-                    )
-                else:
-                    Result_list_RPT = Run_Model_Base_On_Last_Solution_RPT(
-                        Model_Dry_old  , Sol_Dry_old ,   
-                        Paraupdate,      Experiment_RPT, RPT_Cycles, 
-                        Temper_RPT ,mesh_list ,submesh_strech
-                    )
-                [Model_Dry_i, Sol_Dry_i,Call_RPT]  = Result_list_RPT
-                if Return_Sol == True:
-                    Sol_RPT.append(Sol_Dry_i)
-                #print(f"Temperature for RPT is now: {Temper_RPT}")  
-                if Call_RPT.success == False:
-                    print("Fail due to Experiment error or infeasible")
-                    str_error_RPT = "Experiment error or infeasible"
-                    1/0 
-                if Sol_Dry_i == Timeout_text:
-                    print("Fail due to Timeout")
-                    str_error_RPT = "Timeout"
-                    1/0
-                if Sol_Dry_i == "Model error or solver error":
-                    print("Fail due to Model error or solver error")
-                    str_error_RPT = "Model error or solver error"
-                    1/0
-            except ZeroDivisionError as e:
-                print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles, due to {str_error_RPT}")
-                break
-            else:
-                my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_Dry_i, 
-                    cycle_no, step_RPT_CD , step_RPT_CC , step_RPT_RE, step_AGE_CV   )
-                my_dict_RPT["Cycle_RPT"].append(cycle_count)
-                Cyc_Update_Index.append(cycle_count)
-                print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} RPT cycles")
-                if DryOut == "On":
-                    mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
-                Para_0_Dry_old = Paraupdate;    Model_Dry_old = Model_Dry_i  ;     Sol_Dry_old = Sol_Dry_i    ;   
-                del Paraupdate,Model_Dry_i,Sol_Dry_i
-                if Flag_AGE == False:
-                    break
-            k += 1 
-    ############################################################# 
-    #########   An extremely bad case: cannot even finish breakin
-    if Flag_Breakin == False: 
-        value_list_temp = list(Para_dict_i.values())
-        values = []
-        for value_list_temp_i in value_list_temp:
-            values.append(str(value_list_temp_i))
-        values.insert(0,str(Scan_i));
-        values.insert(1,DryOut);
-        values.extend([
-            str_exp_AGE_text,
-            str_exp_RPT_text,
-            "nan","nan",
-            "nan","nan", 
-            "nan","nan",
-            "nan","nan",
-            "nan",str_error_Breakin])
-        values = [values,]
-        print(str_error_Breakin)
-        print("Fail in {}".format(ModelTimer.time())) 
-        book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
-        sheet_name_xlsx =  str(Scan_i);
-        write_excel_xlsx(
-            BasicPath + Target+book_name_xlsx_seperate, 
-            sheet_name_xlsx, values)
-        
-        midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
-
-        return midc_merge,Sol_RPT,Sol_AGE
-    ##########################################################
-    ##############   Part-3: Post-prosessing    ##############
-    ##########################################################
-    # Newly add (220517): save plots, not just a single line in excel file:     
-    # Newly add (221114): make plotting as functions
-    # Niall_data = loadmat( 'Extracted_all_cell.mat'
+        particle_mesh = pb.MeshGenerator(
+            pb.Exponential1DSubMesh, 
+            submesh_params={"side": "right", "stretch": task_config.submesh_strech})
+        submesh_types["negative particle"] = particle_mesh
+        submesh_types["positive particle"] = particle_mesh 
+    Sim_0    = pb.Simulation(
+        task_config.Model_0,        experiment = task_config.Experiment_Breakin,
+        parameter_values = task_config.Para_0,
+        solver = pb.CasadiSolver(),
+        var_pts=var_pts,
+        submesh_types=submesh_types) #mode="safe"
+    task_config.Call_Breakin = RioCallback()
+    try:
+        task_config.Sol_0    = Sim_0.solve(calc_esoh=False,callbacks=task_config.Call_Breakin)
+    except (
+        pb.expression_tree.exceptions.ModelError,
+        pb.expression_tree.exceptions.SolverError
+        ) as e:
+        task_config.Sol_0 = "Model error or solver error"
     else:
-        if not os.path.exists(BasicPath + Target + str(Scan_i)):
-            os.mkdir(BasicPath + Target + str(Scan_i) );
-        dpi= 100;
-        # Update 230221 - Add model LLI, LAM manually 
-        my_dict_RPT['Throughput capacity [kA.h]'] = (
-            np.array(my_dict_RPT['Throughput capacity [A.h]'])/1e3).tolist()
-        my_dict_RPT['CDend SOH [%]'] = ((
-            np.array(my_dict_RPT["Discharge capacity [A.h]"])
-            /my_dict_RPT["Discharge capacity [A.h]"][0])*100).tolist()
-        my_dict_RPT["CDend LAM_ne [%]"] = ((1-
-            np.array(my_dict_RPT['CDend Negative electrode capacity [A.h]'])
-            /my_dict_RPT['CDend Negative electrode capacity [A.h]'][0])*100).tolist()
-        my_dict_RPT["CDend LAM_pe [%]"] = ((1-
-            np.array(my_dict_RPT['CDend Positive electrode capacity [A.h]'])
-            /my_dict_RPT['CDend Positive electrode capacity [A.h]'][0])*100).tolist()
-        my_dict_RPT["CDend LLI [%]"] = ((1-
-            np.array(my_dict_RPT["CDend Total lithium capacity in particles [A.h]"])
-            /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
-        if model_options.__contains__("SEI"):
-            my_dict_RPT["CDend LLI SEI [%]"] = ((
-                np.array(
-                    my_dict_RPT["CDend Loss of capacity to SEI [A.h]"]-
-                    my_dict_RPT["CDend Loss of capacity to SEI [A.h]"][0]
-                    )
-                /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
-        if model_options.__contains__("SEI on cracks"):
-            my_dict_RPT["CDend LLI SEI on cracks [%]"] = ((
-                np.array(
-                    my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"]-
-                    my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"][0]
-                    )
-                /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
-        if model_options.__contains__("lithium plating"):
-            my_dict_RPT["CDend LLI lithium plating [%]"] = ((
-                np.array(
-                    my_dict_RPT["CDend Loss of capacity to lithium plating [A.h]"]-
-                    my_dict_RPT["CDend Loss of capacity to lithium plating [A.h]"][0]
-                    )
-                /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
-  
-        ##########################################################
-        #########      3-1: Plot cycle,location, Dryout related 
-        Plot_Cyc_RPT_4(
-            my_dict_RPT,
-            Exp_Any_AllData,Temp_Cell_Exp, Plot_Exp ,  # =True or False,
-            Scan_i,Temper_i,model_options,BasicPath, Target,fs,dpi)
-        if len(my_dict_AGE["CDend Porosity"])>1:
-            Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi)
-        if DryOut == "On":
-            Plot_Dryout(Cyc_Update_Index,mdic_dry,ce_EC_0,Scan_i,BasicPath, Target,fs,dpi)
-        ##########################################################
-        #########      3-2: Save data as .mat 
-        my_dict_RPT["Cyc_Update_Index"] = Cyc_Update_Index
-        my_dict_RPT["SaveTimes"]    = SaveTimes
-        midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
-        savemat(BasicPath + Target+ str(Scan_i) + '/' + str(Scan_i)+ '-StructDara_for_Mat.mat',midc_merge)  
-        ##########################################################
-        #########      3-3: Save summary to excel 
-        values=Get_Values_Excel(
-            model_options,my_dict_RPT,mdic_dry,
-            DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
-            str_exp_RPT_text,
-            str_error_AGE_final,
-            str_error_RPT)
-        values = [values,]
-        book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
-        sheet_name_xlsx =  str(Scan_i);
-        write_excel_xlsx(
-            BasicPath + Target+book_name_xlsx_seperate, 
-            sheet_name_xlsx, values)
-        print("Succeed doing something in {}".format(ModelTimer.time()))
-        print('This is the end of No.', Scan_i, ' scan')
-        return midc_merge,Sol_RPT,Sol_AGE
+        pass
+    return task_config
 
+# ,Timelimit,check_interval, # task_configs
+def run_Breakin_round(configs,Timelimit,check_interval):
+    worker_pool = Pool(processes=len(configs))  
+    async_results = []
+    # submit jobs and start multiprosessing 
+    for config in configs:
+        async_result = worker_pool.apply_async(run_breakin_single, (config,))
+        async_results.append(async_result)
+    # stop submitting jobs
+    worker_pool.close()
+    # set time limit = Timelimit; check every check_interval period 
+    Timelimit_series = np.arange(check_interval,Timelimit+check_interval,check_interval)
+    for check in Timelimit_series:
+        time.sleep(check)
+        print(f"Checking at {check} second")
+        all_ready = all([async_result.ready() for async_result in async_results])
+        if all_ready:
+            break
+            
+    # either all finish, or timeout
+    configs = [] # clear configs
+    for async_result in async_results:
+        if async_result.ready():
+            task_result = async_result.get()
+            configs.append(task_result)
+        else:
+            print('Task timeout')
+    
+    # close the pool to release resources
+    worker_pool.terminate()
+    
+    return configs
 
+# really run the cases with both timeout and multiprocess enabled!
+Timelimit = int(60*20); # set timeout: unit: second
+check_interval = int(4*60) # check interval unit: second
+task_configs = run_Breakin_round(task_configs,Timelimit,check_interval)
 
 print("Reach end of the file")
