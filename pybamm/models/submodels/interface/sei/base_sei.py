@@ -204,9 +204,9 @@ class BaseModel(BaseInterface):
                 L_inner_0 = 0
                 L_outer_0 = 1
                 L_inner_crack_0 = 0
-                # Dividing by 10000 makes initial condition effectively zero
-                # without triggering division by zero errors
-                L_outer_crack_0 = 1 / 10000
+                L_outer_crack_0 = (
+                    phase_param.L_inner_crack_0 + phase_param.L_outer_crack_0
+                )
             else:
                 L_inner_0 = phase_param.L_inner_0
                 L_outer_0 = phase_param.L_outer_0
@@ -275,7 +275,7 @@ class BaseModel(BaseInterface):
             n_SEI_cr_av = pybamm.yz_average(n_SEI_cr_xav)
 
             # Calculate change in SEI cracks concentration
-            roughness_init = 2 * self.param.rho_cr + 1
+            roughness_init = 2 * self.domain_param.rho_cr + 1
             n_SEI_cr_init = (L_inner_crack_0 + L_outer_crack_0 / v_bar) * (
                 roughness_init - 1
             )
