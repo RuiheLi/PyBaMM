@@ -301,10 +301,14 @@ class BaseModel(pybamm.BaseBatteryModel):
             # For full cells, "sei on cracks" submodel must be set, even if it is zero
             if reaction_loc != "interface":
                 if (
-                    self.options["SEI"] in ["none", "constant"]
+                    self.options["SEI"] == "none"
                     or self.options["SEI on cracks"] == "false"
                 ):
                     submodel = pybamm.sei.NoSEI(
+                        self.param, self.options, phase, cracks=True
+                    )
+                elif self.options["SEI"] == "constant":
+                    submodel = pybamm.sei.ConstantSEI(
                         self.param, self.options, phase, cracks=True
                     )
                 else:
