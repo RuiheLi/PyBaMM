@@ -1338,8 +1338,8 @@ def get_parameter_values():
         "Inner SEI electron conductivity [S.m-1]": 8.95e-14,
         "Inner SEI lithium interstitial diffusivity [m2.s-1]": 1e-20,
         "Lithium interstitial reference concentration [mol.m-3]": 15.0,
-        "Initial inner SEI thickness [m]": 1.8398e-08,
-        "Initial outer SEI thickness [m]": 1.8398e-08,
+        "Initial inner SEI thickness [m]": 1.2362e-08,
+        "Initial outer SEI thickness [m]": 1.2362e-08,
         "EC initial concentration in electrolyte [mol.m-3]": 4541.0,
         "EC diffusivity [m2.s-1]": 2e-18,
         "SEI kinetic rate constant [m.s-1]": 1e-12,
@@ -1369,6 +1369,7 @@ def get_parameter_values():
         "Nominal cell capacity [A.h]": 5.0,
         "Typical current [A]": 5.0,
         "Current function [A]": 5.0,
+        "Contact resistance [Ohm]": 0.013,
         # negative electrode
         "Negative electrode conductivity [S.m-1]": 215.0,
         "Maximum concentration in negative electrode [mol.m-3]": 32544.0,
