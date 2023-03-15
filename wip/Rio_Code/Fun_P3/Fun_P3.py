@@ -325,7 +325,7 @@ def electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019_Con(c_e,c_EC, T):
             -3.96e-5,
         ]
     )
-    c_e_constant = 3000
+    c_e_constant = 4000
     t0plus = (
         (c_e <= c_e_constant) * electrolyte_transference_number_base_Landesfeind2019(c_e,c_EC, T, coeffs)
         + 
@@ -345,7 +345,7 @@ def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
     return electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
 def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019_Con(c_e,c_EC, T):
     coeffs = np.array([1.01e3, 1.01, -1.56e3, -4.87e2])
-    c_e_constant = 3000
+    c_e_constant = 4000
     diff_f = (
         (c_e <= c_e_constant) * electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
         +
@@ -359,7 +359,7 @@ def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019(c_e,c_EC, T):
     return electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
 def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019_Con(c_e,c_EC, T):
     coeffs = np.array([5.21e-1, 2.28e2, -1.06, 3.53e-1, -3.59e-3, 1.48e-3])
-    c_e_constant = 3000
+    c_e_constant = 4000
     sigma = (
         (c_e <= c_e_constant) * electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
         +
@@ -369,7 +369,7 @@ def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019_Con(c_e,c_EC, T):
 
 def electrolyte_diffusivity_EC_DMC_1_1_Landesfeind2019_Con(c_e, c_EC,T):
     coeffs = np.array([1.47e3, 1.33, -1.69e3, -5.63e2])
-    c_e_constant = 3000
+    c_e_constant = 4000
     diff_f = (
         (c_e <= c_e_constant) * electrolyte_diffusivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
         +
@@ -387,7 +387,7 @@ def electrolyte_conductivity_EC_DMC_1_1_Landesfeind2019(c_e,c_EC, T):
 
 def electrolyte_conductivity_EC_DMC_1_1_Landesfeind2019_Con(c_e,c_EC, T):
     coeffs = np.array([7.98e-1, 2.28e2, -1.22, 5.09e-1, -4e-3, 3.79e-3])
-    c_e_constant = 3000
+    c_e_constant = 4000
     sigma = (
         (c_e <= c_e_constant) * electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
         +
@@ -430,7 +430,7 @@ def electrolyte_transference_number_EC_DMC_1_1_Landesfeind2019_Con(c_e,c_EC, T):
             3.07e-5,
         ]
     )
-    c_e_constant = 3000
+    c_e_constant = 4000
     t0plus = (
         (c_e <= c_e_constant) * electrolyte_transference_number_base_Landesfeind2019(c_e,c_EC, T, coeffs)
         + 
@@ -665,6 +665,103 @@ def electrolyte_conductivity_Ding2001(c_e, c_EC,  T):
     kai_final = (kai>0) * kai  + (kai<=0) * 0
 
     return kai_final / 10
+
+# add Ruihe Li update 230315
+def dLJP_One_Specie_dce_Jung2023(ce,co,T): # co means c_EC here
+    # Eq. (13):
+    R = 8.31446261815324;  F = 96485.3321
+    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
+    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
+    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
+    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+
+    aln = 1.390; a0 = 1.158; a1 = -8.955; a2 = 164.7
+    ddelta_U_dce = R*T/F*(
+        aln / ce + a0 + a1/c_tot  + 2*a2*ce/c_tot**2
+    )
+    return ddelta_U_dce
+
+def dLJP_Two_Species_dco_Jung2023(ce,co,T): # co means c_EC here
+    # T = 298.15;     # need to be a variable, unit: K
+    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
+    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
+    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
+    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+    yo = co/c_tot;   ye = ce/c_tot;
+    # constant first
+    R = 8.31446261815324; F = 96485.3321
+    bln = 3.024; b0 = 8.233; b1 = -88.12; b2 = 477.9;
+    p = 32.2;     q = -37.99;   r = -44.80
+    # Eq. (14):
+    delta_U_1to0 = R*T/F*(
+        7.167 - 43.16*ye**0.5 + 185.4*ye - 402.4*ye**1.5 
+        + 236.9*ye**2 + 253.7*ye**2.5 - 408.1*ye**3 
+        + 2509*ye**3.5 - 2886*ye**4.5 + 1.174*np.log(ye) 
+    )
+    # Eq. (18):
+    delta_U_0to1 = R*T/F*(
+        bln*np.log(ye) + b0 + b1*ye + b2*ye**2
+    )
+    # Eq. (23):
+    ddelta_U_ex_dco = R*T/(F*c_tot**3) * (
+        (c_tot-2*co-2*ce) * (p*c_tot + q*co + r*(c_tot-co-2*ce)) 
+        + 
+        (q-r) * (co*c_tot-co**2-2*ce*co)
+    )
+    # Eq. (21):
+    dLJP_dco = (
+        - delta_U_1to0 / (c_tot - 2*ce) 
+        + delta_U_0to1 / (c_tot - 2*ce)
+        + ddelta_U_ex_dco
+    )
+    return dLJP_dco   # units: V
+def dLJP_Two_Species_dce_Jung2023(ce,co,T):
+    # T = 298.15;     # need to be a variable, unit: K
+    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
+    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
+    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
+    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+    yo = co/c_tot;   ye = ce/c_tot;
+    # constant first
+    R = 8.31446261815324; F = 96485.3321
+    bln = 3.024; b0 = 8.233; b1 = -88.12; b2 = 477.9;
+    p = 32.2;     q = -37.99;   r = -44.80
+    # Eq. (14):
+    delta_U_1to0 = R*T/F*(
+        7.167 - 43.16*ye**0.5 + 185.4*ye - 402.4*ye**1.5 
+        + 236.9*ye**2 + 253.7*ye**2.5 - 408.1*ye**3 
+        + 2509*ye**3.5 - 2886*ye**4.5 + 1.174*np.log(ye) 
+    )
+    # Eq. (18):
+    delta_U_0to1 = R*T/F*(
+        bln*np.log(ye) + b0 + b1*ye + b2*ye**2
+    )
+    # Eq. (24):
+    ddelta_U_ex_dce = R*T/(F*c_tot**3) * (
+        -2*co * (p*c_tot + q*co + r*(c_tot-co-2*ce)) 
+        + 
+        -2*r  * (co*c_tot-co**2-2*ce*co)
+    )
+    # Eq. (25):
+    ddelta_U_1to0_dce = R*T/F*(
+        - 43.16*0.5*ye**(-0.5) + 185.4/c_tot - 402.4*1.5*ye**0.5 
+        + 236.9*2*ye + 253.7*2.5*ye**1.5 - 408.1*3*ye**2 
+        + 2509*3.5*ye**2.5 - 2886*4.5*ye**3.5 + 1.174/ce 
+    )
+    # Eq. (26):
+    ddelta_U_0to1_dce = R*T/F*(
+        bln/ce + b1/c_tot + 2*b2*ce/c_tot**2
+    )
+    # Eq. (22):
+    dLJP_dce = (
+        - 2*co/(c_tot-2*ce)**2 * delta_U_1to0 
+        + (c_tot-2*ce-co)/(c_tot-2*ce) * ddelta_U_1to0_dce
+        + 2*co/(c_tot-2*ce)**2 * delta_U_0to1
+        + co/(c_tot-2*ce)*ddelta_U_0to1_dce
+        + ddelta_U_ex_dce
+    )
+    return dLJP_dce   # units: V
+
 
 # DEFINE my callback:
 class RioCallback(pybamm.callbacks.Callback):
@@ -1299,6 +1396,10 @@ def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para,var_pts):
 def Scan_Crate(Rate_Dis_All,Rate_Cha_All,model,para,str_model,str_para,var_pts):   
     Case_Dict = {}
     MyDict_All =[]; Cap_Dis_All = []  ; Cap_Cha_All = []  
+    if str_model == "Model_DD":
+        para.update({"Measured dLJP_dce":dLJP_Two_Species_dce_Jung2023})
+    else: # one species only
+        para.update({"Measured dLJP_dce":dLJP_One_Specie_dce_Jung2023})
     # scan C-rate
     for Rate_Dis in Rate_Dis_All:
         for Rate_Cha in Rate_Cha_All:

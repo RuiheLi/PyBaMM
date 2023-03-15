@@ -461,6 +461,8 @@ def fun_TDF_EC5(c_e, c_EC , T):
         +  (c_EC < 0 ) * 5
     )
     return TDF_EC
+
+#### Use measured LJP
 # add Ruihe Li update 230201
 def dLJP_dcEC_Nyman_2011(c_e, c_EC , T):
     dLJP_dcEC = -5.394e-6 - 3.616e-2 / c_EC
@@ -468,6 +470,103 @@ def dLJP_dcEC_Nyman_2011(c_e, c_EC , T):
 def dLJP_dce_Nyman_2011(c_e, c_EC , T):
     dLJP_dce = 5.326e-5 + 2.47e-2 / c_e
     return dLJP_dce
+
+# add Ruihe Li update 230315
+def dLJP_One_Specie_dce_Jung2023(ce,co,T): # co means c_EC here
+    # Eq. (13):
+    R = 8.31446261815324;  F = 96485.3321
+    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
+    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
+    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
+    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+
+    aln = 1.390; a0 = 1.158; a1 = -8.955; a2 = 164.7
+    ddelta_U_dce = R*T/F*(
+        aln / ce + a0 + a1/c_tot  + 2*a2*ce/c_tot**2
+    )
+    return ddelta_U_dce
+
+def dLJP_Two_Species_dco_Jung2023(ce,co,T): # co means c_EC here
+    # T = 298.15;     # need to be a variable, unit: K
+    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
+    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
+    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
+    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+    yo = co/c_tot;   ye = ce/c_tot;
+    # constant first
+    R = 8.31446261815324; F = 96485.3321
+    bln = 3.024; b0 = 8.233; b1 = -88.12; b2 = 477.9;
+    p = 32.2;     q = -37.99;   r = -44.80
+    # Eq. (14):
+    delta_U_1to0 = R*T/F*(
+        7.167 - 43.16*ye**0.5 + 185.4*ye - 402.4*ye**1.5 
+        + 236.9*ye**2 + 253.7*ye**2.5 - 408.1*ye**3 
+        + 2509*ye**3.5 - 2886*ye**4.5 + 1.174*np.log(ye) 
+    )
+    # Eq. (18):
+    delta_U_0to1 = R*T/F*(
+        bln*np.log(ye) + b0 + b1*ye + b2*ye**2
+    )
+    # Eq. (23):
+    ddelta_U_ex_dco = R*T/(F*c_tot**3) * (
+        (c_tot-2*co-2*ce) * (p*c_tot + q*co + r*(c_tot-co-2*ce)) 
+        + 
+        (q-r) * (co*c_tot-co**2-2*ce*co)
+    )
+    # Eq. (21):
+    dLJP_dco = (
+        - delta_U_1to0 / (c_tot - 2*ce) 
+        + delta_U_0to1 / (c_tot - 2*ce)
+        + ddelta_U_ex_dco
+    )
+    return dLJP_dco   # units: V
+def dLJP_Two_Species_dce_Jung2023(ce,co,T):
+    # T = 298.15;     # need to be a variable, unit: K
+    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
+    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
+    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
+    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+    yo = co/c_tot;   ye = ce/c_tot;
+    # constant first
+    R = 8.31446261815324; F = 96485.3321
+    bln = 3.024; b0 = 8.233; b1 = -88.12; b2 = 477.9;
+    p = 32.2;     q = -37.99;   r = -44.80
+    # Eq. (14):
+    delta_U_1to0 = R*T/F*(
+        7.167 - 43.16*ye**0.5 + 185.4*ye - 402.4*ye**1.5 
+        + 236.9*ye**2 + 253.7*ye**2.5 - 408.1*ye**3 
+        + 2509*ye**3.5 - 2886*ye**4.5 + 1.174*np.log(ye) 
+    )
+    # Eq. (18):
+    delta_U_0to1 = R*T/F*(
+        bln*np.log(ye) + b0 + b1*ye + b2*ye**2
+    )
+    # Eq. (24):
+    ddelta_U_ex_dce = R*T/(F*c_tot**3) * (
+        -2*co * (p*c_tot + q*co + r*(c_tot-co-2*ce)) 
+        + 
+        -2*r  * (co*c_tot-co**2-2*ce*co)
+    )
+    # Eq. (25):
+    ddelta_U_1to0_dce = R*T/F*(
+        - 43.16*0.5*ye**(-0.5) + 185.4/c_tot - 402.4*1.5*ye**0.5 
+        + 236.9*2*ye + 253.7*2.5*ye**1.5 - 408.1*3*ye**2 
+        + 2509*3.5*ye**2.5 - 2886*4.5*ye**3.5 + 1.174/ce 
+    )
+    # Eq. (26):
+    ddelta_U_0to1_dce = R*T/F*(
+        bln/ce + b1/c_tot + 2*b2*ce/c_tot**2
+    )
+    # Eq. (22):
+    dLJP_dce = (
+        - 2*co/(c_tot-2*ce)**2 * delta_U_1to0 
+        + (c_tot-2*ce-co)/(c_tot-2*ce) * ddelta_U_1to0_dce
+        + 2*co/(c_tot-2*ce)**2 * delta_U_0to1
+        + co/(c_tot-2*ce)*ddelta_U_0to1_dce
+        + ddelta_U_ex_dce
+    )
+    return dLJP_dce   # units: V
+
 
 import numpy as np
 def electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs):
@@ -635,8 +734,8 @@ def get_parameter_values():
         "Cation transference number": t_0plus_constant ,   # from Andrew 
         "1 + dlnf/dlnc": 1.0,
         "TDF of EC": 5.0, 
-        "Measured dLJP_dcEC": dLJP_dcEC_Nyman_2011,
-        "Measured dLJP_dce": dLJP_dce_Nyman_2011,
+        "Measured dLJP_dcEC": dLJP_Two_Species_dco_Jung2023,
+        "Measured dLJP_dce": dLJP_Two_Species_dce_Jung2023,
         "Electrolyte diffusivity [m2.s-1]": electrolyte_diffusivity_Valoen2005Constant,
         "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Andrew2022,
         # or: electrolyte_conductivity_Valoen2005Constant_wEC_Haya 
