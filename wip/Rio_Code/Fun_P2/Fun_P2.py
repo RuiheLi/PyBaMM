@@ -509,14 +509,26 @@ def Run_Model_Base_On_Last_Solution(
         ) as e:
         Sol_new = "Model error or solver error"
     else:
-        # add 230221
-        Sol_new['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
-        """ for step in Sol_new.cycles[0].steps:
-            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
-            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1]
-        for step in Sol_new.cycles[-1].steps:
-            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
-            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1] """
+        # add 230221 - update 230317 try to access Throughput capacity more than once
+        i_try = 0
+        while i_try<3:
+            try:
+                getSth2 = Sol_new['Throughput capacity [A.h]'].entries[-1]
+            except:
+                i_try += 1
+                print(f"Fail to read Throughput capacity for the {i_try}th time")
+            else:
+                break
+        i_try = 0
+        while i_try<3:
+            try:
+                getSth = Sol['Throughput capacity [A.h]'].entries[-1]
+            except:
+                i_try += 1
+                print(f"Fail to read Throughput capacity for the {i_try}th time")
+            else:
+                break
+        Sol_new['Throughput capacity [A.h]'].entries += getSth
     # print("Solved this model in {}".format(ModelTimer.time()))
     Result_list = [Model_new, Sol_new,Call_Age]
     return Result_list
@@ -594,14 +606,26 @@ def Run_Model_Base_On_Last_Solution_RPT(
         ) as e:
         Sol_new = "Model error or solver error"
     else:
-        # add 230221
-        Sol_new['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
-        """ for step in Sol_new.cycles[0].steps:
-            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
-            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1]
-        for step in Sol_new.cycles[-1].steps:
-            step['Throughput capacity [A.h]'].entries += Sol['Throughput capacity [A.h]'].entries[-1]
-            step['Throughput energy [W.h]'].entries   += Sol['Throughput energy [W.h]'].entries[-1] """
+        # add 230221 - update 230317 try to access Throughput capacity more than once
+        i_try = 0
+        while i_try<3:
+            try:
+                getSth2 = Sol_new['Throughput capacity [A.h]'].entries[-1]
+            except:
+                i_try += 1
+                print(f"Fail to read Throughput capacity for the {i_try}th time")
+            else:
+                break
+        i_try = 0
+        while i_try<3:
+            try:
+                getSth = Sol['Throughput capacity [A.h]'].entries[-1]
+            except:
+                i_try += 1
+                print(f"Fail to read Throughput capacity for the {i_try}th time")
+            else:
+                break
+        Sol_new['Throughput capacity [A.h]'].entries += getSth
     # print("Solved this model in {}".format(ModelTimer.time()))
     Result_List_RPT = [Model_new, Sol_new,Call_RPT]
     return Result_List_RPT
@@ -1440,7 +1464,7 @@ def Get_0p1s_R0(sol_RPT,Index,cap_full):
     return np.mean(Res_0p1s),Res_0p1s,SOC
 
 def Run_P2_Opt_Timeout(
-    index_xlsx, Para_dict_i,   Path_pack ,  fs,
+    index_i, Para_dict_i,   Path_pack ,  fs,
     keys_all,   exp_text_list, exp_index_pack , 
     Exp_Any_AllData,Temp_Cell_Exp, 
     Plot_Exp,Timeout,Return_Sol,Check_Small_Time ): # true or false to plot,timeout,return,check small time
@@ -1463,7 +1487,7 @@ def Run_P2_Opt_Timeout(
     font = {'family' : 'DejaVu Sans','size'   : fs}
     mpl.rc('font', **font)
     
-    Scan_i = int(index_xlsx)
+    Scan_i = int(index_i)
     print('Start Now! Scan %d.' % Scan_i)  
     Sol_RPT = [];  Sol_AGE = [];
     # pb.set_logging_level('INFO') # show more information!
@@ -1574,6 +1598,7 @@ def Run_P2_Opt_Timeout(
             print(f"Scan {Scan_i}: Fail break-in cycle, need to exit the whole scan now due to {str_error_Breakin} but do not know how!")
         Flag_Breakin = False 
     else:
+        Cyc_Update_Index.append(cycle_count);
         if Check_Small_Time == True:    
             print(f"Scan {Scan_i}: Finish break-in cycle within {SmallTimer.time()}")
             SmallTimer.reset()
@@ -1591,7 +1616,7 @@ def Run_P2_Opt_Timeout(
         del Mean_Res_0p1s,Res_0p1s,SOC 
         cycle_count =0; 
         my_dict_RPT["Cycle_RPT"].append(cycle_count)
-        Cyc_Update_Index.append(cycle_count);
+        
         Flag_Breakin = True
         if Check_Small_Time == True:    
             print(f"Scan {Scan_i}: Finish post-process for break-in cycle within {SmallTimer.time()}")
@@ -1654,8 +1679,10 @@ def Run_P2_Opt_Timeout(
                     str_error_AGE_final = str_error_AGE
                     break
                 else:
+                    Cyc_Update_Index.append(cycle_count)
                     Para_0_Dry_old = Paraupdate;       Model_Dry_old = Model_Dry_i;      Sol_Dry_old = Sol_Dry_i;   
                     del Paraupdate,Model_Dry_i,Sol_Dry_i
+                    
                     if Check_Small_Time == True:    
                         print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} ageing cycles within {SmallTimer.time()}")
                         SmallTimer.reset()
@@ -1671,7 +1698,7 @@ def Run_P2_Opt_Timeout(
                         cycle_no, step_AGE_CD , step_AGE_CC , step_RPT_RE, step_AGE_CV   )    
                     cycle_count +=  Update_Cycles; 
                     my_dict_AGE["Cycle_AGE"].append(cycle_count)           
-                    Cyc_Update_Index.append(cycle_count)
+                    
                     
                     if DryOut == "On":
                         mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
@@ -1729,6 +1756,7 @@ def Run_P2_Opt_Timeout(
                     print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles, due to {str_error_RPT}")
                 break
             else:
+                Cyc_Update_Index.append(cycle_count)
                 if Check_Small_Time == True:    
                     print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} RPT cycles within {SmallTimer.time()}")
                     SmallTimer.reset()
@@ -1737,7 +1765,7 @@ def Run_P2_Opt_Timeout(
                 my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_Dry_i, 
                     0, step_RPT_CD , step_RPT_CC , step_RPT_RE, step_AGE_CV   )
                 my_dict_RPT["Cycle_RPT"].append(cycle_count)
-                Cyc_Update_Index.append(cycle_count)
+                
                 # update 230312 - Get GITT result -need to make sure index goes like this
                 cap_full = 5; Index = np.arange(2,26,1) # index = 2:25
                 Mean_Res_0p1s,Res_0p1s,SOC = Get_0p1s_R0(Sol_Dry_i,Index,cap_full)
