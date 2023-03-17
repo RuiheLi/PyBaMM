@@ -696,11 +696,11 @@ def dLJP_Two_Species_dco_Jung2023(ce,co,T): # co means c_EC here
     delta_U_1to0 = R*T/F*(
         7.167 - 43.16*ye**0.5 + 185.4*ye - 402.4*ye**1.5 
         + 236.9*ye**2 + 253.7*ye**2.5 - 408.1*ye**3 
-        + 2509*ye**3.5 - 2886*ye**4.5 + 1.174*np.log(ye) 
+        + 2509*ye**3.5 - 2886*ye**4.5 + 1.174*pybamm.log(ye) 
     )
     # Eq. (18):
     delta_U_0to1 = R*T/F*(
-        bln*np.log(ye) + b0 + b1*ye + b2*ye**2
+        bln*pybamm.log(ye) + b0 + b1*ye + b2*ye**2
     )
     # Eq. (23):
     ddelta_U_ex_dco = R*T/(F*c_tot**3) * (
@@ -730,11 +730,11 @@ def dLJP_Two_Species_dce_Jung2023(ce,co,T):
     delta_U_1to0 = R*T/F*(
         7.167 - 43.16*ye**0.5 + 185.4*ye - 402.4*ye**1.5 
         + 236.9*ye**2 + 253.7*ye**2.5 - 408.1*ye**3 
-        + 2509*ye**3.5 - 2886*ye**4.5 + 1.174*np.log(ye) 
+        + 2509*ye**3.5 - 2886*ye**4.5 + 1.174*pybamm.log(ye) 
     )
     # Eq. (18):
     delta_U_0to1 = R*T/F*(
-        bln*np.log(ye) + b0 + b1*ye + b2*ye**2
+        bln*pybamm.log(ye) + b0 + b1*ye + b2*ye**2
     )
     # Eq. (24):
     ddelta_U_ex_dce = R*T/(F*c_tot**3) * (
@@ -762,6 +762,12 @@ def dLJP_Two_Species_dce_Jung2023(ce,co,T):
     )
     return dLJP_dce   # units: V
 
+def dLJP_dcEC_Nyman_2011(c_e, c_EC , T):
+    dLJP_dcEC = -5.394e-6 - 3.616e-2 / c_EC
+    return dLJP_dcEC
+def dLJP_dce_Nyman_2011(c_e, c_EC , T):
+    dLJP_dce = 5.326e-5 + 2.47e-2 / c_e
+    return dLJP_dce
 
 # DEFINE my callback:
 class RioCallback(pybamm.callbacks.Callback):
