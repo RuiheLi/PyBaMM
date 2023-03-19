@@ -670,23 +670,19 @@ def electrolyte_conductivity_Ding2001(c_e, c_EC,  T):
 def dLJP_One_Specie_dce_Jung2023(ce,co,T): # co means c_EC here
     # Eq. (13):
     R = 8.31446261815324;  F = 96485.3321
-    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
-    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
-    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
-    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+    c_tot = 1.379*ce+1.113e4
 
     aln = 1.390; a0 = 1.158; a1 = -8.955; a2 = 164.7
     ddelta_U_dce = R*T/F*(
-        aln / ce + a0 + a1/c_tot  + 2*a2*ce/c_tot**2
+        aln / ce  + a1/c_tot  + 2*a2*ce/c_tot**2
     )
     return ddelta_U_dce
 
 def dLJP_Two_Species_dco_Jung2023(ce,co,T): # co means c_EC here
     # T = 298.15;     # need to be a variable, unit: K
-    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
-    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
-    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
-    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+    c_emc = 9778-0.5369*ce-0.6411*co
+    c_back_0 = (c_emc>0) * c_emc + (c_emc<=0) *0
+    c_tot = co+2*ce+c_back_0   # need to be an para.
     yo = co/c_tot;   ye = ce/c_tot;
     # constant first
     R = 8.31446261815324; F = 96485.3321
@@ -717,10 +713,9 @@ def dLJP_Two_Species_dco_Jung2023(ce,co,T): # co means c_EC here
     return dLJP_dco   # units: V
 def dLJP_Two_Species_dce_Jung2023(ce,co,T):
     # T = 298.15;     # need to be a variable, unit: K
-    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
-    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
-    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
-    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+    c_emc = 9778-0.5369*ce-0.6411*co
+    c_back_0 = (c_emc>0) * c_emc + (c_emc<=0) *0
+    c_tot = co+2*ce+c_back_0   # need to be an para.
     yo = co/c_tot;   ye = ce/c_tot;
     # constant first
     R = 8.31446261815324; F = 96485.3321

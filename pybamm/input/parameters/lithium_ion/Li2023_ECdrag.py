@@ -472,26 +472,32 @@ def dLJP_dce_Nyman_2011(c_e, c_EC , T):
     return dLJP_dce
 
 # add Ruihe Li update 230315
+def Fun_c_EMC(c_e, c_EC , T):
+    c_emc = 9778-0.5369*c_e-0.6411*c_EC
+    c_emc_out = (c_emc>0) * c_emc + (c_emc<=0) *0
+    return c_emc_out
+def Fun_c_tot(c_e, c_EC):
+    c_emc = 9778-0.5369*c_e-0.6411*c_EC
+    c_emc_out = (c_emc>0) * c_emc + (c_emc<=0) *0
+    c_tot = c_emc_out + 2*c_e + c_EC
+    return c_tot
+
 def dLJP_One_Specie_dce_Jung2023(ce,co,T): # co means c_EC here
     # Eq. (13):
     R = 8.31446261815324;  F = 96485.3321
-    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
-    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
-    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
-    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+    c_tot = 1.379*ce+1.113e4
 
     aln = 1.390; a0 = 1.158; a1 = -8.955; a2 = 164.7
     ddelta_U_dce = R*T/F*(
-        aln / ce + a0 + a1/c_tot  + 2*a2*ce/c_tot**2
+        aln / ce +  a1/c_tot  + 2*a2*ce/c_tot**2
     )
     return ddelta_U_dce
 
 def dLJP_Two_Species_dco_Jung2023(ce,co,T): # co means c_EC here
     # T = 298.15;     # need to be a variable, unit: K
-    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
-    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
-    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
-    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+    c_emc = 9778-0.5369*ce-0.6411*co
+    c_back_0 = (c_emc>0) * c_emc + (c_emc<=0) *0
+    c_tot = co+2*ce+c_back_0   # need to be an para.
     yo = co/c_tot;   ye = ce/c_tot;
     # constant first
     R = 8.31446261815324; F = 96485.3321
@@ -522,10 +528,9 @@ def dLJP_Two_Species_dco_Jung2023(ce,co,T): # co means c_EC here
     return dLJP_dco   # units: V
 def dLJP_Two_Species_dce_Jung2023(ce,co,T):
     # T = 298.15;     # need to be a variable, unit: K
-    c_EC_0 = pybamm.Parameter("EC initial concentration in electrolyte [mol.m-3]")
-    c_e_0 = pybamm.Parameter("Initial concentration in electrolyte [mol.m-3]")
-    c_back_0 = pybamm.Parameter("Background solvent concentration [mol.m-3]")
-    c_tot = c_EC_0+c_e_0+c_back_0   # need to be an para.
+    c_emc = 9778-0.5369*ce-0.6411*co
+    c_back_0 = (c_emc>0) * c_emc + (c_emc<=0) *0
+    c_tot = co+2*ce+c_back_0   # need to be an para.
     yo = co/c_tot;   ye = ce/c_tot;
     # constant first
     R = 8.31446261815324; F = 96485.3321
@@ -745,9 +750,10 @@ def get_parameter_values():
         # 3500 and 7000 (EC:EMC=3:7); 6250 and 5300 (EC:EMC=1:1); 9300 and 3250 (EC:EMC=7:3)
         "EC transference number": EC_transference_number,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
         "EC transference number zero": 0.7  , # from Andrew": 
-        "EC initial concentration in electrolyte [mol.m-3]": 6250  ,
-        "Typical EC concentration [mol.m-3]": 6250, 
-        "Background solvent concentration [mol.m-3]": 5300,  # should from Andrew, add temperoaliy
+        "EC initial concentration in electrolyte [mol.m-3]": 3500  ,
+        "Typical EC concentration [mol.m-3]": 3500, 
+        #"Background solvent concentration [mol.m-3]": Fun_c_EMC,  # should from Andrew, add temperoaliy
+        "Typical total concentration [mol.m-3]":12482.2,
         "EC Lithium ion cross diffusivity [m2.s-1]": Dimensional_EC_Lithium_ion_cross_diffusivity,      # from Andrew
         "Typical EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-12,
         "EC diffusivity in electrolyte [m2.s-1]": EC_diffusivity_5E_10,     #from Andrew

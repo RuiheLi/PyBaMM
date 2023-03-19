@@ -171,11 +171,20 @@ class LithiumIonParameters(BaseParameters):
             "Li partial molar volume [m3.mol-1]")
         self.Vmolar_CH2OCO2Li2 = pybamm.Parameter(
             "CH2OCO2Li2 partial molar volume [m3.mol-1]")
+        self.ce_tot_typ = pybamm.Parameter("Typical total concentration [mol.m-3]") 
         # Total electrolyte concentration [mol.m-3] - just for double diffusion
         # update 221208: Add background solvent concentration now!
-        self.c_0_back = pybamm.Parameter("Background solvent concentration [mol.m-3]") 
-        self.ce_tot = self.c_e_typ *2 + self.c_ec_typ + self.c_0_back
-
+        #self.c_0_back = pybamm.Parameter("Background solvent concentration [mol.m-3]") 
+        # self.ce_tot = self.c_e_typ *2 + self.c_ec_typ + self.c_0_back
+    # update 230318: change background solvent concentration to be a function
+    """ def c_0_back(self, c_e, c_EC , T):
+        #Dimensional EC diffusivity in electrolyte
+        inputs = {
+            "Electrolyte concentration [mol.m-3]": c_e, 
+            "EC concentration [mol.m-3]": c_EC, 
+            "Temperature [K]": T}
+        return pybamm.FunctionParameter("Background solvent concentration [mol.m-3]", inputs)
+     """
     def D_ec_dim(self, c_e, c_EC , T):
         """Dimensional EC diffusivity in electrolyte"""
         inputs = {
@@ -311,8 +320,8 @@ class LithiumIonParameters(BaseParameters):
         self.gamma_e_ec_Rio = self.c_ec_typ / self.c_e_typ
         self.tau_cross_Rio = self.L_x *  self.L_x / self.D_ec_Li_cross_typ
         self.tau_ec_Rio = self.L_x *  self.L_x / self.D_ec_typ
-        self.EC_ratio_Rio = self.c_ec_typ / self.ce_tot
-        self.e_ratio_Rio = self.c_e_typ / self.ce_tot  
+        self.EC_ratio_Rio = self.c_ec_typ / self.ce_tot_typ
+        self.e_ratio_Rio = self.c_e_typ / self.ce_tot_typ  
         # Move from ParticleLithiumIonParameters 
         self.c_ec_init = self.c_ec_0_dim / self.c_ec_typ   # Mark Ruihe Li add 
         # Mark Ruihe block end
