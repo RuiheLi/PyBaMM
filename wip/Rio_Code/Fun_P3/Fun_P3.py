@@ -1397,9 +1397,9 @@ def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para,var_pts):
 def Scan_Crate(Rate_Dis_All,Rate_Cha_All,model,para,str_model,str_para,var_pts):   
     Case_Dict = {}
     MyDict_All =[]; Cap_Dis_All = []  ; Cap_Cha_All = []  
-    if str_model == "Model_DD":
-        para.update({"Measured dLJP_dce":dLJP_Two_Species_dce_Jung2023})
-    else: # one species only
+    if str_model == "Model_DFN": # one species only
+        para.update({"Measured dLJP_dce":dLJP_One_Specie_dce_Jung2023})
+    else: # use default, which is two speices
         pass
         #para.update({"Measured dLJP_dce":dLJP_One_Specie_dce_Jung2023})
     # scan C-rate

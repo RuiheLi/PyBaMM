@@ -27,44 +27,42 @@ Para_dict_All = {
           "solvent diffusion": "double spatial consume w refill"   },
     ],
    # solvent diffusion parameters:
-   "EC initial concentration in electrolyte [mol.m-3]":[9300],
-   "Typical EC concentration [mol.m-3]":[9300,],
-   "Background solvent concentration [mol.m-3]":[3250],
+   "EC initial concentration in electrolyte [mol.m-3]":[3500],
+   "Typical EC concentration [mol.m-3]":[3500,],
+   #"Background solvent concentration [mol.m-3]":[3250],
    "EC Lithium ion cross diffusivity [m2.s-1]":[
         "Cross_diffusivity_1p5E_10","Cross_diffusivity_1p5E_12",],
    "EC diffusivity in electrolyte [m2.s-1]":[
         "EC_diffusivity_5E_5"],
+    "Measured dLJP_dce":["dLJP_One_Specie_dce_Jung2023"], # 
+    "Measured dLJP_dcEC": ["dLJP_Two_Species_dco_Jung2023",], # place holder only
 
    # DFN parameter
    "Upper voltage cut-off [V]":[4.21,],
    "Lower voltage cut-off [V]":[2.49,],
-   "Negative electrode diffusivity [m2.s-1]":[
-        "graphite_LGM50_diffusivity_ORegan2022",],
-   "Positive electrode diffusivity [m2.s-1]":[
-        "nmc_LGM50_diffusivity_ORegan2022",],
    # if want a function, add 'Func', 
    #    if want a constant, delete Func
    # note!!!: Constant will overwrite Func
    "Electrolyte conductivity [S.m-1]":[
-        "Cond_Andrew_ACS",
+        "electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019_Con",
         ],
     "Electrolyte diffusivity [m2.s-1]":[
-        "Diff_Andrew_ACS",],
+        "electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019_Con",],
     "EC transference number":[
         "EC_transference_number",],
     "Cation transference number":[
-        "t_0plus_Andrew_ACS",],
+        "electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019_Con",],
    # general SEI
    'SEI resistivity [Ohm.m]':[2E5,],
    "Ratio of lithium moles to SEI moles":[2,],
    "Inner SEI reaction proportion":[0.5,],
-   "Initial inner SEI thickness [m]":[2.5e-9,],
-   "Initial outer SEI thickness [m]":[2.5e-9,],
+   "Initial inner SEI thickness [m]":[1.2362e-08,],
+   "Initial outer SEI thickness [m]":[1.2362e-08,],
    # solvent-diffusion limited
-   'Outer SEI solvent diffusivity [m2.s-1]':[1.7e-22,],
+   #'Outer SEI solvent diffusivity [m2.s-1]':[1.7e-22,],
    #'Bulk solvent concentration [mol.m-3]':[4541.0,],
    # interstitial-diffusion limited
-   'Inner SEI lithium interstitial diffusivity [m2.s-1]':[5e-20,],    
+   'Inner SEI lithium interstitial diffusivity [m2.s-1]':[1e-19,],    
    'Lithium interstitial reference concentration [mol.m-3]':[15,],
    # ec-reaction limited
    'EC diffusivity in SEI [m2.s-1]':[5e-21,],
@@ -92,45 +90,43 @@ Para_dict_All = {
           "solvent diffusion": "double spatial consume w refill"   },
     ],
    # solvent diffusion parameters:
-   "EC initial concentration in electrolyte [mol.m-3]":[9300],
-   "Typical EC concentration [mol.m-3]":[9300,],
-   "Background solvent concentration [mol.m-3]":[3250],
+   "EC initial concentration in electrolyte [mol.m-3]":[3500],
+   "Typical EC concentration [mol.m-3]":[3500,],
+   #"Background solvent concentration [mol.m-3]":[3250],
    "EC Lithium ion cross diffusivity [m2.s-1]":[
         "Cross_diffusivity_1p5E_10","Cross_diffusivity_1p5E_12",
    ],
    "EC diffusivity in electrolyte [m2.s-1]":[
         "EC_diffusivity_5E_10"],
+    "Measured dLJP_dce":["dLJP_Two_Species_dce_Jung2023"], # 
+    "Measured dLJP_dcEC": ["dLJP_Two_Species_dco_Jung2023",], # place holder only
 
    # DFN parameter
    "Upper voltage cut-off [V]":[4.21,],
    "Lower voltage cut-off [V]":[2.49,],
-   "Negative electrode diffusivity [m2.s-1]":[
-        "graphite_LGM50_diffusivity_ORegan2022",],
-   "Positive electrode diffusivity [m2.s-1]":[
-        "nmc_LGM50_diffusivity_ORegan2022",],
    # if want a function, add 'Func', 
    #    if want a constant, delete Func
    # note!!!: Constant will overwrite Func
    "Electrolyte conductivity [S.m-1]":[
-        "Cond_Andrew_ACS",
+        "electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019_Con",
         ],
     "Electrolyte diffusivity [m2.s-1]":[
-        "Diff_Andrew_ACS",],
+        "electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019_Con",],
     "EC transference number":[
         "EC_transference_number",],
     "Cation transference number":[
-        "t_0plus_Andrew_ACS",],
+        "electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019_Con",],
    # general SEI
    'SEI resistivity [Ohm.m]':[2E5,],
    "Ratio of lithium moles to SEI moles":[2,],
    "Inner SEI reaction proportion":[0.5,],
-   "Initial inner SEI thickness [m]":[2.5e-9,],
-   "Initial outer SEI thickness [m]":[2.5e-9,],
+   "Initial inner SEI thickness [m]":[1.2362e-08,],
+   "Initial outer SEI thickness [m]":[1.2362e-08,],
    # solvent-diffusion limited
-   'Outer SEI solvent diffusivity [m2.s-1]':[1.7e-22,],
+   #'Outer SEI solvent diffusivity [m2.s-1]':[1.7e-22,],
    #'Bulk solvent concentration [mol.m-3]':[4541.0,],
    # interstitial-diffusion limited
-   'Inner SEI lithium interstitial diffusivity [m2.s-1]':[5e-20,],    
+   'Inner SEI lithium interstitial diffusivity [m2.s-1]':[1e-19,],    
    'Lithium interstitial reference concentration [mol.m-3]':[15,],
    # ec-reaction limited
    'EC diffusivity in SEI [m2.s-1]':[5e-21,],
@@ -158,41 +154,40 @@ Para_dict_All = {
           "solvent diffusion": "single no consume wo refill"   },
     ],
    # solvent diffusion parameters:
-   "EC initial concentration in electrolyte [mol.m-3]":[9300],
-   "Typical EC concentration [mol.m-3]":[9300,],
+   "EC initial concentration in electrolyte [mol.m-3]":[3500],
+   "Typical EC concentration [mol.m-3]":[3500,],
    "Background solvent concentration [mol.m-3]":[3250],
    "EC Lithium ion cross diffusivity [m2.s-1]":[
         "Cross_diffusivity_1p5E_10","Cross_diffusivity_1p5E_12",],
    "EC diffusivity in electrolyte [m2.s-1]":[
         "EC_diffusivity_5E_10"],
+    "Measured dLJP_dce":["dLJP_One_Specie_dce_Jung2023"], # 
+    "Measured dLJP_dcEC": ["dLJP_Two_Species_dco_Jung2023",], # place holder only
 
    # DFN parameter
    "Upper voltage cut-off [V]":[4.21,],
    "Lower voltage cut-off [V]":[2.49,],
-   "Negative electrode diffusivity [m2.s-1]":[
-        "graphite_LGM50_diffusivity_ORegan2022",],
-   "Positive electrode diffusivity [m2.s-1]":[
-        "nmc_LGM50_diffusivity_ORegan2022",],
+
    "Electrolyte conductivity [S.m-1]":[
-        "Cond_Andrew_ACS",
+        "electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019_Con",
         ],
     "Electrolyte diffusivity [m2.s-1]":[
-        "Diff_Andrew_ACS",],
+        "electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019_Con",],
     "EC transference number":[
         "EC_transference_number",],
     "Cation transference number":[
-        "t_0plus_Andrew_ACS",],
+        "electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019_Con",],
    # general SEI
    'SEI resistivity [Ohm.m]':[2E5,],
    "Ratio of lithium moles to SEI moles":[2,],
    "Inner SEI reaction proportion":[0.5,],
-   "Initial inner SEI thickness [m]":[2.5e-9,],
-   "Initial outer SEI thickness [m]":[2.5e-9,],
+   "Initial inner SEI thickness [m]":[1.2362e-08,],
+   "Initial outer SEI thickness [m]":[1.2362e-08,],
    # solvent-diffusion limited
-   'Outer SEI solvent diffusivity [m2.s-1]':[1.7e-22,],
+   #'Outer SEI solvent diffusivity [m2.s-1]':[1.7e-22,],
    #'Bulk solvent concentration [mol.m-3]':[4541.0,],
    # interstitial-diffusion limited
-   'Inner SEI lithium interstitial diffusivity [m2.s-1]':[5e-20,],    
+   'Inner SEI lithium interstitial diffusivity [m2.s-1]':[1e-19,],    
    'Lithium interstitial reference concentration [mol.m-3]':[15,],
    # ec-reaction limited
    'EC diffusivity in SEI [m2.s-1]':[5e-21,],
@@ -320,10 +315,10 @@ exp_index_pack = [
    step_AGE_CC,step_AGE_CV,];
 # Path and save to excel
 BasicPath=os.getcwd() # for HPC
-Target  = '/AndrewACS_int=5e_21_2000cyc/' # wip\Rio_Code\P3R10\.ipynb
+Target  = '/Landes_int=1e_19_2000cyc/' # wip\Rio_Code\P3R10\.ipynb
 if not os.path.exists(BasicPath + Target):
    os.mkdir(BasicPath + Target);
-book_name_xlsx = 'AndrewACS_int.xlsx';sheet_name_xlsx = 'Results';
+book_name_xlsx = 'Landes_int.xlsx';sheet_name_xlsx = 'Results';
 Path_pack = [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,];
 # Write the head for excel file:
 head_list = list(Para_dict_list[0].keys())
@@ -355,7 +350,7 @@ if __name__ == "__main__":
             keys_all_AGE,   Exp_AGE_List, exp_index_pack 
          )   ) 
          for Para_dict_i,index_i in zip(Para_dict_list,Index)]
-    result = [p.get() for p in processes] 
+    result = [p.get() for p in processes] # 测试一下不保存会怎么样？
 
 # Write all seperate excel files into a big file:
 for i in Index:
