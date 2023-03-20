@@ -1563,7 +1563,7 @@ def Run_P2_Opt_Timeout(
     Timeout_text = 'I timed out'
     ##########    2-1: Define model and run break-in cycle
     try:  
-        Timelimit = int(60*10)
+        Timelimit = int(3600*3)
         # the following turns on for HPC only!
         if Timeout == True:
             timeout_RPT = TimeoutFunc(
@@ -1598,7 +1598,6 @@ def Run_P2_Opt_Timeout(
             print(f"Scan {Scan_i}: Fail break-in cycle, need to exit the whole scan now due to {str_error_Breakin} but do not know how!")
         Flag_Breakin = False 
     else:
-        Cyc_Update_Index.append(cycle_count);
         if Check_Small_Time == True:    
             print(f"Scan {Scan_i}: Finish break-in cycle within {SmallTimer.time()}")
             SmallTimer.reset()
@@ -1616,7 +1615,7 @@ def Run_P2_Opt_Timeout(
         del Mean_Res_0p1s,Res_0p1s,SOC 
         cycle_count =0; 
         my_dict_RPT["Cycle_RPT"].append(cycle_count)
-        
+        Cyc_Update_Index.append(cycle_count);
         Flag_Breakin = True
         if Check_Small_Time == True:    
             print(f"Scan {Scan_i}: Finish post-process for break-in cycle within {SmallTimer.time()}")
@@ -1679,7 +1678,7 @@ def Run_P2_Opt_Timeout(
                     str_error_AGE_final = str_error_AGE
                     break
                 else:
-                    Cyc_Update_Index.append(cycle_count)
+                    
                     Para_0_Dry_old = Paraupdate;       Model_Dry_old = Model_Dry_i;      Sol_Dry_old = Sol_Dry_i;   
                     del Paraupdate,Model_Dry_i,Sol_Dry_i
                     
@@ -1698,7 +1697,7 @@ def Run_P2_Opt_Timeout(
                         cycle_no, step_AGE_CD , step_AGE_CC , step_RPT_RE, step_AGE_CV   )    
                     cycle_count +=  Update_Cycles; 
                     my_dict_AGE["Cycle_AGE"].append(cycle_count)           
-                    
+                    Cyc_Update_Index.append(cycle_count)
                     
                     if DryOut == "On":
                         mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
