@@ -1675,8 +1675,8 @@ def Run_P3_model(
         "x_n": 10,  # negative electrode
         "x_s": 5,  # separator 
         "x_p": 10,  # positive electrode
-        "r_n": 80,  # negative particle
-        "r_p": 40,  # positive particle
+        "r_n": 30,  # negative particle
+        "r_p": 20,  # positive particle
     }
 
     # initialize my_dict for outputs
