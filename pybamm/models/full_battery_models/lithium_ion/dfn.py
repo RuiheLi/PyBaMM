@@ -157,6 +157,10 @@ class DFN(BaseModel):
             self.submodels[
                 "solvent diffusion"
             ] = pybamm.solvent_diffusion.Double_SpatialConsume_wo_refill(self.param, self.options)
+        elif self.options["solvent diffusion"] == "double no consume wo refill":
+            self.submodels[
+                "solvent diffusion"
+            ] = pybamm.solvent_diffusion.Double_NoConsume_wo_refill(self.param, self.options)
         elif self.options["solvent diffusion"] == "single no consume wo refill":
             self.submodels[
                 "solvent diffusion"

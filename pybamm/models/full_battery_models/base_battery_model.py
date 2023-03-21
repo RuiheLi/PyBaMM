@@ -51,6 +51,7 @@ class BatteryModelOptions(pybamm.FuzzyDict):
                 "integrated".
             * "solvent diffusion" : str    # Mark Ruihe Li add
                 Can be "double spatial consume w refill", "double spatial consume wo refill", 
+                "double no consume wo refill", 
                 "single spatial consume w refill", "single spatial consume wo refill",  
                 or "single no consume wo refill", (default).
             * "external submodels" : list
@@ -214,7 +215,8 @@ class BatteryModelOptions(pybamm.FuzzyDict):
             ],
             "solvent diffusion": [
                 "single no consume wo refill","double spatial consume w refill", 
-                "double spatial consume wo refill","single spatial consume w refill", 
+                "double spatial consume wo refill","double no consume wo refill",
+                "single spatial consume w refill", 
                 "single spatial consume wo refill", 
                 ],  # Mark Ruihe Li add
             "hydrolysis": ["false", "true"],

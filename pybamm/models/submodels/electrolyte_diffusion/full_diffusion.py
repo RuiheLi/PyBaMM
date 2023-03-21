@@ -76,7 +76,7 @@ class Full(BaseElectrolyteDiffusion):
                 "current collector",)
           
         elif self.options["solvent diffusion"] in ["double spatial consume w refill",
-            "double spatial consume wo refill"]:
+            "double spatial consume wo refill","double no consume wo refill"]:
             N_cross_diffusion =  -   (
                 param.e_ratio_Rio * param.gamma_e_ec_Rio * 
                 param.tau_diffusion_e / param.tau_cross_Rio * 
@@ -116,6 +116,7 @@ class Full(BaseElectrolyteDiffusion):
         sum_s_j.print_name = "a"
         source_terms = sum_s_j / self.param.gamma_e
         if self.options["solvent diffusion"] in ["single no consume wo refill",
+            "double no consume wo refill",   # Ruihe add 230320 
             "double spatial consume wo refill","single spatial consume wo refill" ]:
             source_terms_refill = sign_2
         # Mark Ruihe update 221021 - ignore Li+ (de-)intercalation to 

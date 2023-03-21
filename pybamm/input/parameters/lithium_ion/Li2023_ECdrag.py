@@ -287,6 +287,13 @@ def EC_diffusivity_5E_10(c_e, c_EC , T):
         +  (c_EC < 0 ) * 0 
     )
     return D_ec_dim
+def EC_diffusivity_3E_10(c_e, c_EC , T):
+    # Ruihe add: set Heaviside(c_EC) * 3e-10 
+    D_ec_dim = (
+        (c_EC >= 0 ) * 3e-10 
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_dim
 def Dimensional_EC_Lithium_ion_cross_diffusivity(c_e, c_EC , T):
     # Ruihe add: set Heaviside(c_EC) * 1.5e-12
     D_ec_Li_cross_dim = (
