@@ -1,6 +1,7 @@
 from .base_solvent_diffusion import BaseSolventDiffusion
 from .Double_SpatialConsume_w_refill import Double_SpatialConsume_w_refill
 from .Double_SpatialConsume_wo_refill import Double_SpatialConsume_wo_refill
+from .Double_NoConsume_wo_refill import Double_NoConsume_wo_refill
 from .Single_SpatialConsume_w_refill import Single_SpatialConsume_w_refill
 from .Single_SpatialConsume_wo_refill import Single_SpatialConsume_wo_refill
 from .Single_NoConsume_wo_refill import Single_NoConsume_wo_refill
