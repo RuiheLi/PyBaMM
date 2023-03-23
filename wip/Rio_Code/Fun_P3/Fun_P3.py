@@ -116,6 +116,12 @@ def EC_diffusivity_5E_10(c_e, c_EC , T):
         +  (c_EC < 0 ) * 0 
     )
     return D_ec_dim
+def EC_diffusivity_3E_10(c_e, c_EC , T):
+    D_ec_dim = (
+        (c_EC >= 0 ) * 3e-10
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_dim
 def Cross_diffusivity_1p5E_12(c_e, c_EC , T):
     D_x_dim_1 = (
         (c_EC >= 0 ) * 1.5e-12 

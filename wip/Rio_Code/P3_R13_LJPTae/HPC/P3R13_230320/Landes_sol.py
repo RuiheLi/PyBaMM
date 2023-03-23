@@ -253,11 +253,13 @@ keys_tim_AGE = [
     "CD X-averaged EC concentration overpotential [V]", 
     "CD X-averaged battery electrolyte ohmic losses [V]",
     "CD X-averaged battery solid phase ohmic losses [V]",
+    "CD X-averaged SEI interfacial current density [A.m-2]",
     "CC X-averaged battery reaction overpotential [V]",
     "CC X-averaged battery concentration overpotential [V]",
     "CC X-averaged EC concentration overpotential [V]", 
     "CC X-averaged battery electrolyte ohmic losses [V]",
     "CC X-averaged battery solid phase ohmic losses [V]",
+    "CC X-averaged SEI interfacial current density [A.m-2]",
 ]
 keys_cyc_AGE = [   # default: CDend
     "Discharge capacity [A.h]",

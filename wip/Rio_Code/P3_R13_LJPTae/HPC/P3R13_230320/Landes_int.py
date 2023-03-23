@@ -238,7 +238,6 @@ keys_loc_AGE = [ # MAY WANT TO SELECT AGEING CYCLE later
     "CDend Electrolyte diffusivity [m2.s-1]",
     "CDend Electrolyte conductivity [S.m-1]",
     "CDend Negative electrode SEI interfacial current density [A.m-2]",
-
 ]
 keys_tim_AGE = [
     # default: CD
@@ -253,11 +252,13 @@ keys_tim_AGE = [
     "CD X-averaged EC concentration overpotential [V]", 
     "CD X-averaged battery electrolyte ohmic losses [V]",
     "CD X-averaged battery solid phase ohmic losses [V]",
+    "CD X-averaged SEI interfacial current density [A.m-2]",
     "CC X-averaged battery reaction overpotential [V]",
     "CC X-averaged battery concentration overpotential [V]",
     "CC X-averaged EC concentration overpotential [V]", 
     "CC X-averaged battery electrolyte ohmic losses [V]",
     "CC X-averaged battery solid phase ohmic losses [V]",
+    "CC X-averaged SEI interfacial current density [A.m-2]",
 ]
 keys_cyc_AGE = [   # default: CDend
     "Discharge capacity [A.h]",
