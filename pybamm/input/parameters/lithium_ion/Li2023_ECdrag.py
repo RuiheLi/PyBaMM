@@ -503,81 +503,13 @@ def dLJP_One_Specie_dce_Jung2023(ce,co,T): # co means c_EC here
 def dLJP_Two_Species_dco_Jung2023(x,y,T): # # ~~~~# x: ce; y: co 
     # co means c_EC here
     # T = 298.15;     # need to be a variable, unit: K
-    dLJP_dco = (
-        -7.50763911169966e-9*x*y
-        *(
-            1.28423548961347e-7*x**2
-            /(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            - 2.26403007269705*x/(1.4631*x + 0.3589*y + 9778) 
-            + 0.0776943592809339*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 0.211527003955003
-        )
-        /(
-            (-2*x/(1.4631*x + 0.3589*y + 9778) + 1)**2
-            *(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2
-            *(1.4631*x + 0.3589*y + 9778)
-        ) 
-        + 0.0256925791272929*y
-        *(
-            -3.36342232204145e-7*x
-            /(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            - 2.55635111753373e-8*y/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            + 6.81/(1.4631*x + 0.3589*y + 9778))
-        *(-2*x/(1.4631*x + 0.3589*y + 9778) - y/(1.4631*x + 0.3589*y + 9778) + 1)/(1.4631*x + 0.3589*y + 9778) 
-        + 0.0256925791272929*y*(
-            7.50763911169966e-9*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            + 3.75381955584983e-9*y/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            - 1/(1.4631*x + 0.3589*y + 9778))
-        *(89.6*x/(1.4631*x + 0.3589*y + 9778) + 6.81*y/(1.4631*x + 0.3589*y + 9778) - 12.6)
-        /(1.4631*x + 0.3589*y + 9778) 
-        - 9.64453059682514e-11*y*(-2*x/(1.4631*x + 0.3589*y + 9778) - y/(1.4631*x + 0.3589*y + 9778) + 1)
-        *(89.6*x/(1.4631*x + 0.3589*y + 9778) + 6.81*y/(1.4631*x + 0.3589*y + 9778) - 12.6)
-        /(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-        + y*(
-            -9.42753359014672e-12*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 
-            + 8.49876036192231e-9*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            - 2.91650605247992e-10*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2)
-        /((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778)) 
-        - 3.75381955584983e-9*y*(
-            1.28423548961347e-7*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            - 2.26403007269705*x/(1.4631*x + 0.3589*y + 9778) 
-            + 0.0776943592809339*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 0.211527003955003)
-        /((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2) 
-        + (-y/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778)) + 1)
-        *(
-            1.23500546345405e-15*x**3/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**4 
-            - 4.67332644382875e-12*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 
-            - 1.78809597265138e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            + 2.08128970279486e-9*(x/(1.4631*x + 0.3589*y + 9778))**0.5*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            + 5.82143866824365e-8*(x/(1.4631*x + 0.3589*y + 9778))**1.5*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            - 6.11704353103634e-8*(x/(1.4631*x + 0.3589*y + 9778))**2.5*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            - 8.46934454360199e-7*(x/(1.4631*x + 0.3589*y + 9778))**3.5*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            + 1.25253518860968e-6*(x/(1.4631*x + 0.3589*y + 9778))**4.5*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-            - 1.13226789206727e-10*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2) 
-        + (
-            7.50763911169966e-9*x*y/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)**2*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2*(1.4631*x + 0.3589*y + 9778)) 
-            + 3.75381955584983e-9*y/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2) - 1/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)
-            *(1.4631*x + 0.3589*y + 9778))
-        )
-        *(-1.12156435605589e-11*x**3/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 
-        + 6.36608887820528e-8*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 4.76340417020011*x
-        /(1.4631*x + 0.3589*y + 9778) 
-        - 1.10889171513396*(x/(1.4631*x + 0.3589*y + 9778))**0.5 - 10.3386938408227*(x/(1.4631*x + 0.3589*y + 9778))**1.5 
-        + 6.51820732459422*(x/(1.4631*x + 0.3589*y + 9778))**2.5 + 64.462681030378*(x/(1.4631*x + 0.3589*y + 9778))**3.5 
-        - 74.1487833613674*(x/(1.4631*x + 0.3589*y + 9778))**4.5 + 0.0301630878954419*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) 
-        + 0.184138714605309) 
-        + 0.0256925791272929*(-2*x/(1.4631*x + 0.3589*y + 9778) - y/(1.4631*x + 0.3589*y + 9778) + 1)*(89.6*x/(1.4631*x + 0.3589*y + 9778) 
-        + 6.81*y/(1.4631*x + 0.3589*y + 9778) - 12.6)/(1.4631*x + 0.3589*y + 9778) + (1.28423548961347e-7*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 
-        - 2.26403007269705*x/(1.4631*x + 0.3589*y + 9778) + 0.0776943592809339*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 0.211527003955003)
-        /((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778))
-    )
+    dLJP_dco = -6.46958282530615e-13*T*x*y*(4.99846855876465e-6*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 88.12*x/(1.4631*x + 0.3589*y + 9778) + 3.024*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 8.233)/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)**2*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2*(1.4631*x + 0.3589*y + 9778)) + 8.61733326422705e-5*T*y*(-3.36342232204145e-7*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 2.55635111753373e-8*y/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 6.81/(1.4631*x + 0.3589*y + 9778))*(-2*x/(1.4631*x + 0.3589*y + 9778) - y/(1.4631*x + 0.3589*y + 9778) + 1)/(1.4631*x + 0.3589*y + 9778) + 8.61733326422705e-5*T*y*(7.50763911169966e-9*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 3.75381955584983e-9*y/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 1/(1.4631*x + 0.3589*y + 9778))*(89.6*x/(1.4631*x + 0.3589*y + 9778) + 6.81*y/(1.4631*x + 0.3589*y + 9778) - 12.6)/(1.4631*x + 0.3589*y + 9778) - 3.23479141265307e-13*T*y*(-2*x/(1.4631*x + 0.3589*y + 9778) - y/(1.4631*x + 0.3589*y + 9778) + 1)*(89.6*x/(1.4631*x + 0.3589*y + 9778) + 6.81*y/(1.4631*x + 0.3589*y + 9778) - 12.6)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 8.61733326422705e-5*T*y*(-3.6693605353664e-10*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 + 3.30786579261487e-7*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 1.13515503368899e-8*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2)/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778)) - 3.23479141265307e-13*T*y*(4.99846855876465e-6*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 88.12*x/(1.4631*x + 0.3589*y + 9778) + 3.024*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 8.233)/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2) + 8.61733326422705e-5*T*(-y/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778)) + 1)*(4.80685670883901e-14*x**3/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**4 - 1.8189401775022e-10*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 - 6.95958145654558e-7*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 8.10074260152393e-8*(x/(1.4631*x + 0.3589*y + 9778))**0.5*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 2.26580548391096e-6*(x/(1.4631*x + 0.3589*y + 9778))**1.5*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 2.38086005329775e-6*(x/(1.4631*x + 0.3589*y + 9778))**2.5*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 3.29641664296953e-5*(x/(1.4631*x + 0.3589*y + 9778))**3.5*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 4.87508545718217e-5*(x/(1.4631*x + 0.3589*y + 9778))**4.5*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 4.4069841585677e-9*(1.4631*x + 0.3589*y + 9778)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2) + 8.61733326422705e-5*T*(7.50763911169966e-9*x*y/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)**2*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2*(1.4631*x + 0.3589*y + 9778)) + 3.75381955584983e-9*y/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2) - 1/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778)))*(-4.36532412919363e-10*x**3/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 + 2.47779284697917e-6*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 185.4*x/(1.4631*x + 0.3589*y + 9778) - 43.16*(x/(1.4631*x + 0.3589*y + 9778))**0.5 - 402.4*(x/(1.4631*x + 0.3589*y + 9778))**1.5 + 253.7*(x/(1.4631*x + 0.3589*y + 9778))**2.5 + 2509*(x/(1.4631*x + 0.3589*y + 9778))**3.5 - 2886*(x/(1.4631*x + 0.3589*y + 9778))**4.5 + 1.174*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 7.167) + 8.61733326422705e-5*T*(-2*x/(1.4631*x + 0.3589*y + 9778) - y/(1.4631*x + 0.3589*y + 9778) + 1)*(89.6*x/(1.4631*x + 0.3589*y + 9778) + 6.81*y/(1.4631*x + 0.3589*y + 9778) - 12.6)/(1.4631*x + 0.3589*y + 9778) + 8.61733326422705e-5*T*(4.99846855876465e-6*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 88.12*x/(1.4631*x + 0.3589*y + 9778) + 3.024*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 8.233)/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778))
     return dLJP_dco  # units: V
+
 def dLJP_Two_Species_dce_Jung2023(x,y,T):
     # x: ce; y: co 
-    dLJP_dce = (
-        y*(-3.06058143893223e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 2/(1.4631*x + 0.3589*y + 9778))
-        *(1.28423548961347e-7*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 2.26403007269705*x/(1.4631*x + 0.3589*y + 9778) + 0.0776943592809339*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 0.211527003955003)/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)**2*(1.4631*x + 0.3589*y + 9778)) + 0.0256925791272929*y*(-1.37114048464164e-6*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 1.04212797995642e-7*y/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 89.6/(1.4631*x + 0.3589*y + 9778))*(-2*x/(1.4631*x + 0.3589*y + 9778) - y/(1.4631*x + 0.3589*y + 9778) + 1)/(1.4631*x + 0.3589*y + 9778) + 0.0256925791272929*y*(3.06058143893223e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 1.53029071946611e-8*y/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 2/(1.4631*x + 0.3589*y + 9778))*(89.6*x/(1.4631*x + 0.3589*y + 9778) + 6.81*y/(1.4631*x + 0.3589*y + 9778) - 12.6)/(1.4631*x + 0.3589*y + 9778) - 3.93171153976452e-10*y*(-2*x/(1.4631*x + 0.3589*y + 9778) - y/(1.4631*x + 0.3589*y + 9778) + 1)*(89.6*x/(1.4631*x + 0.3589*y + 9778) + 6.81*y/(1.4631*x + 0.3589*y + 9778) - 12.6)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + y*(-3.84325004060843e-11*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 + 2.91493340011098e-7*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 2.26403007269705/(1.4631*x + 0.3589*y + 9778) + 0.0776943592809339*(-1.53029071946611e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 1/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x)/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778)) - 1.53029071946611e-8*y*(1.28423548961347e-7*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 2.26403007269705*x/(1.4631*x + 0.3589*y + 9778) + 0.0776943592809339*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 0.211527003955003)/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2) + (-y/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778)) + 1)*(5.0346516956802e-15*x**3/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**4 - 5.26983208181097e-11*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 + 5.44278456168714e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 4.76340417020011/(1.4631*x + 0.3589*y + 9778) - 1.10889171513396*(x/(1.4631*x + 0.3589*y + 9778))**0.5*(-7.65145359733057e-9*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 0.5/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x - 10.3386938408227*(x/(1.4631*x + 0.3589*y + 9778))**1.5*(-2.29543607919917e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 1.5/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x + 6.51820732459422*(x/(1.4631*x + 0.3589*y + 9778))**2.5*(-3.82572679866528e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 2.5/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x + 64.462681030378*(x/(1.4631*x + 0.3589*y + 9778))**3.5*(-5.3560175181314e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 3.5/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x - 74.1487833613674*(x/(1.4631*x + 0.3589*y + 9778))**4.5*(-6.88630823759751e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 4.5/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x + 0.0301630878954419*(-1.53029071946611e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 1/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x) + (-y*(-3.06058143893223e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 2/(1.4631*x + 0.3589*y + 9778))/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)**2*(1.4631*x + 0.3589*y + 9778)) + 1.53029071946611e-8*y/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2))*(-1.12156435605589e-11*x**3/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 + 6.36608887820528e-8*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 4.76340417020011*x/(1.4631*x + 0.3589*y + 9778) - 1.10889171513396*(x/(1.4631*x + 0.3589*y + 9778))**0.5 - 10.3386938408227*(x/(1.4631*x + 0.3589*y + 9778))**1.5 + 6.51820732459422*(x/(1.4631*x + 0.3589*y + 9778))**2.5 + 64.462681030378*(x/(1.4631*x + 0.3589*y + 9778))**3.5 - 74.1487833613674*(x/(1.4631*x + 0.3589*y + 9778))**4.5 + 0.0301630878954419*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 0.184138714605309)
-    )
-    return dLJP_dce  # units: V
+    dLJP_dce = 8.61733326422705e-5*T*y*(-3.06058143893223e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 2/(1.4631*x + 0.3589*y + 9778))*(4.99846855876465e-6*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 88.12*x/(1.4631*x + 0.3589*y + 9778) + 3.024*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 8.233)/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)**2*(1.4631*x + 0.3589*y + 9778)) + 8.61733326422705e-5*T*y*(-1.37114048464164e-6*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 1.04212797995642e-7*y/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 89.6/(1.4631*x + 0.3589*y + 9778))*(-2*x/(1.4631*x + 0.3589*y + 9778) - y/(1.4631*x + 0.3589*y + 9778) + 1)/(1.4631*x + 0.3589*y + 9778) + 8.61733326422705e-5*T*y*(3.06058143893223e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 1.53029071946611e-8*y/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 2/(1.4631*x + 0.3589*y + 9778))*(89.6*x/(1.4631*x + 0.3589*y + 9778) + 6.81*y/(1.4631*x + 0.3589*y + 9778) - 12.6)/(1.4631*x + 0.3589*y + 9778) - 1.31870251207933e-12*T*y*(-2*x/(1.4631*x + 0.3589*y + 9778) - y/(1.4631*x + 0.3589*y + 9778) + 1)*(89.6*x/(1.4631*x + 0.3589*y + 9778) + 6.81*y/(1.4631*x + 0.3589*y + 9778) - 12.6)/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 8.61733326422705e-5*T*y*(-1.49585996079537e-9*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 + 1.13454292995228e-5*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 88.12/(1.4631*x + 0.3589*y + 9778) + 3.024*(-1.53029071946611e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 1/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x)/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778)) - 1.31870251207933e-12*T*y*(4.99846855876465e-6*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 - 88.12*x/(1.4631*x + 0.3589*y + 9778) + 3.024*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 8.233)/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2) + 8.61733326422705e-5*T*(-y/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(1.4631*x + 0.3589*y + 9778)) + 1)*(1.95957426879419e-13*x**3/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**4 - 2.05111057776714e-9*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 + 2.11842670006817e-6*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 185.4/(1.4631*x + 0.3589*y + 9778) - 43.16*(x/(1.4631*x + 0.3589*y + 9778))**0.5*(-7.65145359733057e-9*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 0.5/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x - 402.4*(x/(1.4631*x + 0.3589*y + 9778))**1.5*(-2.29543607919917e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 1.5/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x + 253.7*(x/(1.4631*x + 0.3589*y + 9778))**2.5*(-3.82572679866528e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 2.5/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x + 2509*(x/(1.4631*x + 0.3589*y + 9778))**3.5*(-5.3560175181314e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 3.5/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x - 2886*(x/(1.4631*x + 0.3589*y + 9778))**4.5*(-6.88630823759751e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 4.5/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x + 1.174*(-1.53029071946611e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 1/(1.4631*x + 0.3589*y + 9778))*(1.4631*x + 0.3589*y + 9778)/x) + 8.61733326422705e-5*T*(-y*(-3.06058143893223e-8*x/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 2/(1.4631*x + 0.3589*y + 9778))/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)**2*(1.4631*x + 0.3589*y + 9778)) + 1.53029071946611e-8*y/((-2*x/(1.4631*x + 0.3589*y + 9778) + 1)*(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2))*(-4.36532412919363e-10*x**3/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**3 + 2.47779284697917e-6*x**2/(0.000149631826549397*x + 3.67048476170996e-5*y + 1)**2 + 185.4*x/(1.4631*x + 0.3589*y + 9778) - 43.16*(x/(1.4631*x + 0.3589*y + 9778))**0.5 - 402.4*(x/(1.4631*x + 0.3589*y + 9778))**1.5 + 253.7*(x/(1.4631*x + 0.3589*y + 9778))**2.5 + 2509*(x/(1.4631*x + 0.3589*y + 9778))**3.5 - 2886*(x/(1.4631*x + 0.3589*y + 9778))**4.5 + 1.174*pybamm.log(x/(1.4631*x + 0.3589*y + 9778)) + 7.167)
+    return dLJP_dce # units: V
 
 
 import numpy as np
@@ -611,6 +543,445 @@ def electrolyte_TDF_EMC_FEC_19_1_Landesfeind2019(c_e, c_EC , T):
         [3.22, -1.01e1, -1.58e-2, 6.12, 2.96e-2, 2.42e-5, -2.22e-1, -1.57e-2, 6.30e-6]
     )
     return electrolyte_TDF_base_Landesfeind2019(c_e,  c_EC ,T, coeffs)
+
+def nmc_LGM50_entropic_change_ORegan2022(sto, c_s_max):
+    """
+    LG M50 NMC 811 entropic change in open circuit potential (OCP) at a temperature of
+    298.15K as a function of the stochiometry. The fit is taken from [1].
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+       Electrode stochiometry
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Entropic change [V.K-1]
+    """
+    a1 = 0.04006
+    a2 = -0.06656
+    b1 = 0.2828
+    b2 = 0.8032
+    c1 = 0.0009855
+    c2 = 0.02179
+
+    dUdT = (
+        a1 * pybamm.exp(-((sto - b1) ** 2) / c1)
+        + a2 * pybamm.exp(-((sto - b2) ** 2) / c2)
+    ) / 1000
+    # fit in mV / K
+    return dUdT
+
+def graphite_LGM50_entropic_change_ORegan2022(sto, c_s_max):
+    """
+    LG M50 Graphite entropic change in open circuit potential (OCP) at a temperature of
+    298.15K as a function of the stochiometry. The fit is taken from [1].
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+       Electrode stochiometry
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Entropic change [V.K-1]
+    """
+
+    a0 = -0.1112
+    a1 = -0.09002 * 0  # fixed fit (see discussion O'Regan et al 2021)
+    a2 = 0.3561
+    b1 = 0.4955
+    b2 = 0.08309
+    c0 = 0.02914
+    c1 = 0.1122
+    c2 = 0.004616
+    d1 = 63.9
+
+    dUdT = (
+        a0 * sto
+        + c0
+        + a2 * pybamm.exp(-((sto - b2) ** 2) / c2)
+        + a1
+        * (pybamm.tanh(d1 * (sto - (b1 - c1))) - pybamm.tanh(d1 * (sto - (b1 + c1))))
+    ) / 1000  # fit in mV / K
+
+    return dUdT
+
+def separator_LGM50_heat_capacity_ORegan2022(T):
+    """
+    Wet separator specific heat capacity as a function of the temperature from [1].
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Specific heat capacity
+    """
+
+    # value for the dry porous separator (i.e. separator + air, and we neglect the air
+    # contribution to density)
+    cp_dry = 1.494e-3 * T**3 - 1.444 * T**2 + 475.5 * T - 5.13e4
+    rho_dry = 946
+    theta_dry = rho_dry * cp_dry
+
+    # value for the bulk electrolyte
+    rho_e = 1280
+    cp_e = 229
+    eps_e = pybamm.Parameter("Separator porosity")
+    theta_e = rho_e * cp_e
+
+    # value for the wet separator
+    theta_wet = theta_dry + theta_e * eps_e
+    rho_wet = rho_dry + rho_e * eps_e
+    cp_wet = theta_wet / rho_wet
+
+    return cp_wet
+def nmc_LGM50_heat_capacity_ORegan2022(T):
+
+    # value for the dry porous electrode (i.e. electrode + air, and we neglect the air
+    # contribution to density)
+    cp_dry = -8.414e-4 * T**3 + 0.7892 * T**2 - 241.3 * T + 2.508e4
+    rho_dry = 3270
+    theta_dry = rho_dry * cp_dry
+
+    # value for the bulk electrolyte
+    rho_e = 1280
+    cp_e = 229
+    eps_e = pybamm.Parameter("Positive electrode porosity")
+    theta_e = rho_e * cp_e
+
+    # value for the wet separator
+    theta_wet = theta_dry + theta_e * eps_e
+    rho_wet = rho_dry + rho_e * eps_e
+    cp_wet = theta_wet / rho_wet
+
+    return cp_wet
+def graphite_LGM50_heat_capacity_ORegan2022(T):
+    # value for the dry porous electrode (i.e. electrode + air, and we neglect the air
+    # contribution to density)
+    cp_dry = 4.932e-4 * T**3 - 0.491 * T**2 + 169.4 * T - 1.897e4
+    rho_dry = 1740
+    theta_dry = rho_dry * cp_dry
+
+    # value for the bulk electrolyte
+    rho_e = 1280
+    cp_e = 229
+    eps_e = pybamm.Parameter("Negative electrode porosity")
+    theta_e = rho_e * cp_e
+
+    # value for the wet separator
+    theta_wet = theta_dry + theta_e * eps_e
+    rho_wet = rho_dry + rho_e * eps_e
+    cp_wet = theta_wet / rho_wet
+
+    return cp_wet
+def aluminium_heat_capacity_CRC(T):
+    """
+    Aluminium specific heat capacity as a function of the temperature from [1].
+
+    References
+    ----------
+    .. [1] William M. Haynes (Ed.). "CRC handbook of chemistry and physics". CRC Press
+    (2014).
+
+    Parameters
+    ----------
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Specific heat capacity
+    """
+
+    cp = 4.503e-6 * T**3 - 6.256e-3 * T**2 + 3.281 * T + 355.7
+
+    return cp
+
+
+def copper_thermal_conductivity_CRC(T):
+    """
+    Copper thermal conductivity as a function of the temperature from [1].
+
+    References
+    ----------
+    .. [1] William M. Haynes (Ed.). "CRC handbook of chemistry and physics". CRC Press
+    (2014).
+
+    Parameters
+    ----------
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Thermal conductivity
+    """
+
+    lambda_th = -5.409e-7 * T**3 + 7.054e-4 * T**2 - 0.3727 * T + 463.6
+
+    return lambda_th
+
+def copper_thermal_conductivity_CRC(T):
+    """
+    Copper thermal conductivity as a function of the temperature from [1].
+
+    References
+    ----------
+    .. [1] William M. Haynes (Ed.). "CRC handbook of chemistry and physics". CRC Press
+    (2014).
+
+    Parameters
+    ----------
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Thermal conductivity
+    """
+
+    lambda_th = -5.409e-7 * T**3 + 7.054e-4 * T**2 - 0.3727 * T + 463.6
+
+    return lambda_th
+def graphite_LGM50_thermal_conductivity_ORegan2022(T):
+    """
+    Wet negative electrode thermal conductivity as a function of the temperature from
+    [1].
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Thermal conductivity
+    """
+
+    lambda_wet = -2.61e-4 * T**2 + 0.1726 * T - 24.49
+
+    return lambda_wet
+def nmc_LGM50_thermal_conductivity_ORegan2022(T):
+    """
+    Wet positive electrode thermal conductivity as a function of the temperature from
+    [1].
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Thermal conductivity
+    """
+
+    lambda_wet = 2.063e-5 * T**2 - 0.01127 * T + 2.331
+
+    return lambda_wet
+
+def copper_heat_capacity_CRC(T):
+    """
+    Copper specific heat capacity as a function of the temperature from [1].
+
+    References
+    ----------
+    .. [1] William M. Haynes (Ed.). "CRC handbook of chemistry and physics". CRC Press
+    (2014).
+
+    Parameters
+    ----------
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Specific heat capacity
+    """
+
+    cp = 1.445e-6 * T**3 - 1.946e-3 * T**2 + 0.9633 * T + 236
+
+    return cp
+def graphite_LGM50_diffusivity_ORegan2022(sto, T):
+    """
+    LG M50 Graphite diffusivity as a function of stochiometry, in this case the
+    diffusivity is taken to be a constant. The value is taken from [1].
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+       Electrode stochiometry
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Solid diffusivity
+    """
+
+    a0 = 11.17
+    a1 = -1.553
+    a2 = -6.136
+    a3 = -9.725
+    a4 = 1.85
+    b1 = 0.2031
+    b2 = 0.5375
+    b3 = 0.9144
+    b4 = 0.5953
+    c0 = -15.11
+    c1 = 0.0006091
+    c2 = 0.06438
+    c3 = 0.0578
+    c4 = 0.001356
+    d = 2092
+
+    D_ref = (
+        10
+        ** (
+            a0 * sto
+            + c0
+            + a1 * pybamm.exp(-((sto - b1) ** 2) / c1)
+            + a2 * pybamm.exp(-((sto - b2) ** 2) / c2)
+            + a3 * pybamm.exp(-((sto - b3) ** 2) / c3)
+            + a4 * pybamm.exp(-((sto - b4) ** 2) / c4)
+        )
+        * 3.0321  # correcting factor (see O'Regan et al 2021)
+    )
+
+    E_D_s = d * pybamm.constants.R
+    arrhenius = pybamm.exp(E_D_s / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    return D_ref * arrhenius
+def nmc_LGM50_electronic_conductivity_ORegan2022(T):
+    """
+    Positive electrode electronic conductivity as a function of the temperature from
+    [1].
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Thermal conductivity
+    """
+
+    E_r = 3.5e3
+    arrhenius = pybamm.exp(E_r / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    sigma = 0.8473 * arrhenius
+
+    return sigma
+def nmc_LGM50_diffusivity_ORegan2022(sto, T):
+    """
+    NMC diffusivity as a function of stoichiometry, in this case the
+    diffusivity is taken to be a constant. The value is taken from [1].
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+       Electrode stochiometry
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Solid diffusivity
+    """
+
+    a1 = -0.9231
+    a2 = -0.4066
+    a3 = -0.993
+    b1 = 0.3216
+    b2 = 0.4532
+    b3 = 0.8098
+    c0 = -13.96
+    c1 = 0.002534
+    c2 = 0.003926
+    c3 = 0.09924
+    d = 1449
+
+    D_ref = (
+        10
+        ** (
+            c0
+            + a1 * pybamm.exp(-((sto - b1) ** 2) / c1)
+            + a2 * pybamm.exp(-((sto - b2) ** 2) / c2)
+            + a3 * pybamm.exp(-((sto - b3) ** 2) / c3)
+        )
+        * 2.7  # correcting factor (see O'Regan et al 2021)
+    )
+
+    E_D_s = d * pybamm.constants.R
+    arrhenius = pybamm.exp(E_D_s / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    return D_ref * arrhenius
+
 # Mark Ruihe block end
 
 # Call dict via a function to avoid errors when editing in place
@@ -687,9 +1058,12 @@ def get_parameter_values():
         "Positive current collector conductivity [S.m-1]": 36914000.0,
         "Negative current collector density [kg.m-3]": 8960.0,
         "Positive current collector density [kg.m-3]": 2700.0,
-        "Negative current collector specific heat capacity [J.kg-1.K-1]": 385.0,
-        "Positive current collector specific heat capacity [J.kg-1.K-1]": 897.0,
-        "Negative current collector thermal conductivity [W.m-1.K-1]": 401.0,
+        "Negative current collector specific heat capacity [J.kg-1.K-1]"
+        "": copper_heat_capacity_CRC,
+        "Positive current collector specific heat capacity [J.kg-1.K-1]"
+        "": aluminium_heat_capacity_CRC,
+        "Negative current collector thermal conductivity [W.m-1.K-1]"
+        "": copper_thermal_conductivity_CRC,
         "Positive current collector thermal conductivity [W.m-1.K-1]": 237.0,
         "Nominal cell capacity [A.h]": 5.0,
         "Typical current [A]": 5.0,
@@ -697,49 +1071,58 @@ def get_parameter_values():
         # negative electrode
         "Negative electrode conductivity [S.m-1]": 215.0,
         "Maximum concentration in negative electrode [mol.m-3]": 33133.0,
-        "Negative electrode diffusivity [m2.s-1]": 3.3e-14,
+        "Negative electrode diffusivity [m2.s-1]"
+        "": graphite_LGM50_diffusivity_ORegan2022,
         "Negative electrode OCP [V]": graphite_LGM50_ocp_Chen2020,
         "Negative electrode porosity": 0.25,
         "Negative electrode active material volume fraction": 0.75,
         "Negative particle radius [m]": 5.86e-06,
         "Negative electrode Bruggeman coefficient (electrolyte)": 1.5,
-        "Negative electrode Bruggeman coefficient (electrode)": 1.5,
+        "Negative electrode Bruggeman coefficient (electrode)": 0.0, # Mark Ruihe, change from 1.5  
         "Negative electrode cation signed stoichiometry": -1.0,
         "Negative electrode electrons in reaction": 1.0,
         "Negative electrode charge transfer coefficient": 0.5,
         "Negative electrode double-layer capacity [F.m-2]": 0.2,
         "Negative electrode exchange-current density [A.m-2]"
-        "": graphite_LGM50_electrolyte_exchange_current_density_Chen2020,
-        "Negative electrode density [kg.m-3]": 1657.0,
-        "Negative electrode specific heat capacity [J.kg-1.K-1]": 700.0,
-        "Negative electrode thermal conductivity [W.m-1.K-1]": 1.7,
-        "Negative electrode OCP entropic change [V.K-1]": 0.0,
+        "": graphite_LGM50_electrolyte_exchange_current_density_Chen2020, # ask Simon
+        "Negative electrode density [kg.m-3]": 2060.0,
+        "Negative electrode specific heat capacity [J.kg-1.K-1]"
+        "": graphite_LGM50_heat_capacity_ORegan2022,
+        "Negative electrode thermal conductivity [W.m-1.K-1]"
+        "": graphite_LGM50_thermal_conductivity_ORegan2022,
+        "Negative electrode OCP entropic change [V.K-1]"
+        "": graphite_LGM50_entropic_change_ORegan2022,
         # positive electrode
-        "Positive electrode conductivity [S.m-1]": 0.18,
+        "Positive electrode conductivity [S.m-1]"
+        "": nmc_LGM50_electronic_conductivity_ORegan2022,
         "Maximum concentration in positive electrode [mol.m-3]": 63104.0,
-        "Positive electrode diffusivity [m2.s-1]": 4e-15,
+        "Positive electrode diffusivity [m2.s-1]": nmc_LGM50_diffusivity_ORegan2022,
         "Positive electrode OCP [V]": nmc_LGM50_ocp_Chen2020,
         "Positive electrode porosity": 0.335,
         "Positive electrode active material volume fraction": 0.665,
         "Positive particle radius [m]": 5.22e-06,
         "Positive electrode Bruggeman coefficient (electrolyte)": 1.5,
-        "Positive electrode Bruggeman coefficient (electrode)": 1.5,
+        "Positive electrode Bruggeman coefficient (electrode)": 0.0,  # Mark Ruihe, change from 1.5  
         "Positive electrode cation signed stoichiometry": -1.0,
         "Positive electrode electrons in reaction": 1.0,
         "Positive electrode charge transfer coefficient": 0.5,
         "Positive electrode double-layer capacity [F.m-2]": 0.2,
         "Positive electrode exchange-current density [A.m-2]"
-        "": nmc_LGM50_electrolyte_exchange_current_density_Chen2020,
-        "Positive electrode density [kg.m-3]": 3262.0,
-        "Positive electrode specific heat capacity [J.kg-1.K-1]": 700.0,
-        "Positive electrode thermal conductivity [W.m-1.K-1]": 2.1,
-        "Positive electrode OCP entropic change [V.K-1]": 0.0,
+        "": nmc_LGM50_electrolyte_exchange_current_density_Chen2020, # ask Simon
+        "Positive electrode density [kg.m-3]": 3699.0,
+        "Positive electrode specific heat capacity [J.kg-1.K-1]"
+        "": nmc_LGM50_heat_capacity_ORegan2022,
+        "Positive electrode thermal conductivity [W.m-1.K-1]"
+        "": nmc_LGM50_thermal_conductivity_ORegan2022,
+        "Positive electrode OCP entropic change [V.K-1]"
+        "": nmc_LGM50_entropic_change_ORegan2022,
         # separator
         "Separator porosity": 0.47,
         "Separator Bruggeman coefficient (electrolyte)": 1.5,
-        "Separator density [kg.m-3]": 397.0,
-        "Separator specific heat capacity [J.kg-1.K-1]": 700.0,
-        "Separator thermal conductivity [W.m-1.K-1]": 0.16,
+        "Separator density [kg.m-3]": 1548.0,
+        "Separator specific heat capacity [J.kg-1.K-1]"
+        "": separator_LGM50_heat_capacity_ORegan2022,
+        "Separator thermal conductivity [W.m-1.K-1]": 0.3344,
         # electrolyte
         "Typical electrolyte concentration [mol.m-3]": 1000.0,
         "Initial concentration in electrolyte [mol.m-3]": 1000.0,
@@ -780,10 +1163,10 @@ def get_parameter_values():
         "Number of electrodes connected in parallel to make a cell": 1.0,
         "Number of cells connected in series to make a battery": 1.0,
         "Lower voltage cut-off [V]": 2.5,
-        "Upper voltage cut-off [V]": 4.2,
+        "Upper voltage cut-off [V]": 4.4,
         "Initial concentration in negative electrode [mol.m-3]": 29866.0,
         "Initial concentration in positive electrode [mol.m-3]": 17038.0,
         "Initial temperature [K]": 298.15,
         # citations
-        "citations": ["Chen2020"],
+        "citations": ["ORegan2022","Chen2020"],
     }
