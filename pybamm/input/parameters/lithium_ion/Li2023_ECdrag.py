@@ -1035,8 +1035,8 @@ def get_parameter_values():
         "Inner SEI electron conductivity [S.m-1]": 8.95e-14,
         "Inner SEI lithium interstitial diffusivity [m2.s-1]": 1e-19,
         "Lithium interstitial reference concentration [mol.m-3]": 15.0,
-        "Initial inner SEI thickness [m]": 2.5e-09,
-        "Initial outer SEI thickness [m]": 2.5e-09,
+        "Initial inner SEI thickness [m]": 5e-09,
+        "Initial outer SEI thickness [m]": 5e-09,
         "EC diffusivity [m2.s-1]": 2e-18,
         "SEI kinetic rate constant [m.s-1]": 1e-12,
         "SEI open-circuit potential [V]": 0.4,
@@ -1078,7 +1078,7 @@ def get_parameter_values():
         "Negative electrode active material volume fraction": 0.75,
         "Negative particle radius [m]": 5.86e-06,
         "Negative electrode Bruggeman coefficient (electrolyte)": 1.5,
-        "Negative electrode Bruggeman coefficient (electrode)": 0.0, # Mark Ruihe, change from 1.5  
+        "Negative electrode Bruggeman coefficient (electrode)": 1.5, # Mark Ruihe, change from 1.5  
         "Negative electrode cation signed stoichiometry": -1.0,
         "Negative electrode electrons in reaction": 1.0,
         "Negative electrode charge transfer coefficient": 0.5,
@@ -1102,7 +1102,7 @@ def get_parameter_values():
         "Positive electrode active material volume fraction": 0.665,
         "Positive particle radius [m]": 5.22e-06,
         "Positive electrode Bruggeman coefficient (electrolyte)": 1.5,
-        "Positive electrode Bruggeman coefficient (electrode)": 0.0,  # Mark Ruihe, change from 1.5  
+        "Positive electrode Bruggeman coefficient (electrode)": 1.5,  # Mark Ruihe, change from 1.5  
         "Positive electrode cation signed stoichiometry": -1.0,
         "Positive electrode electrons in reaction": 1.0,
         "Positive electrode charge transfer coefficient": 0.5,

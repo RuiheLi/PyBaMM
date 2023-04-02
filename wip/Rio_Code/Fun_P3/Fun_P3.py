@@ -680,7 +680,7 @@ def dLJP_One_Specie_dce_Jung2023(ce,co,T): # co means c_EC here
 
     aln = 1.390; a0 = 1.158; a1 = -8.955; a2 = 164.7
     ddelta_U_dce = R*T/F*(
-        aln / ce  + a1/c_tot  + 2*a2*ce/c_tot**2
+        aln / ce +  a1/c_tot  + 2*a2*ce/c_tot**2
     )
     return ddelta_U_dce
 
@@ -1314,6 +1314,9 @@ def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para,var_pts):
         MyDict ['Discharge Capacity'] = abs(
             sol.cycles[0].steps[1]['Discharge capacity [A.h]'].entries[0] - 
             sol.cycles[0].steps[1]['Discharge capacity [A.h]'].entries[-1] )
+        MyDict ['T rise'] = abs(
+            sol.cycles[0].steps[1]["Volume-averaged cell temperature [C]"].entries[-1] - 
+            sol.cycles[0].steps[1]["Volume-averaged cell temperature [C]"].entries[0] )
     except:
         MyDict ['Discharge Capacity'] = 0
     else:
@@ -1334,7 +1337,7 @@ def Run_P3_OneCycle(Rate_Dis,Rate_Cha,model,para,str_model,str_para,var_pts):
     
 def Scan_Crate(Rate_Dis_All,Rate_Cha_All,model,para,str_model,str_para,var_pts):   
     Case_Dict = {}
-    MyDict_All =[]; Cap_Dis_All = []  ; Cap_Cha_All = []  
+    MyDict_All =[]; Cap_Dis_All = []  ; Cap_Cha_All = []; Trise_All = [];
     if str_model == "Model_DFN": # one species only
         para.update({"Measured dLJP_dce":dLJP_One_Specie_dce_Jung2023})
     else: # use default, which is two speices
@@ -1349,6 +1352,7 @@ def Scan_Crate(Rate_Dis_All,Rate_Cha_All,model,para,str_model,str_para,var_pts):
                     str_model,str_para,var_pts))
             Cap_Dis_All.append(MyDict_All[-1]['Discharge Capacity'])
             Cap_Cha_All.append(MyDict_All[-1]['Charge Capacity'])
+            Trise_All.append(MyDict_All[-1]['T rise'])
     Case_Dict ['Cap_Dis_All'] = Cap_Dis_All
     Case_Dict ['Cap_Cha_All'] = Cap_Cha_All
     Case_Dict ['str_model'] = str_model
@@ -1356,6 +1360,184 @@ def Scan_Crate(Rate_Dis_All,Rate_Cha_All,model,para,str_model,str_para,var_pts):
     Case_Dict ['MyDict_All']  = MyDict_All
     Case_Dict ['Rate_Dis_All']  = Rate_Dis_All
     Case_Dict ['Rate_Cha_All']  = Rate_Cha_All
+    Case_Dict ['Trise_All']  = Trise_All
+    return Case_Dict
+
+def Para_init_Dict(Para_dict):
+    Para_dict_used = Para_dict.copy();
+    Para_0=pybamm.ParameterValues(Para_dict_used["Para_Set"]  )
+    Para_dict_used.pop("Para_Set")
+
+    if Para_dict_used.__contains__("Mesh list"):
+        Mesh_list = Para_dict_used["Mesh list"]  
+        Para_dict_used.pop("Mesh list")
+    if Para_dict_used.__contains__("Model option"):
+        model_options = Para_dict_used["Model option"]  
+        Para_dict_used.pop("Model option")
+    # about initial SOC
+    if Para_dict_used.__contains__("Initial Neg SOC"):
+        c_Neg1SOC_in = (
+            Para_0["Maximum concentration in negative electrode [mol.m-3]"]
+            *Para_dict_used["Initial Neg SOC"]  )
+        Para_0.update(
+            {"Initial concentration in negative electrode [mol.m-3]":
+            c_Neg1SOC_in})
+        Para_dict_used.pop("Initial Neg SOC")
+    if Para_dict_used.__contains__("Initial Pos SOC"):    
+        c_Pos1SOC_in = (
+            Para_0["Maximum concentration in positive electrode [mol.m-3]"]
+            *Para_dict_used["Initial Pos SOC"]  )
+        Para_0.update(
+            {"Initial concentration in positive electrode [mol.m-3]":
+            c_Pos1SOC_in})
+        Para_dict_used.pop("Initial Pos SOC")
+
+    CyclePack = [ Mesh_list,model_options];
+    
+    for key, value in Para_dict_used.items():
+        # risk: will update parameter that doesn't exist, 
+        # so need to make sure the name is right 
+        if isinstance(value, str):
+            Para_0.update({key: eval(value)})
+            #Para_dict_used.pop(key)
+        else:
+            Para_0.update({key: value},check_already_exists=False)
+    return CyclePack,Para_0
+
+
+def Run_P3_OneCycle_Dict(
+        index_i, Para_dd_i, Path_pack,Rate_Dis,
+        Return_sol):
+    count_i = int(index_i);
+    [BasicPath,Target,
+        book_name_xlsx,sheet_name_xlsx,] = Path_pack
+    ##### Initialise Para_0 and model 
+    CyclePack,para_used = Para_init_Dict(Para_dd_i)
+    [Mesh_list,model_options] = CyclePack
+    model = pybamm.lithium_ion.DFN(options=model_options)
+    str_model_options = str(model_options)
+    V_max = 4.2;        V_min = 2.5
+    if Rate_Dis > 4:
+        ts_dis = 0.5
+    else: 
+        ts_dis = 2
+    Exp_1  = pybamm.Experiment(
+    [ (
+        f"Hold at {V_max} V until C/100",
+        f"Discharge at {Rate_Dis} C until {V_min} V ({ts_dis} second period)", 
+        )] * 1 )  
+
+    c_e = model.variables["Electrolyte concentration [mol.m-3]"]
+    c_EC= model.variables["EC concentration [mol.m-3]"]
+    T = model.variables["Cell temperature [K]"]
+    D_e = para_used["Electrolyte diffusivity [m2.s-1]"]
+    D_EC= para_used["EC diffusivity in electrolyte [m2.s-1]"]
+    sigma_e = para_used["Electrolyte conductivity [S.m-1]"]
+    Xi = para_used["EC transference number"]
+    model.variables["Electrolyte diffusivity [m2.s-1]"] = D_e(c_e,c_EC, T)
+    model.variables["EC diffusivity in electrolyte [m2.s-1]"] = D_EC(c_e,c_EC, T)
+    model.variables["Electrolyte conductivity [S.m-1]"] = sigma_e(c_e,c_EC, T)
+    model.variables["EC transference number"] = Xi(c_e,c_EC, T)
+    model.variables["c(EC) over c(Li+)"] = c_EC / c_e
+    t_0plus = para_used["Cation transference number"]
+    model.variables["Cation transference number"] = t_0plus(c_e,c_EC, T)
+    var_pts = {
+        "x_n": Mesh_list[0],  # negative electrode
+        "x_s": Mesh_list[1],  # separator 
+        "x_p": Mesh_list[2],  # positive electrode
+        "r_n": Mesh_list[3],  # negative particle
+        "r_p": Mesh_list[4],  # positive particle
+    }
+    sim    = pybamm.Simulation(
+        model, experiment = Exp_1,
+        parameter_values = para_used,
+        solver = pybamm.CasadiSolver(return_solution_if_failed_early=True),
+        var_pts=var_pts,
+        )       
+    sol    = sim.solve()
+    if Return_sol == True:
+        sol_return = sol
+    else:
+        sol_return = []
+    # Get temperature rise and discharge capacity as well
+    step_i = sol.cycles[0].steps[1]
+    cap = (
+        step_i["Discharge capacity [A.h]"].entries[-1]
+        -step_i["Discharge capacity [A.h]"].entries[0])
+    Trise = (
+        step_i["Volume-averaged cell temperature [C]"].entries[-1]
+        -step_i["Volume-averaged cell temperature [C]"].entries[0])
+    t_dis =( 
+        step_i["Time [h]"].entries - step_i["Time [h]"].entries[0] 
+        )
+    vol_dis = step_i["Terminal voltage [V]"].entries
+    return sol_return,cap,Trise,t_dis,vol_dis
+
+def Scan_Crate_Dict(
+        index_i, Para_dd_i, Path_pack , Rate_Dis_All,
+        Return_sol,SaveFig):   
+    Case_Dict = {}
+    print('Start Now! Scan %d.' % index_i)  
+    Sol_All =[]; Cap_Dis_All = [];  Trise_All = []; 
+    Time_dis_All =[];Vol_dis_All =[];
+    for Rate_Dis in Rate_Dis_All:
+        sol,cap,Trise,t_dis,vol_dis = Run_P3_OneCycle_Dict(
+            index_i, Para_dd_i, Path_pack,Rate_Dis,
+            Return_sol)
+        Sol_All.append(sol)
+        Cap_Dis_All.append(cap)
+        Trise_All.append(Trise)
+        Time_dis_All.append(t_dis)
+        Vol_dis_All.append(vol_dis)
+    Case_Dict ['Cap_Dis_All'] = Cap_Dis_All
+    Case_Dict ['Sol_All']  = Sol_All
+    Case_Dict ['Rate_Dis_All']  = Rate_Dis_All
+    Case_Dict ['Trise_All']  = Trise_All
+    Case_Dict ['Time_dis_All']  = Time_dis_All
+    Case_Dict ['Vol_dis_All']  = Vol_dis_All
+    # Plot capacity comparasion for each scan - TOdo: voltage comparasion 
+    #     Summarize Exp - plot temperature rise and capacity vs C rate
+    for i in range(0):
+        Niall_Crate = [0.2, 0.3, 0.4, 0.5, 1, 2, 3]; 
+        Niall_Cap = [ 4.815, 4.75, 4.82, 4.82, 4.64, 3.298, 1.983]; 
+        Ruihe_Crate = [0.5, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0]
+        RL_Cap_Cell_1 = [4.715963693555362, 4.612124591646047, 4.525131462728684, 4.357837218694934, 3.9985270604389145, 3.4233452957546677, 2.5758641034678815, 1.988704897546658, 1.6652388357649741, 1.4100456949750437]
+        RL_Cap_Cell_2 = [4.716030959172494, 4.617948432702642, 4.5276396589819425, 4.341444372881664, 3.9091685871110027, 3.286849922924804, 2.4498175045751953, 1.901398288847656, 1.57583310209744, 1.345814775172526]
+        # Biologic temperature:
+        RL_T_Rise_Cell_1 = [1.8637965639005145, 2.6184089732547733, 2.2785406232761183, 2.7299726754489058, 3.4454458756196686, 3.2409775493440662, 4.36836993533397, 4.043625726318339, 4.889784013534822, 5.519928668485186]
+        RL_T_Rise_Cell_2 = [1.6080960965963662, 1.5360009591223402, 2.038724388471504, 2.0249414408349473, 2.984494420154249, 3.5199766991718633, 4.342076997341994, 4.719743013070929, 3.79700883048751, 3.071455647673517]
+        # from 1C to 3C only
+        Pico_T_Rise_Cell_1 =[
+            26.643-25.982, 26.778-25.974,
+            27.133-25.889,27.481-25.917,27.6-25.9,
+            28.023-26,28.229-25.952]
+        Pico_T_Rise_Cell_2 =[
+            26.411-25.706,26.671-25.681,27.025-25.611,
+            27.481-25.644,27.7-25.6,28.361-25.739, 28.832-25.633]
+    
+    ls = "-"
+    # Compare experiment and modelling result: temperature rise and capacity vs C rate
+    fig, axs = plt.subplots(2,2, figsize=(9.3,6.4),tight_layout=True)
+    # experiment:
+    axs[0].plot(Ruihe_Crate, RL_Cap_Cell_1 ,linestyle='none',marker ="o", color="gray",) # label="Cell-1"
+    axs[0].plot(Ruihe_Crate, RL_Cap_Cell_2 ,linestyle='none',marker ="s",color="gray",) # label="Cell-2"
+    axs[0].plot(Niall_Crate[3:], Niall_Cap[3:] ,linestyle='none',marker ="s",color="gray",) # label="Niall"
+    axs[1].plot(Ruihe_Crate, RL_T_Rise_Cell_1 ,linestyle='none',marker ="o",color="gray",)  # label="Bio-Cell-1"
+    axs[1].plot(Ruihe_Crate, RL_T_Rise_Cell_2 ,linestyle='none',marker ="s",color="gray",) # label="Bio-Cell-2"
+    # simulation - double
+    axs[0].plot( Rate_Dis_All,Cap_Dis_All,linestyle=ls,marker ="^",color="b",)
+    axs[0].plot( Rate_Dis_All,Cap_Dis_All,linestyle=ls,marker ="^",color="b",)
+    axs[0].set_ylabel("Capacity [A.h]",fontsize=fs)
+    axs[1].set_ylabel("T rise [degC]",fontsize=fs)
+    axs[0].set_xlabel("C rate",fontsize=fs-2)
+    axs[1].set_xlabel("C rate",fontsize=fs-2)
+    fig.suptitle(f'Scan = {index_i}', fontsize=fs)
+    [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
+    dpi = 600;
+    if SaveFig == True:    
+        plt.savefig( BasicPath + Target+
+            f"Scan={index_i} Cap and Temperature rise.png", dpi=dpi)
+
     return Case_Dict
 
 def Plot_quick(Case_Para_All, Crate_i, fs):
