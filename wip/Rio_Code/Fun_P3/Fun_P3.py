@@ -702,6 +702,95 @@ def dLJP_dce_Nyman_2011(c_e, c_EC , T):
     dLJP_dce = 5.326e-5 + 2.47e-2 / c_e
     return dLJP_dce
 
+def graphite_LGM50_electrolyte_exchange_current_density_ORegan2022(
+    c_e, c_s_surf, c_s_max, T
+):
+    """
+    Exchange-current density for Butler-Volmer reactions between graphite and LiPF6 in
+    EC:DMC.
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    c_e : :class:`pybamm.Symbol`
+        Electrolyte concentration [mol.m-3]
+    c_s_surf : :class:`pybamm.Symbol`
+        Particle concentration [mol.m-3]
+    c_s_max : :class:`pybamm.Symbol`
+        Maximum particle concentration [mol.m-3]
+    T : :class:`pybamm.Symbol`
+        Temperature [K]
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Exchange-current density [A.m-2]
+    """
+
+    i_ref = 2.668  # (A/m2)
+    alpha = 0.792
+    E_r = 4e4
+    arrhenius = pybamm.exp(E_r / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    c_e_ref = pybamm.Parameter("Typical electrolyte concentration [mol.m-3]")
+
+    return (
+        i_ref
+        * arrhenius
+        * (c_e / c_e_ref) ** (1 - alpha)
+        * (c_s_surf / c_s_max) ** alpha
+        * (1 - c_s_surf / c_s_max) ** (1 - alpha)
+    )
+def nmc_LGM50_electrolyte_exchange_current_density_ORegan2022(
+    c_e, c_s_surf, c_s_max, T
+):
+    """
+    Exchange-current density for Butler-Volmer reactions between NMC and LiPF6 in
+    EC:DMC.
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    c_e : :class:`pybamm.Symbol`
+        Electrolyte concentration [mol.m-3]
+    c_s_surf : :class:`pybamm.Symbol`
+        Particle concentration [mol.m-3]
+    c_s_max : :class:`pybamm.Symbol`
+        Maximum particle concentration [mol.m-3]
+    T : :class:`pybamm.Symbol`
+        Temperature [K]
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Exchange-current density [A.m-2]
+    """
+    i_ref = 5.028  # (A/m2)
+    alpha = 0.43
+    E_r = 2.401e4
+    arrhenius = pybamm.exp(E_r / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    c_e_ref = pybamm.Parameter("Typical electrolyte concentration [mol.m-3]")
+
+    return (
+        i_ref
+        * arrhenius
+        * (c_e / c_e_ref) ** (1 - alpha)
+        * (c_s_surf / c_s_max) ** alpha
+        * (1 - c_s_surf / c_s_max) ** (1 - alpha)
+    )
+
+
 # DEFINE my callback:
 class RioCallback(pybamm.callbacks.Callback):
     def __init__(self, logfile=None):
@@ -1404,12 +1493,133 @@ def Para_init_Dict(Para_dict):
             Para_0.update({key: value},check_already_exists=False)
     return CyclePack,Para_0
 
+def Read_ExpCrate(Path_Exp_Crate, ):
+    #BasicPath = "D:/OneDrive - Imperial College London/SimDataSave/InputData/" 
+    #Target = "Ruihe_newLGM50_Crate/"
+    Cell_1_2p5to3C = pd.read_csv(
+        Path_Exp_Crate + "dicharge_2.5C_3C_ch_a_1_CA1.txt", #engine='python',
+        encoding = "shift-jis",  skiprows = 1,
+        sep ='\t', header=None)
+    Cell_1_2p5to3C.head()
+    newNames = [
+        "time/s", "Ns","Ecell/V", "I/mA", 
+        "(Q-Qo)/mA.h", "Temperature/ｰC", 
+        "Q charge/mA.h","Q discharge/mA.h","R/Ohm"]
+    oldNames = np.arange(9).tolist()
+    Cell_1_2p5to3C=Cell_1_2p5to3C.rename(columns={i:j for i,j in zip(oldNames,newNames)})
+    Cell_1_2p5to3C.head()
+    # Get Cell-1 2.5C and 3C:
+    font = {'family' : 'DejaVu Sans','size'   : 14};   mpl.rc('font', **font)
+    Cell_1_2p5C = Cell_1_2p5to3C[(Cell_1_2p5to3C['Ns']==5)]
+    df_dc4 = Cell_1_2p5to3C[(Cell_1_2p5to3C['Ns']==12)]
+    Cell_1_3C = Cell_1_2p5to3C[(Cell_1_2p5to3C['Ns']==12)]
+    # Read Cell-2 2.5C to 3C:
+    Cell_2_2p5to3C = pd.read_csv(
+        Path_Exp_Crate + "dicharge_2.5C_3C_ch_a_2_CA2.txt", #engine='python',
+        encoding = "shift-jis",  skiprows = 1,
+        sep ='\t', header=None)
+    Cell_2_2p5to3C.head()
+    newNames = [
+        "time/s", "Ns","Ecell/V", "I/mA", 
+        "(Q-Qo)/mA.h", "Temperature/ｰC", 
+        "Q charge/mA.h","Q discharge/mA.h","R/Ohm"]
+    oldNames = np.arange(9).tolist()
+    Cell_2_2p5to3C=Cell_2_2p5to3C.rename(columns={i:j for i,j in zip(oldNames,newNames)})
+    Cell_2_2p5to3C.head()
+    Cell_2_2p5C = Cell_2_2p5to3C[(Cell_2_2p5to3C['Ns']==5)]
+    df_dc4 = Cell_2_2p5to3C[(Cell_2_2p5to3C['Ns']==12)]
+    Cell_2_3C = Cell_2_2p5to3C[(Cell_2_2p5to3C['Ns']==12)]
+    # Read Cell-1 3.5C to 4C:
+    Cell_1_3p5to4C = pd.read_csv(
+        Path_Exp_Crate + "Discharge_test_3p5_to_4C_A1_CA1.txt", #engine='python',
+        encoding = "shift-jis",  skiprows = 1,
+        sep ='\t', header=None)
+    Cell_1_3p5to4C.head()
+    newNames = [
+        "time/s", "Ns","Ecell/V", "I/mA", 
+        "(Q-Qo)/mA.h", "Temperature/ｰC", 
+        "Q charge/mA.h","Q discharge/mA.h","R/Ohm"]
+    oldNames = np.arange(9).tolist()
+    Cell_1_3p5to4C=Cell_1_3p5to4C.rename(columns={i:j for i,j in zip(oldNames,newNames)})
+    Cell_1_3p5to4C.head()
+    Cell_1_3p5C = Cell_1_3p5to4C[(Cell_1_3p5to4C['Ns']==5)]
+    df_dc4 = Cell_1_3p5to4C[(Cell_1_3p5to4C['Ns']==12)]
+    Cell_1_4C = Cell_1_3p5to4C[(Cell_1_3p5to4C['Ns']==12)]
+    # Read Cell-2 3.5C to 4C:
+    Cell_2_3p5to4C = pd.read_csv(
+        Path_Exp_Crate + "Discharge_test_3p5_to_4C_A2_CA3.txt", #engine='python',
+        encoding = "shift-jis",  skiprows = 1,
+        sep ='\t', header=None)
+    Cell_2_3p5to4C.head()
+    newNames = [
+        "time/s", "Ns","Ecell/V", "I/mA", 
+        "(Q-Qo)/mA.h", "Temperature/ｰC", 
+        "Q charge/mA.h","Q discharge/mA.h","R/Ohm"]
+    oldNames = np.arange(9).tolist()
+    Cell_2_3p5to4C=Cell_2_3p5to4C.rename(columns={i:j for i,j in zip(oldNames,newNames)})
+    Cell_2_3p5to4C.head()
+    Cell_2_3p5C = Cell_2_3p5to4C[(Cell_2_3p5to4C['Ns']==5)]
+    df_dc4 = Cell_2_3p5to4C[(Cell_2_3p5to4C['Ns']==12)]
+    Cell_2_4C = Cell_2_3p5to4C[(Cell_2_3p5to4C['Ns']==12)]
+    # Read Cell-2 up to 2C:
+    Cell_2_UpTo2C = pd.read_csv(
+        Path_Exp_Crate + "dicharge_to_2C_ch_a_2_CA2.txt", #engine='python',
+        encoding = "shift-jis",  skiprows = 1,
+        sep ='\t', header=None)
+    Cell_2_UpTo2C.head()
+    newNames = [
+        "time/s", "Ns","Ecell/V", "I/mA", 
+        "(Q-Qo)/mA.h", "Temperature/ｰC", 
+        "Q charge/mA.h","Q discharge/mA.h","R/Ohm"]
+    oldNames = np.arange(9).tolist()
+    Cell_2_UpTo2C=Cell_2_UpTo2C.rename(columns={i:j for i,j in zip(oldNames,newNames)})
+    Cell_2_UpTo2C.head()
+
+    Cell_2_0p5C = Cell_2_UpTo2C[(Cell_2_UpTo2C['Ns']==5)]
+    Cell_2_1C = Cell_2_UpTo2C[(Cell_2_UpTo2C['Ns']==12)]
+    Cell_2_1p25C = Cell_2_UpTo2C[(Cell_2_UpTo2C['Ns']==19)]
+    Cell_2_1p5C = Cell_2_UpTo2C[(Cell_2_UpTo2C['Ns']==26)]
+    Cell_2_1p75C = Cell_2_UpTo2C[(Cell_2_UpTo2C['Ns']==33)]
+    Cell_2_2C = Cell_2_UpTo2C[(Cell_2_UpTo2C['Ns']==40)]
+    # Read Cell-1 up to 2C:
+
+    Cell_1_UpTo2C = pd.read_csv(
+        Path_Exp_Crate + "dicharge_to_2C_ch_a_1_CA1.txt", #engine='python',
+        encoding = "shift-jis",  skiprows = 1,
+        sep ='\t', header=None)
+    Cell_1_UpTo2C.head()
+    newNames = [
+        "time/s", "Ns","Ecell/V", "I/mA", 
+        "(Q-Qo)/mA.h", "Temperature/ｰC", 
+        "Q charge/mA.h","Q discharge/mA.h","R/Ohm"]
+    oldNames = np.arange(9).tolist()
+    Cell_1_UpTo2C=Cell_1_UpTo2C.rename(columns={i:j for i,j in zip(oldNames,newNames)})
+    Cell_1_UpTo2C.head()
+
+    Cell_1_0p5C = Cell_1_UpTo2C[(Cell_1_UpTo2C['Ns']==5)]
+    Cell_1_1C = Cell_1_UpTo2C[(Cell_1_UpTo2C['Ns']==12)]
+    Cell_1_1p25C = Cell_1_UpTo2C[(Cell_1_UpTo2C['Ns']==19)]
+    Cell_1_1p5C = Cell_1_UpTo2C[(Cell_1_UpTo2C['Ns']==26)]
+    Cell_1_1p75C = Cell_1_UpTo2C[(Cell_1_UpTo2C['Ns']==33)]
+    Cell_1_2C = Cell_1_UpTo2C[(Cell_1_UpTo2C['Ns']==40)]
+    # collect all together
+    Cell_2_All = [
+        Cell_2_0p5C,Cell_2_1C,Cell_2_1p25C,Cell_2_1p5C,Cell_2_1p75C,
+        Cell_2_2C,Cell_2_2p5C,Cell_2_3C,Cell_2_3p5C,Cell_2_4C];
+    Cell_1_All = [
+        Cell_1_0p5C,Cell_1_1C,Cell_1_1p25C,Cell_1_1p5C,Cell_1_1p75C,
+        Cell_1_2C,Cell_1_2p5C,Cell_1_3C,Cell_1_3p5C,Cell_1_4C];
+    str_Crate = ["0.5","1","1.25","1.5","1.75","2","2.5","3","3.5","4",]
+    Num_Crate = [];
+    for str in str_Crate:
+        Num_Crate.append(float(str)) # print(Num_Crate)
+    return Num_Crate, Cell_1_All,Cell_2_All
 
 def Run_P3_OneCycle_Dict(
         index_i, Para_dd_i, Path_pack,Rate_Dis,
         Return_sol):
     count_i = int(index_i);
-    [BasicPath,Target,
+    [BasicPath,Target,Path_Exp_Crate,
         book_name_xlsx,sheet_name_xlsx,] = Path_pack
     ##### Initialise Para_0 and model 
     CyclePack,para_used = Para_init_Dict(Para_dd_i)
@@ -1474,8 +1684,8 @@ def Run_P3_OneCycle_Dict(
     return sol_return,cap,Trise,t_dis,vol_dis
 
 def Scan_Crate_Dict(
-        index_i, Para_dd_i, Path_pack , Rate_Dis_All,
-        Return_sol,SaveFig):   
+        index_i, Para_dd_i, Path_pack ,  str_model,
+        Rate_Dis_All, Return_sol,SaveFig):   
     Case_Dict = {}
     print('Start Now! Scan %d.' % index_i)  
     Sol_All =[]; Cap_Dis_All = [];  Trise_All = []; 
@@ -1495,49 +1705,76 @@ def Scan_Crate_Dict(
     Case_Dict ['Trise_All']  = Trise_All
     Case_Dict ['Time_dis_All']  = Time_dis_All
     Case_Dict ['Vol_dis_All']  = Vol_dis_All
-    # Plot capacity comparasion for each scan - TOdo: voltage comparasion 
-    #     Summarize Exp - plot temperature rise and capacity vs C rate
-    for i in range(0):
-        Niall_Crate = [0.2, 0.3, 0.4, 0.5, 1, 2, 3]; 
-        Niall_Cap = [ 4.815, 4.75, 4.82, 4.82, 4.64, 3.298, 1.983]; 
-        Ruihe_Crate = [0.5, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0]
-        RL_Cap_Cell_1 = [4.715963693555362, 4.612124591646047, 4.525131462728684, 4.357837218694934, 3.9985270604389145, 3.4233452957546677, 2.5758641034678815, 1.988704897546658, 1.6652388357649741, 1.4100456949750437]
-        RL_Cap_Cell_2 = [4.716030959172494, 4.617948432702642, 4.5276396589819425, 4.341444372881664, 3.9091685871110027, 3.286849922924804, 2.4498175045751953, 1.901398288847656, 1.57583310209744, 1.345814775172526]
-        # Biologic temperature:
-        RL_T_Rise_Cell_1 = [1.8637965639005145, 2.6184089732547733, 2.2785406232761183, 2.7299726754489058, 3.4454458756196686, 3.2409775493440662, 4.36836993533397, 4.043625726318339, 4.889784013534822, 5.519928668485186]
-        RL_T_Rise_Cell_2 = [1.6080960965963662, 1.5360009591223402, 2.038724388471504, 2.0249414408349473, 2.984494420154249, 3.5199766991718633, 4.342076997341994, 4.719743013070929, 3.79700883048751, 3.071455647673517]
-        # from 1C to 3C only
-        Pico_T_Rise_Cell_1 =[
-            26.643-25.982, 26.778-25.974,
-            27.133-25.889,27.481-25.917,27.6-25.9,
-            28.023-26,28.229-25.952]
-        Pico_T_Rise_Cell_2 =[
-            26.411-25.706,26.671-25.681,27.025-25.611,
-            27.481-25.644,27.7-25.6,28.361-25.739, 28.832-25.633]
-    
-    ls = "-"
-    # Compare experiment and modelling result: temperature rise and capacity vs C rate
-    fig, axs = plt.subplots(2,2, figsize=(9.3,6.4),tight_layout=True)
-    # experiment:
-    axs[0].plot(Ruihe_Crate, RL_Cap_Cell_1 ,linestyle='none',marker ="o", color="gray",) # label="Cell-1"
-    axs[0].plot(Ruihe_Crate, RL_Cap_Cell_2 ,linestyle='none',marker ="s",color="gray",) # label="Cell-2"
-    axs[0].plot(Niall_Crate[3:], Niall_Cap[3:] ,linestyle='none',marker ="s",color="gray",) # label="Niall"
-    axs[1].plot(Ruihe_Crate, RL_T_Rise_Cell_1 ,linestyle='none',marker ="o",color="gray",)  # label="Bio-Cell-1"
-    axs[1].plot(Ruihe_Crate, RL_T_Rise_Cell_2 ,linestyle='none',marker ="s",color="gray",) # label="Bio-Cell-2"
-    # simulation - double
-    axs[0].plot( Rate_Dis_All,Cap_Dis_All,linestyle=ls,marker ="^",color="b",)
-    axs[0].plot( Rate_Dis_All,Cap_Dis_All,linestyle=ls,marker ="^",color="b",)
-    axs[0].set_ylabel("Capacity [A.h]",fontsize=fs)
-    axs[1].set_ylabel("T rise [degC]",fontsize=fs)
-    axs[0].set_xlabel("C rate",fontsize=fs-2)
-    axs[1].set_xlabel("C rate",fontsize=fs-2)
-    fig.suptitle(f'Scan = {index_i}', fontsize=fs)
-    [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
-    dpi = 600;
-    if SaveFig == True:    
-        plt.savefig( BasicPath + Target+
-            f"Scan={index_i} Cap and Temperature rise.png", dpi=dpi)
+    try:
+        # Plot capacity comparasion for each scan - TODO: voltage comparasion 
+        #     Summarize Exp - plot temperature rise and capacity vs C rate
+        for i in range(1):
+            Niall_Crate = [0.2, 0.3, 0.4, 0.5, 1, 2, 3]; 
+            Niall_Cap = [ 4.815, 4.75, 4.82, 4.82, 4.64, 3.298, 1.983]; 
+            Ruihe_Crate = [0.5, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0]
+            RL_Cap_Cell_1 = [4.715963693555362, 4.612124591646047, 4.525131462728684, 4.357837218694934, 3.9985270604389145, 3.4233452957546677, 2.5758641034678815, 1.988704897546658, 1.6652388357649741, 1.4100456949750437]
+            RL_Cap_Cell_2 = [4.716030959172494, 4.617948432702642, 4.5276396589819425, 4.341444372881664, 3.9091685871110027, 3.286849922924804, 2.4498175045751953, 1.901398288847656, 1.57583310209744, 1.345814775172526]
+            # Biologic temperature:
+            RL_T_Rise_Cell_1 = [1.8637965639005145, 2.6184089732547733, 2.2785406232761183, 2.7299726754489058, 3.4454458756196686, 3.2409775493440662, 4.36836993533397, 4.043625726318339, 4.889784013534822, 5.519928668485186]
+            RL_T_Rise_Cell_2 = [1.6080960965963662, 1.5360009591223402, 2.038724388471504, 2.0249414408349473, 2.984494420154249, 3.5199766991718633, 4.342076997341994, 4.719743013070929, 3.79700883048751, 3.071455647673517]
+            # from 1C to 3C only
+            Pico_T_Rise_Cell_1 =[
+                26.643-25.982, 26.778-25.974,
+                27.133-25.889,27.481-25.917,27.6-25.9,
+                28.023-26,28.229-25.952]
+            Pico_T_Rise_Cell_2 =[
+                26.411-25.706,26.671-25.681,27.025-25.611,
+                27.481-25.644,27.7-25.6,28.361-25.739, 28.832-25.633]
+        
+        ls = "-"
+        # Compare experiment and modelling result: temperature rise and capacity vs C rate
+        fig, axs = plt.subplots(1,2, figsize=(9.3,6.4),tight_layout=True)
+        # experiment:
+        axs[0].plot(Ruihe_Crate, RL_Cap_Cell_1 ,linestyle='none',marker ="o", color="gray",) # label="Cell-1"
+        axs[0].plot(Ruihe_Crate, RL_Cap_Cell_2 ,linestyle='none',marker ="s",color="gray",) # label="Cell-2"
+        axs[0].plot(Niall_Crate[3:], Niall_Cap[3:] ,linestyle='none',marker ="s",color="gray",) # label="Niall"
+        axs[1].plot(Ruihe_Crate, RL_T_Rise_Cell_1 ,linestyle='none',marker ="o",color="gray",)  # label="Bio-Cell-1"
+        axs[1].plot(Ruihe_Crate, RL_T_Rise_Cell_2 ,linestyle='none',marker ="s",color="gray",) # label="Bio-Cell-2"
+        # simulation - double
+        axs[0].plot( Rate_Dis_All,Cap_Dis_All,linestyle=ls,marker ="^",color="b",)
+        axs[0].plot( Rate_Dis_All,Cap_Dis_All,linestyle=ls,marker ="^",color="b",)
+        axs[1].plot( Rate_Dis_All,Trise_All,linestyle=ls,marker ="^",color="b",)
+        axs[1].plot( Rate_Dis_All,Trise_All,linestyle=ls,marker ="^",color="b",)
+        axs[0].set_ylabel("Capacity [A.h]",fontsize=fs)
+        axs[1].set_ylabel("T rise [degC]",fontsize=fs)
+        axs[0].set_xlabel("C rate",fontsize=fs-2)
+        axs[1].set_xlabel("C rate",fontsize=fs-2)
+        fig.suptitle(f'{str_model} - Scan = {index_i}', fontsize=fs)
+        [BasicPath,Target,Path_Exp_Crate,
+            book_name_xlsx,sheet_name_xlsx,] = Path_pack
+        dpi = 600;
+        if SaveFig == True:    
+            plt.savefig( BasicPath + Target+
+                f"{str_model} - Scan={index_i} Cap and Temperature rise.png", dpi=dpi)
+        # compare voltage - need to read detailed csv file so must prepare:
+        Num_Crate, Cell_1_All,Cell_2_All = Read_ExpCrate(Path_Exp_Crate, )
 
+        cmdd = mpl.cm.get_cmap("cool", len(Rate_Dis_All)) 
+        cmgray = mpl.cm.get_cmap("gray", len(Rate_Dis_All)) 
+        fig, axs = plt.subplots( figsize=(9.3,6.2),tight_layout=True)
+        for j in range(len(Rate_Dis_All)):
+            # plot simulation:
+            axs.plot(Case_Dict['Time_dis_All'][j],Case_Dict['Vol_dis_All'][j], color=cmdd(j),)
+            # plot experiment:
+            index = Num_Crate.index(Rate_Dis_All[j])
+            axs.plot(
+                (Cell_1_All[index]["time/s"]-Cell_1_All[index]["time/s"].iloc[0])/3600,
+                Cell_1_All[index]["Ecell/V"],linestyle='--',
+                color=cmgray(j),)
+        fig.suptitle(f'{str_model} - Scan = {index_i}', fontsize=fs)
+        if SaveFig == True:   
+            plt.savefig( BasicPath + Target+
+                f"{str_model} - Scan={index_i} Vol compare.png", dpi=dpi)    
+    except:
+        print(f"Something went wrong with {str_model} - Scan={index_i}")
+        Case_Dict = "Empty";
+    else:
+        print(f"Finish {str_model} - Scan={index_i}")
     return Case_Dict
 
 def Plot_quick(Case_Para_All, Crate_i, fs):
