@@ -1690,22 +1690,22 @@ def Scan_Crate_Dict(
     print('Start Now! Scan %d.' % index_i)  
     Sol_All =[]; Cap_Dis_All = [];  Trise_All = []; 
     Time_dis_All =[];Vol_dis_All =[];
-    for Rate_Dis in Rate_Dis_All:
-        sol,cap,Trise,t_dis,vol_dis = Run_P3_OneCycle_Dict(
-            index_i, Para_dd_i, Path_pack,Rate_Dis,
-            Return_sol)
-        Sol_All.append(sol)
-        Cap_Dis_All.append(cap)
-        Trise_All.append(Trise)
-        Time_dis_All.append(t_dis)
-        Vol_dis_All.append(vol_dis)
-    Case_Dict ['Cap_Dis_All'] = Cap_Dis_All
-    Case_Dict ['Sol_All']  = Sol_All
-    Case_Dict ['Rate_Dis_All']  = Rate_Dis_All
-    Case_Dict ['Trise_All']  = Trise_All
-    Case_Dict ['Time_dis_All']  = Time_dis_All
-    Case_Dict ['Vol_dis_All']  = Vol_dis_All
     try:
+        for Rate_Dis in Rate_Dis_All:
+            sol,cap,Trise,t_dis,vol_dis = Run_P3_OneCycle_Dict(
+                index_i, Para_dd_i, Path_pack,Rate_Dis,
+                Return_sol)
+            Sol_All.append(sol)
+            Cap_Dis_All.append(cap)
+            Trise_All.append(Trise)
+            Time_dis_All.append(t_dis)
+            Vol_dis_All.append(vol_dis)
+        Case_Dict ['Cap_Dis_All'] = Cap_Dis_All
+        Case_Dict ['Sol_All']  = Sol_All
+        Case_Dict ['Rate_Dis_All']  = Rate_Dis_All
+        Case_Dict ['Trise_All']  = Trise_All
+        Case_Dict ['Time_dis_All']  = Time_dis_All
+        Case_Dict ['Vol_dis_All']  = Vol_dis_All
         # Plot capacity comparasion for each scan - TODO: voltage comparasion 
         #     Summarize Exp - plot temperature rise and capacity vs C rate
         for i in range(1):
