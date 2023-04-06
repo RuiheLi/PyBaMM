@@ -111,7 +111,9 @@ class BaseElectrode(pybamm.BaseSubModel):
 
         return variables
 
-    def _get_standard_current_collector_potential_variables(self, phi_s_cn, phi_s_cp):
+    def _get_standard_current_collector_potential_variables(
+        self, phi_s_cn, phi_s_cp, delta_phi_contact
+    ):
         """
         A private function to obtain the standard variables which
         can be derived from the potentials in the current collector.
@@ -122,6 +124,8 @@ class BaseElectrode(pybamm.BaseSubModel):
             The potential in the negative current collector.
         phi_s_cp : :class:`pybamm.Symbol`
             The potential in the positive current collector.
+        delta_phi_contact : :class:`pybamm.Symbol` # Mark Ruihe add contact resistance
+            The potential difference due to the contact resistance, if any.
 
         Returns
         -------
@@ -151,8 +155,11 @@ class BaseElectrode(pybamm.BaseSubModel):
             "Positive current collector potential [V]": phi_s_cp_dim,
             "Local voltage": V_cc,
             "Local voltage [V]": self.param.ocv_ref + V_cc * pot_scale,
-            "Terminal voltage": V,
-            "Terminal voltage [V]": V_dim,
+            # Mark Ruihe add contact resistance
+            "Contact overpotential": delta_phi_contact,
+            "Contact overpotential [V]": delta_phi_contact * pot_scale,
+            "Terminal voltage": V - delta_phi_contact,
+            "Terminal voltage [V]": V_dim - delta_phi_contact * pot_scale,
         }
 
         return variables
@@ -191,9 +198,15 @@ class BaseElectrode(pybamm.BaseSubModel):
             phi_s_cn = variables["Negative current collector potential"]
             phi_s_p = variables["Positive electrode potential"]
             phi_s_cp = pybamm.boundary_value(phi_s_p, "right")
+            if self.options["contact resistance"] == "true":
+                param = self.param
+                I = variables["Current [A]"]
+                delta_phi_contact = I * param.R_contact / param.potential_scale
+            else:
+                delta_phi_contact = pybamm.Scalar(0)
             variables.update(
                 self._get_standard_current_collector_potential_variables(
-                    phi_s_cn, phi_s_cp
+                    phi_s_cn, phi_s_cp, delta_phi_contact
                 )
             )
 
