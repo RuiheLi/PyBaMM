@@ -1070,6 +1070,59 @@ def nmc_LGM50_electrolyte_exchange_current_density_ORegan2022(
         * (1 - c_s_surf / c_s_max) ** (1 - alpha)
     )
 
+def nmc_LGM50_lithiation_ocp_OKane2023(sto):
+    """
+    LG M50 NMC lithiation open-circuit potential as a function of stoichiometry.
+    Fitted to unpublished measurements by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open-circuit potential
+    """
+
+    U = (
+        -0.7983 * sto
+        + 4.513
+        - 0.03269 * pybamm.tanh(19.83 * (sto - 0.5424))
+        - 18.23 * pybamm.tanh(14.33 * (sto - 0.2771))
+        + 18.05 * pybamm.tanh(14.46 * (sto - 0.2776))
+    )
+
+    return U
+
+def graphite_LGM50_delithiation_ocp_OKane2023(sto):
+    """
+    LG M50 Graphite delithiation open-circuit potential as a function of stochiometry.
+    Fitted to unpublished measurements taken by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open circuit potential
+    """
+
+    u_eq = (
+        1.051 * pybamm.exp(-26.76 * sto)
+        + 0.1916
+        - 0.05598 * pybamm.tanh(35.62 * (sto - 0.1356))
+        - 0.04483 * pybamm.tanh(14.64 * (sto - 0.2861))
+        - 0.02097 * pybamm.tanh(26.28 * (sto - 0.6183))
+        - 0.02398 * pybamm.tanh(38.1 * (sto - 1))
+    )
+
+    return u_eq
+
+
 # Mark Ruihe block end
 
 # Call dict via a function to avoid errors when editing in place
@@ -1123,12 +1176,12 @@ def get_parameter_values():
         "Inner SEI electron conductivity [S.m-1]": 8.95e-14,
         "Inner SEI lithium interstitial diffusivity [m2.s-1]": 1e-19,
         "Lithium interstitial reference concentration [mol.m-3]": 15.0,
-        "Initial inner SEI thickness [m]": 5e-09,
-        "Initial outer SEI thickness [m]": 5e-09,
+        "Initial inner SEI thickness [m]": 1.2362e-08, # Simon new: 1.2362e-08,
+        "Initial outer SEI thickness [m]": 1.2362e-08, # Simon new: 1.2362e-08,
         "EC diffusivity [m2.s-1]": 2e-18,
         "SEI kinetic rate constant [m.s-1]": 1e-12,
         "SEI open-circuit potential [V]": 0.4,
-        "SEI growth activation energy [J.mol-1]": 0.0,
+        "SEI growth activation energy [J.mol-1]": 0.0, # Simon: 38000.0,
         "Negative electrode reaction-driven LAM factor [m3.mol-1]": 0.0,
         "Positive electrode reaction-driven LAM factor [m3.mol-1]": 0.0,
         # cell
@@ -1158,21 +1211,22 @@ def get_parameter_values():
         "Current function [A]": 5.0,
         # negative electrode
         "Negative electrode conductivity [S.m-1]": 215.0,
-        "Maximum concentration in negative electrode [mol.m-3]": 33133.0,
+        "Maximum concentration in negative electrode [mol.m-3]": 32544.0,# Mark Ruihe change from 33133.0,
         "Negative electrode diffusivity [m2.s-1]"
         "": graphite_LGM50_diffusivity_ORegan2022,
-        "Negative electrode OCP [V]": graphite_LGM50_ocp_Chen2020,
+        # Mark Ruihe change "Negative electrode OCP [V]": graphite_LGM50_ocp_Chen2020,
+        "Negative electrode OCP [V]": graphite_LGM50_delithiation_ocp_OKane2023,
         "Negative electrode porosity": 0.25,
         "Negative electrode active material volume fraction": 0.75,
         "Negative particle radius [m]": 5.86e-06,
         "Negative electrode Bruggeman coefficient (electrolyte)": 1.5,
-        "Negative electrode Bruggeman coefficient (electrode)": 1.5, # Mark Ruihe, change from 1.5  
+        "Negative electrode Bruggeman coefficient (electrode)": 0.0, # Mark Ruihe, change from 1.5  
         "Negative electrode cation signed stoichiometry": -1.0,
         "Negative electrode electrons in reaction": 1.0,
         "Negative electrode charge transfer coefficient": 0.5,
         "Negative electrode double-layer capacity [F.m-2]": 0.2,
         "Negative electrode exchange-current density [A.m-2]"
-        "": graphite_LGM50_electrolyte_exchange_current_density_Chen2020, # ask Simon
+        "": graphite_LGM50_electrolyte_exchange_current_density_ORegan2022, # ask Simon change here
         "Negative electrode density [kg.m-3]": 2060.0,
         "Negative electrode specific heat capacity [J.kg-1.K-1]"
         "": graphite_LGM50_heat_capacity_ORegan2022,
@@ -1183,20 +1237,20 @@ def get_parameter_values():
         # positive electrode
         "Positive electrode conductivity [S.m-1]"
         "": nmc_LGM50_electronic_conductivity_ORegan2022,
-        "Maximum concentration in positive electrode [mol.m-3]": 63104.0,
+        "Maximum concentration in positive electrode [mol.m-3]": 52787.0, # Mark Ruihe change from 63104.0,
         "Positive electrode diffusivity [m2.s-1]": nmc_LGM50_diffusivity_ORegan2022,
-        "Positive electrode OCP [V]": nmc_LGM50_ocp_Chen2020,
+        "Positive electrode OCP [V]": nmc_LGM50_lithiation_ocp_OKane2023, #  nmc_LGM50_ocp_Chen2020,
         "Positive electrode porosity": 0.335,
         "Positive electrode active material volume fraction": 0.665,
         "Positive particle radius [m]": 5.22e-06,
         "Positive electrode Bruggeman coefficient (electrolyte)": 1.5,
-        "Positive electrode Bruggeman coefficient (electrode)": 1.5,  # Mark Ruihe, change from 1.5  
+        "Positive electrode Bruggeman coefficient (electrode)": 0.0,  # Mark Ruihe, change from 1.5  
         "Positive electrode cation signed stoichiometry": -1.0,
         "Positive electrode electrons in reaction": 1.0,
         "Positive electrode charge transfer coefficient": 0.5,
         "Positive electrode double-layer capacity [F.m-2]": 0.2,
         "Positive electrode exchange-current density [A.m-2]"
-        "": nmc_LGM50_electrolyte_exchange_current_density_Chen2020, # ask Simon
+        "": nmc_LGM50_electrolyte_exchange_current_density_ORegan2022, # ask Simon
         "Positive electrode density [kg.m-3]": 3699.0,
         "Positive electrode specific heat capacity [J.kg-1.K-1]"
         "": nmc_LGM50_heat_capacity_ORegan2022,
@@ -1252,9 +1306,9 @@ def get_parameter_values():
         "Number of cells connected in series to make a battery": 1.0,
         "Lower voltage cut-off [V]": 2.5,
         "Upper voltage cut-off [V]": 4.4,
-        "Initial concentration in negative electrode [mol.m-3]": 29866.0,
-        "Initial concentration in positive electrode [mol.m-3]": 17038.0,
+        "Initial concentration in negative electrode [mol.m-3]": 28543.0,
+        "Initial concentration in positive electrode [mol.m-3]": 12727.0,
         "Initial temperature [K]": 298.15,
         # citations
-        "citations": ["ORegan2022","Chen2020"],
+        "citations": ["ORegan2022","Chen2020","OKane2022", "OKane2020",],
     }

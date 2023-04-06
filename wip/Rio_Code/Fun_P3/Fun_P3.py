@@ -9,6 +9,59 @@ import random;import time, signal
 
 from pybamm import tanh,exp,sqrt
 
+def nmc_LGM50_lithiation_ocp_OKane2023(sto):
+    """
+    LG M50 NMC lithiation open-circuit potential as a function of stoichiometry.
+    Fitted to unpublished measurements by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open-circuit potential
+    """
+
+    U = (
+        -0.7983 * sto
+        + 4.513
+        - 0.03269 * pybamm.tanh(19.83 * (sto - 0.5424))
+        - 18.23 * pybamm.tanh(14.33 * (sto - 0.2771))
+        + 18.05 * pybamm.tanh(14.46 * (sto - 0.2776))
+    )
+
+    return U
+
+def graphite_LGM50_delithiation_ocp_OKane2023(sto):
+    """
+    LG M50 Graphite delithiation open-circuit potential as a function of stochiometry.
+    Fitted to unpublished measurements taken by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open circuit potential
+    """
+
+    u_eq = (
+        1.051 * pybamm.exp(-26.76 * sto)
+        + 0.1916
+        - 0.05598 * pybamm.tanh(35.62 * (sto - 0.1356))
+        - 0.04483 * pybamm.tanh(14.64 * (sto - 0.2861))
+        - 0.02097 * pybamm.tanh(26.28 * (sto - 0.6183))
+        - 0.02398 * pybamm.tanh(38.1 * (sto - 1))
+    )
+
+    return u_eq
+
+
 def Diff_Andrew_ACS(c_e,c_EC, T):
     M_EMC = 104.105/1e3 # kg/mol
     M_e   = 151.905/1e3 # kg/mol
@@ -701,6 +754,89 @@ def dLJP_dcEC_Nyman_2011(c_e, c_EC , T):
 def dLJP_dce_Nyman_2011(c_e, c_EC , T):
     dLJP_dce = 5.326e-5 + 2.47e-2 / c_e
     return dLJP_dce
+
+def gr_i_ex_2p68(c_e, c_s_surf, c_s_max, T):
+    i_ref = 2.668  # (A/m2)
+    alpha = 0.792; E_r = 4e4
+    arrhenius = pybamm.exp(E_r / pybamm.constants.R * (1 / 298.15 - 1 / T))
+    c_e_ref = pybamm.Parameter("Typical electrolyte concentration [mol.m-3]")
+    return (
+        i_ref
+        * arrhenius
+        * (c_e / c_e_ref) ** (1 - alpha)
+        * (c_s_surf / c_s_max) ** alpha
+        * (1 - c_s_surf / c_s_max) ** (1 - alpha)
+    )
+def gr_i_ex_1p68(c_e, c_s_surf, c_s_max, T):
+    i_ref = 1.668  # (A/m2)
+    alpha = 0.792; E_r = 4e4
+    arrhenius = pybamm.exp(E_r / pybamm.constants.R * (1 / 298.15 - 1 / T))
+    c_e_ref = pybamm.Parameter("Typical electrolyte concentration [mol.m-3]")
+    return (
+        i_ref
+        * arrhenius
+        * (c_e / c_e_ref) ** (1 - alpha)
+        * (c_s_surf / c_s_max) ** alpha
+        * (1 - c_s_surf / c_s_max) ** (1 - alpha)
+    )
+def gr_i_ex_3p68(c_e, c_s_surf, c_s_max, T):
+    i_ref = 3.668  # (A/m2)
+    alpha = 0.792; E_r = 4e4
+    arrhenius = pybamm.exp(E_r / pybamm.constants.R * (1 / 298.15 - 1 / T))
+    c_e_ref = pybamm.Parameter("Typical electrolyte concentration [mol.m-3]")
+    return (
+        i_ref
+        * arrhenius
+        * (c_e / c_e_ref) ** (1 - alpha)
+        * (c_s_surf / c_s_max) ** alpha
+        * (1 - c_s_surf / c_s_max) ** (1 - alpha)
+    )
+
+def nc_i_ex_5(c_e, c_s_surf, c_s_max, T):
+    i_ref = 5.028  # (A/m2)
+    alpha = 0.43
+    E_r = 2.401e4
+    arrhenius = pybamm.exp(E_r / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    c_e_ref = pybamm.Parameter("Typical electrolyte concentration [mol.m-3]")
+
+    return (
+        i_ref
+        * arrhenius
+        * (c_e / c_e_ref) ** (1 - alpha)
+        * (c_s_surf / c_s_max) ** alpha
+        * (1 - c_s_surf / c_s_max) ** (1 - alpha)
+    )
+def nc_i_ex_3(c_e, c_s_surf, c_s_max, T):
+    i_ref = 3.028  # (A/m2)
+    alpha = 0.43
+    E_r = 2.401e4
+    arrhenius = pybamm.exp(E_r / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    c_e_ref = pybamm.Parameter("Typical electrolyte concentration [mol.m-3]")
+
+    return (
+        i_ref
+        * arrhenius
+        * (c_e / c_e_ref) ** (1 - alpha)
+        * (c_s_surf / c_s_max) ** alpha
+        * (1 - c_s_surf / c_s_max) ** (1 - alpha)
+    )
+def nc_i_ex_1(c_e, c_s_surf, c_s_max, T):
+    i_ref = 1.028  # (A/m2)
+    alpha = 0.43
+    E_r = 2.401e4
+    arrhenius = pybamm.exp(E_r / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    c_e_ref = pybamm.Parameter("Typical electrolyte concentration [mol.m-3]")
+
+    return (
+        i_ref
+        * arrhenius
+        * (c_e / c_e_ref) ** (1 - alpha)
+        * (c_s_surf / c_s_max) ** alpha
+        * (1 - c_s_surf / c_s_max) ** (1 - alpha)
+    )
 
 def graphite_LGM50_electrolyte_exchange_current_density_ORegan2022(
     c_e, c_s_surf, c_s_max, T
