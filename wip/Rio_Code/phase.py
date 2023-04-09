@@ -1,19 +1,37 @@
-sol_dd = SD_Dis_All[0]
-sol_dd = DD_Dis_All[0]
-t_seconds = sol_dd["Time [s]"].entries
-t_hours = (t_seconds - 60) / 3600
-I = sol_dd["Current [A]"].entries
-Q = sol_dd["Discharge capacity [A.h]"].entries
-V = sol_dd["Terminal voltage [V]"].entries
+# Concentration, LJP and overpotential 
+Crate_index = -1
+fig, axs = plt.subplots(1,2, figsize=(9.3,3.2),tight_layout=True)
+step_sd = SD_Crate['Sol_All'][Crate_index].cycles[0].steps[1]
+axs[0].plot(
+    step_sd['Time [s]'].entries-step_sd['Time [s]'].entries[0], 
+    step_sd["X-averaged battery concentration overpotential [V]"].entries,
+    color=Colors[0],linestyle=LS[0],label=r"Single-High $D_\times$") 
+axs[1].plot(
+    step_sd['Time [s]'].entries-step_sd['Time [s]'].entries[0], 
+    step_sd["X-averaged EC concentration overpotential [V]"].entries,
+    color=Colors[0],linestyle=LS[0],label=r"Single-High $D_\times$") 
 
-# No zoom in:
-fig, ax = plt.subplots()
-ax.plot(t_exp-t_exp[0],V_exp,color='k',linewidth=2,  linestyle='-',label='Experiment')
-ax.plot(t_hours,V,color='r',linewidth=2,  linestyle='--',label='Simulation')
+step_DD_LDx = DD_LDx_Crate['Sol_All'][Crate_index].cycles[0].steps[1]
+axs[0].plot(
+    step_DD_LDx['Time [s]'].entries-step_DD_LDx['Time [s]'].entries[0], 
+    step_DD_LDx["X-averaged battery concentration overpotential [V]"].entries,
+    color=Colors[3],linestyle=LS[3],label=r"Double-Low $D_\times$") 
+axs[1].plot(
+    step_DD_LDx['Time [s]'].entries-step_DD_LDx['Time [s]'].entries[0], 
+    step_DD_LDx["X-averaged EC concentration overpotential [V]"].entries,
+    color=Colors[3],linestyle=LS[3],label=r"Double-Low $D_\times$") 
 
-ax.set_xlabel('Time [h]')
-ax.set_ylabel('Terminal voltage [V]')
-ax.set_title('25x1C pulses at 298K, comparison')
-ax.legend(loc='best',frameon=False)
-fig.suptitle(f'Scan = {index_i}')
-plt.show()
+step_DD_HDx = DD_HDx_Crate['Sol_All'][Crate_index].cycles[0].steps[1]
+axs[0].plot(
+    step_DD_HDx['Time [s]'].entries-step_DD_HDx['Time [s]'].entries[0], 
+    step_DD_HDx["X-averaged battery concentration overpotential [V]"].entries,
+    color=Colors[2],linestyle=LS[2],label=r"Double-High $D_\times$") 
+axs[1].plot(
+    step_DD_HDx['Time [s]'].entries-step_DD_HDx['Time [s]'].entries[0], 
+    step_DD_HDx["X-averaged EC concentration overpotential [V]"].entries,
+    color=Colors[2],linestyle=LS[2],label=r"Double-High $D_\times$") 
+
+axs[0].set_ylabel("Potential [V]",fontsize=fs)
+axs[1].set_xlabel("Time [s]",fontsize=fs)
+axs[0].set_xlabel("Time [s]",fontsize=fs)
+fig.suptitle(f"EC and Li+ overpotential - {Rate_Dis_All[Crate_index]}C Discharge", fontsize=fs+1)

@@ -1317,6 +1317,7 @@ class BaseBatteryModel(pybamm.BaseModel):
         V_dim = self.variables["Terminal voltage [V]"]
         eta_e_av_dim = self.variables["X-averaged electrolyte ohmic losses [V]"]
         eta_c_av_dim = self.variables["X-averaged concentration overpotential [V]"]
+        eta_c_EC_av_dim = self.variables["X-averaged EC concentration overpotential [V]"]
         num_cells = pybamm.Parameter(
             "Number of cells connected in series to make a battery"
         )
@@ -1331,6 +1332,8 @@ class BaseBatteryModel(pybamm.BaseModel):
                 "X-averaged battery electrolyte ohmic losses [V]": eta_e_av_dim
                 * num_cells,
                 "X-averaged battery concentration overpotential [V]": eta_c_av_dim
+                * num_cells,
+                "X-averaged battery EC concentration overpotential [V]": eta_c_EC_av_dim
                 * num_cells,
                 "Battery voltage [V]": V_dim * num_cells,
             }
