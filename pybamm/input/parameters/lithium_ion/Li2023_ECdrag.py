@@ -1283,7 +1283,7 @@ def get_parameter_values():
         # 3500 and 7000 (EC:EMC=3:7); 6250 and 5300 (EC:EMC=1:1); 9300 and 3250 (EC:EMC=7:3)
         "EC transference number": EC_transference_number,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
         "EC transference number zero": 0.7  , # from Andrew": 
-        "EC initial concentration in electrolyte [mol.m-3]": 3500  ,
+        "EC initial concentration in electrolyte [mol.m-3]": 3500,
         "Typical EC concentration [mol.m-3]": 3500, 
         #"Background solvent concentration [mol.m-3]": Fun_c_EMC,  # should from Andrew, add temperoaliy
         "Typical total concentration [mol.m-3]":12482.2,

@@ -2007,9 +2007,18 @@ def Para_init(Para_dict):
     if Para_dict_used.__contains__("Total ageing cycles"):
         Total_Cycles = Para_dict_used["Total ageing cycles"]  
         Para_dict_used.pop("Total ageing cycles")
+    else:
+        Total_Cycles = False
+    if Para_dict_used.__contains__("Mesh list"):
+        Mesh_list = Para_dict_used["Mesh list"]  
+        Para_dict_used.pop("Mesh list")
+    else:
+        Mesh_list = False
     if Para_dict_used.__contains__("SaveAsList"):
         SaveAsList = Para_dict_used["SaveAsList"]  
         Para_dict_used.pop("SaveAsList")
+    else:
+        SaveAsList = False
     if Para_dict_used.__contains__("Ageing cycles between RPT"):
         Cycle_bt_RPT = Para_dict_used["Ageing cycles between RPT"]  
         Para_dict_used.pop("Ageing cycles between RPT")
@@ -2022,6 +2031,8 @@ def Para_init(Para_dict):
     if Para_dict_used.__contains__("Ageing temperature"):
         Temper_i = Para_dict_used["Ageing temperature"]  + 273.15
         Para_dict_used.pop("Ageing temperature")
+    else: 
+        Temper_i = False
     if Para_dict_used.__contains__("RPT temperature"):
         Temper_RPT = Para_dict_used["RPT temperature"]   + 273.15
         Para_dict_used.pop("RPT temperature")
@@ -2036,32 +2047,8 @@ def Para_init(Para_dict):
     if Para_dict_used.__contains__("Model option"):
         model_options = Para_dict_used["Model option"]  
         Para_dict_used.pop("Model option")
-
-    """ if Para_dict_used.__contains__("Func Electrolyte conductivity [S.m-1]"):
-        Para_0.update({
-            "Electrolyte conductivity [S.m-1]": 
-            eval(Para_dict_used["Func Electrolyte conductivity [S.m-1]"])})  
-        Para_dict_used.pop("Func Electrolyte conductivity [S.m-1]")
-    if Para_dict_used.__contains__("Func Electrolyte diffusivity [m2.s-1]"):
-        Para_0.update({
-            "Electrolyte diffusivity [m2.s-1]": 
-            eval(Para_dict_used["Func Electrolyte diffusivity [m2.s-1]"])})
-        Para_dict_used.pop("Func Electrolyte diffusivity [m2.s-1]")
-    if Para_dict_used.__contains__("Func EC transference number"):
-        Para_0.update({
-            "EC transference number": 
-            eval(Para_dict_used["Func EC transference number"])})
-        Para_dict_used.pop("Func EC transference number")
-    if Para_dict_used.__contains__("Func Cation transference number"):
-        Para_0.update({
-            "Cation transference number": 
-            eval(Para_dict_used["Func Cation transference number"])})
-        Para_dict_used.pop("Func Cation transference number")
-    if Para_dict_used.__contains__("Func 1 + dlnf/dlnc"):
-        Para_0.update({
-            "1 + dlnf/dlnc": 
-            eval(Para_dict_used["Func 1 + dlnf/dlnc"])})
-        Para_dict_used.pop("Func 1 + dlnf/dlnc") """
+    else:
+        model_options = False
 
     if Para_dict_used.__contains__("Initial Neg SOC"):
         c_Neg1SOC_in = (
@@ -2081,7 +2068,7 @@ def Para_init(Para_dict):
         Para_dict_used.pop("Initial Pos SOC")
 
     CyclePack = [ 
-        Total_Cycles,SaveAsList,Temper_i,model_options];
+        Total_Cycles,SaveAsList,Mesh_list,Temper_i,model_options];
     
     for key, value in Para_dict_used.items():
         # risk: will update parameter that doesn't exist, 
@@ -2161,45 +2148,43 @@ def Run_P3_model(
     # Un-pack data:
     [cycle_no,step_AGE_CD,
         step_AGE_CC,step_AGE_CV, ] = exp_index_pack
-    [exp_AGE,exp_AGE,exp_AGE_2, # may be deleted later
+    [exp_AGE,exp_AGE,exp_AGE_2, # seems not used but actually used!
         exp_AGE_CD,exp_AGE_CC,exp_AGE_CV] = Exp_AGE_List
     [BasicPath,Target,
         book_name_xlsx,sheet_name_xlsx,] = Path_pack
 
     ##### Initialise Para_0 and model 
     CyclePack,Para_0 = Para_init(Para_dict_i)
-    [Total_Cycles,SaveAsList,
+    [Total_Cycles,SaveAsList,Mesh_list,
         Temper_i,model_options] = CyclePack
-    model_0 = pybamm.lithium_ion.DFN(options=model_options)
+    model = pybamm.lithium_ion.DFN(options=model_options)
     str_model_options = str(model_options)
     # add electrolyte properties as variables, 
     # only when they are not constant
-    c_e = model_0.variables["Electrolyte concentration [mol.m-3]"]
-    T = model_0.variables["Cell temperature [K]"]
-    c_EC = model_0.variables["EC concentration [mol.m-3]"]
-    model_0.variables["c(EC) over c(Li+)"] = c_EC / c_e
-    if Para_dict_i.__contains__(
-        "Electrolyte conductivity [S.m-1]") and isinstance(
-            Para_dict_i["Electrolyte conductivity [S.m-1]"], str):
-                model_0.variables["Electrolyte conductivity [S.m-1]"] =(
-                    Para_0["Electrolyte conductivity [S.m-1]"](c_e,c_EC, T))
-    if Para_dict_i.__contains__(
-        "Electrolyte diffusivity [m2.s-1]") and isinstance(
-            Para_dict_i["Electrolyte diffusivity [m2.s-1]"], str):
-                model_0.variables["Electrolyte diffusivity [m2.s-1]"] =(
-                    Para_0['Electrolyte diffusivity [m2.s-1]'](c_e,c_EC, T))
-    if Para_dict_i.__contains__(
-        "Cation transference number") and isinstance(
-            Para_dict_i["Cation transference number"], str):
-                model_0.variables["Cation transference number"] =(
-                    Para_0['Cation transference number'](c_e,c_EC, T))
-    if Para_dict_i.__contains__(
-        "EC transference number") and isinstance(
-            Para_dict_i["EC transference number"], str):
-                model_0.variables["EC transference number"] =(
-                    Para_0['EC transference number'](c_e,c_EC, T))
+    c_e = model.variables["Electrolyte concentration [mol.m-3]"]
+    c_EC= model.variables["EC concentration [mol.m-3]"]
+    T = model.variables["Cell temperature [K]"]
+    D_e = Para_0["Electrolyte diffusivity [m2.s-1]"]
+    D_EC= Para_0["EC diffusivity in electrolyte [m2.s-1]"]
+    sigma_e = Para_0["Electrolyte conductivity [S.m-1]"]
+    dLJP_dcEC = Para_0["Measured dLJP_dcEC"] # dLJP_Two_Species_dco_Jung2023(x,y,T): # # ~~~~# x: ce; y: co 
+    dLJP_dce  = Para_0["Measured dLJP_dce"]
+    Xi = Para_0["EC transference number"]
+    model.variables["Electrolyte diffusivity [m2.s-1]"] = D_e(c_e,c_EC, T)
+    model.variables["EC diffusivity in electrolyte [m2.s-1]"] = D_EC(c_e,c_EC, T)
+    model.variables["Electrolyte conductivity [S.m-1]"] = sigma_e(c_e,c_EC, T)
+    model.variables["EC transference number"] = Xi(c_e,c_EC, T)
+    model.variables["c(EC) over c(Li+)"] = c_EC / c_e
+    model.variables["dLJP_dcEC"] =  dLJP_dcEC(c_e,c_EC, T)
+    model.variables["dLJP_dce"] =  dLJP_dce(c_e,c_EC, T)
+    # molar mass in Taeho's paper: unit: g/mol
+    M_EMC = 104.105; M_EC = 88.062; M_e = 151.905;
+    c_EMC = 9778-0.5369*c_e-0.6411*c_EC
+    model.variables["c(EMC) [mol.m-3]"] =  c_EMC
+    model.variables["EC:EMC wt%"] =  (c_EC*M_EC) / (c_EMC*M_EMC) 
+    t_0plus = Para_0["Cation transference number"]
+    model.variables["Cation transference number"] = t_0plus(c_e,c_EC, T)
     
-
     # Define experiment- for ageing only, NOT RPT
     str_exp_All = [];Experiment_All = [];
     for SaveAs_i, exp_i in zip(SaveAsList,Exp_AGE_List):
@@ -2209,14 +2194,22 @@ def Run_P3_model(
 
 
     #####Important: index canot be pre-determined anymore! ######
-    var_pts = {
-        "x_n": 10,  # negative electrode
-        "x_s": 5,  # separator 
-        "x_p": 10,  # positive electrode
-        "r_n": 30,  # negative particle
-        "r_p": 20,  # positive particle
-    }
-
+    if not Mesh_list:
+        var_pts = {
+        "x_n": Mesh_list[0],  # negative electrode
+        "x_s": Mesh_list[1],  # separator 
+        "x_p": Mesh_list[2],  # positive electrode
+        "r_n": Mesh_list[3],  # negative particle
+        "r_p": Mesh_list[4],  # positive particle
+        }    
+    else:
+        var_pts = {
+            "x_n": 5,  # negative electrode
+            "x_s": 5,  # separator 
+            "x_p": 5,  # positive electrode
+            "r_n": 60,  # negative particle
+            "r_p": 20,  # positive particle
+        }
     # initialize my_dict for outputs
     my_dict_AGE = {}; 
     for keys in keys_all_AGE:
@@ -2236,7 +2229,7 @@ def Run_P3_model(
             if i==0: # 1st time or never succeed, run from scratch:
                 rioCall = RioCallback()  # define callback
                 sim_0    = pybamm.Simulation(
-                    model_0,
+                    model,
                     experiment = Experiment_All[step_switch],
                     parameter_values = Para_0,
                     solver = pybamm.CasadiSolver(),
@@ -2288,7 +2281,7 @@ def Run_P3_model(
                 break
         else:        
             if i == 0: 
-                model_old = model_0; sol_old = sol_0    
+                model_old = model; sol_old = sol_0    
             else: 
                 model_old = model_new; sol_old = sol_new
                 del model_new,sol_new
