@@ -2196,20 +2196,20 @@ def Run_P3_model(
     #####Important: index canot be pre-determined anymore! ######
     if not Mesh_list:
         var_pts = {
-        "x_n": Mesh_list[0],  # negative electrode
-        "x_s": Mesh_list[1],  # separator 
-        "x_p": Mesh_list[2],  # positive electrode
-        "r_n": Mesh_list[3],  # negative particle
-        "r_p": Mesh_list[4],  # positive particle
-        }    
-    else:
-        var_pts = {
             "x_n": 5,  # negative electrode
             "x_s": 5,  # separator 
             "x_p": 5,  # positive electrode
             "r_n": 60,  # negative particle
             "r_p": 20,  # positive particle
         }
+    else:
+        var_pts = {
+        "x_n": Mesh_list[0],  # negative electrode
+        "x_s": Mesh_list[1],  # separator 
+        "x_p": Mesh_list[2],  # positive electrode
+        "r_n": Mesh_list[3],  # negative particle
+        "r_p": Mesh_list[4],  # positive particle
+        }    
     # initialize my_dict for outputs
     my_dict_AGE = {}; 
     for keys in keys_all_AGE:
