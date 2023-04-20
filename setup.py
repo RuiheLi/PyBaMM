@@ -237,6 +237,7 @@ setup(
             "Marquis2019 = pybamm.input.parameters.lithium_ion.Marquis2019:get_parameter_values",  # noqa: E501
             "Mohtat2020 = pybamm.input.parameters.lithium_ion.Mohtat2020:get_parameter_values",  # noqa: E501
             "NCA_Kim2011 = pybamm.input.parameters.lithium_ion.NCA_Kim2011:get_parameter_values",  # noqa: E501
+            "Oehler2023 = pybamm.input.parameters.lithium_ion.Oehler2023:get_parameter_values",  # noqa: E501
             "OKane2022 = pybamm.input.parameters.lithium_ion.OKane2022:get_parameter_values",  # noqa: E501
             "OKane2023 = pybamm.input.parameters.lithium_ion.OKane2023:get_parameter_values",  # noqa: E501
             "ORegan2022 = pybamm.input.parameters.lithium_ion.ORegan2022:get_parameter_values",  # noqa: E501

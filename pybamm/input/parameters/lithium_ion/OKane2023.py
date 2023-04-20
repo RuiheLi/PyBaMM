@@ -1381,7 +1381,7 @@ def get_parameter_values():
         "": graphite_LGM50_delithiation_ocp_OKane2023,
         "Negative electrode lithiation OCP [V]"
         "": graphite_LGM50_lithiation_ocp_OKane2023,
-        "Negative electrode porosity": 0.25,
+        "Negative electrode porosity": 0.22239,
         "Negative electrode active material volume fraction": 0.75,
         "Negative particle radius [m]": 5.86e-06,
         "Negative electrode Bruggeman coefficient (electrolyte)": 1.5,
