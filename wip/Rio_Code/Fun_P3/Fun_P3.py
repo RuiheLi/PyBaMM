@@ -2137,12 +2137,12 @@ def GetSol_dict (my_dict, keys_all, Sol,
 
 # Run model   # mark:
 def Run_P3_model(
-    index_xlsx, Para_dict_i,   Path_pack , 
+    index_i, Para_dict_i,   Path_pack , 
     keys_all_AGE,   Exp_AGE_List, exp_index_pack ):
 
     ModelTimer = pybamm.Timer()
     Para_dict_old = Para_dict_i.copy();
-    count_i = int(index_xlsx);
+    count_i = int(index_i);
     print('Start Now! Scan %d.' % count_i)  
 
     # Un-pack data:
