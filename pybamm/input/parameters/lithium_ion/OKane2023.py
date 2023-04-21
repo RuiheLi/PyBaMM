@@ -1474,6 +1474,7 @@ def get_parameter_values():
         "": electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019,
         "Electrolyte conductivity [S.m-1]"
         "": electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019,
+        "EC partial molar volume [m3.mol-1]": 6.667e-05,
         # experiment
         "Reference temperature [K]": 298.15,
         "Total heat transfer coefficient [W.m-2.K-1]": 10.0,
