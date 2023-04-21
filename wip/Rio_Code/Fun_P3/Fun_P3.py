@@ -2540,7 +2540,7 @@ def Run_P3_model(
             print(f"Something went wrong during saving .mat for scan {count_i}")
             midc_merge = {}
         else: 
-            print(f"Scan No. {index_xlsx} succeed! Saving succeed as well!")
+            print(f"Scan No. {index_i} succeed! Saving succeed as well!")
 
     else:
         my_dict_AGE={};mdic_cycles={};
@@ -2566,7 +2566,7 @@ def Run_P3_model(
         write_excel_xlsx(
             BasicPath + Target+   book_name_xlsx_seperate, 
             sheet_name_xlsx, values)
-        print(f"Scan No. {index_xlsx} degrade too fast!" )
+        print(f"Scan No. {index_i} degrade too fast!" )
 
     return Sol_all_i,j,midc_merge
 
