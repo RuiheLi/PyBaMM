@@ -109,24 +109,35 @@ class BaseElectrolyteDiffusion(pybamm.BaseSubModel):
 
         param = self.param
         flux_scale = param.D_e_typ * param.c_e_typ / param.L_x
+        source_scale = flux_scale / param.L_x
 
 
         variables = {
             "Li+ flux": N_e,
+            "Li+ flux [mol.m-2.s-1]": N_e * flux_scale,
             "Minus div Li+ flux": -pybamm.div(N_e) / param.C_e ,
+            "Minus div Li+ flux [mol.m-3.s-1]": -pybamm.div(N_e) / param.C_e*source_scale ,
             "Li+ source term": source_terms,
+            "Li+ source term [mol.m-3.s-1]": source_terms*source_scale,
             "eps_c_e rhs":  -pybamm.div(N_e) / param.C_e+source_terms,
             "Li+ source term refill": source_terms_refill,
-            "Li+ flux [mol.m-2.s-1]": N_e * flux_scale,
+            "Li+ source term refill [mol.m-3.s-1]": source_terms_refill*source_scale,
+            
             "Li+ flux by diffusion": N_e_diffusion,
             "Minus div Li+ flux by diffusion": -pybamm.div(N_e_diffusion) / param.C_e ,
             "Li+ flux by diffusion [mol.m-2.s-1]": N_e_diffusion * flux_scale,
+            "Minus div Li+ flux by diffusion [mol.m-3.s-1]": (
+            -pybamm.div(N_e_diffusion) / param.C_e *source_scale) ,
             "Li+ flux by migration": N_e_migration,
             "Minus div Li+ flux by migration": -pybamm.div(N_e_migration) / param.C_e ,
             "Li+ flux by migration [mol.m-2.s-1]": N_e_migration * flux_scale,
+            "Minus div Li+ flux by migration [mol.m-3.s-1]": (
+            -pybamm.div(N_e_migration) / param.C_e  *source_scale),
             "Li+ flux by solvent": N_cross_diffusion,
             "Minus div Li+ flux by solvent": -pybamm.div(N_cross_diffusion) / param.C_e ,
             "Li+ flux by solvent [mol.m-2.s-1]": N_cross_diffusion * flux_scale,
+            "Minus div Li+ flux by solvent [mol.m-3.s-1]": (
+            -pybamm.div(N_cross_diffusion) / param.C_e* source_scale) ,
         }
 
         return variables

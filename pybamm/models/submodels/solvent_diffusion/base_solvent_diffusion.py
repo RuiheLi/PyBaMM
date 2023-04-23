@@ -111,21 +111,42 @@ class BaseSolventDiffusion(pybamm.BaseSubModel):
 
         param = self.param
         flux_EC_scale = param.D_ec_typ * param.c_ec_typ / param.L_x
+        source_EC_scale = flux_EC_scale / param.L_x
 
         variables = {
             "EC flux": N_EC,
             "Minus div EC flux": - pybamm.div(N_EC) * param.tau_discharge / param.tau_ec_Rio ,
+            "Minus div EC flux [mol.m-3.s-1]": (
+            - pybamm.div(N_EC) * param.tau_discharge 
+            / param.tau_ec_Rio *source_EC_scale),
             "EC source term (SEI)": source_terms_ec,
             "EC source term refill": source_terms_refill,
+            "EC source term (SEI) [mol.m-3.s-1]": source_terms_ec*source_EC_scale,
+            "EC source term refill [mol.m-3.s-1]": source_terms_refill*source_EC_scale,
             "EC flux [mol.m-2.s-1]": N_EC * flux_EC_scale,
             "EC flux by diffusion": N_EC_diffusion,
-            "Minus div EC flux by diffusion": - pybamm.div(N_EC_diffusion) * param.tau_discharge / param.tau_ec_Rio  ,
+            "Minus div EC flux by diffusion": (
+            - pybamm.div(N_EC_diffusion) * param.tau_discharge 
+            / param.tau_ec_Rio)  ,
+            "Minus div EC flux by diffusion [mol.m-3.s-1]": (
+            - pybamm.div(N_EC_diffusion) * param.tau_discharge 
+            / param.tau_ec_Rio) * source_EC_scale ,
             "EC flux by diffusion [mol.m-2.s-1]": N_EC_diffusion * flux_EC_scale,
             "EC flux by migration": N_EC_migration,
-            "Minus div EC flux by migration": - pybamm.div(N_EC_migration) * param.tau_discharge / param.tau_ec_Rio  ,
+            "Minus div EC flux by migration": (
+            - pybamm.div(N_EC_migration) * param.tau_discharge 
+            / param.tau_ec_Rio)  ,
+            "Minus div EC flux by migration [mol.m-3.s-1]": (
+            - pybamm.div(N_EC_migration) * param.tau_discharge 
+            / param.tau_ec_Rio)  * source_EC_scale ,
             "EC flux by migration [mol.m-2.s-1]": N_EC_migration * flux_EC_scale,
             "EC flux by Li+": N_cross_diffusion,
-            "Minus div EC flux by Li+": - pybamm.div(N_cross_diffusion) * param.tau_discharge / param.tau_ec_Rio  ,
+            "Minus div EC flux by Li+": (
+            - pybamm.div(N_cross_diffusion) * param.tau_discharge 
+            / param.tau_ec_Rio ) ,
+            "Minus div EC flux by Li+ [mol.m-3.s-1]": (
+            - pybamm.div(N_cross_diffusion) * param.tau_discharge 
+            / param.tau_ec_Rio ) * source_EC_scale,
             "EC flux by Li+ [mol.m-2.s-1]": N_cross_diffusion * flux_EC_scale,
         }
 

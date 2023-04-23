@@ -1755,6 +1755,7 @@ def Run_P3_OneCycle_Dict(
         index_i, Para_dd_i, Path_pack,Rate_Dis,
         Return_sol):
     count_i = int(index_i);
+    print(f'Start Now! C rate: {Rate_Dis}')  
     [BasicPath,Target,Path_Exp_Crate,
         book_name_xlsx,sheet_name_xlsx,] = Path_pack
     ##### Initialise Para_0 and model 
@@ -1829,6 +1830,7 @@ def Run_P3_OneCycle_Dict(
         step_i["Time [h]"].entries - step_i["Time [h]"].entries[0] 
         )
     vol_dis = step_i["Terminal voltage [V]"].entries
+    print(f'Finish Now! C rate: {Rate_Dis}')  
     return sol_return,cap,Trise,t_dis,vol_dis
 
 
