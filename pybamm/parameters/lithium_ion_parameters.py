@@ -102,6 +102,8 @@ class LithiumIonParameters(BaseParameters):
         # Electrolyte properties
         self.c_e_typ = pybamm.Parameter("Typical electrolyte concentration [mol.m-3]")
 
+        self.V_bar_EC = pybamm.Parameter("EC partial molar volume [m3.mol-1]")
+
         self.epsilon_init = pybamm.concatenation(
             *[
                 self.domain_params[domain.split()[0]].epsilon_init
