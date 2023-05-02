@@ -331,7 +331,7 @@ def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
     # Because inner and outer SEI partial molar volume is the same, just set one for whole SEI
     VmolSEI   = Para["Outer SEI partial molar volume [m3.mol-1]"] # 9.8e-5,
     VmolLiP   = Para["Lithium metal partial molar volume [m3.mol-1]"] # 1.3e-05
-    VmolEC    = 6.667e-5  # Unit:m3.mol-1; According to Wiki, correct value: EC molar volume is :66.67 cm3.mol-1  = 6.667e-5, 
+    VmolEC    = Para["EC partial molar volume [m3.mol-1]"]
     Vol_EC_consumed  =  ( LLINegSEI + LLINegSEIcr + LLINegDeadLiP  ) * 2 * VmolEC    # Mark: Ruihe add LLINegDeadLiP, either with 2 or not, will decide how fast electrolyte being consumed!
     Vol_Elely_need   = Vol_EC_consumed - Vol_Pore_decrease
     Vol_SEILiP_increase = 1.0*(
@@ -1498,8 +1498,7 @@ def Run_P2_Opt_Timeout(
         step_RPT_CD,step_RPT_RE , step_RPT_CC ] = exp_index_pack;
     [
         exp_AGE_text,       exp_RPT_0p1C_text,  
-        exp_RPT_refill_text,exp_RPT_GITT_text, 
-        exp_preAge_text     ] = exp_text_list;
+        exp_RPT_refill_text,exp_preAge_text] = exp_text_list;
     [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
     CyclePack,Para_0 = Para_init(Para_dict_i)
     [Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
@@ -1510,11 +1509,9 @@ def Run_P2_Opt_Timeout(
 
     # define experiment
     Experiment_Long   = pb.Experiment( exp_AGE_text * Update_Cycles  )  
-    # update 230312 - add GITT and compare R_0
+    # update 24-04-2023: delete GITT
     Experiment_RPT    = pb.Experiment( 
         exp_RPT_0p1C_text*1 
-        + exp_RPT_refill_text*1
-        + exp_RPT_GITT_text*24 
         + exp_RPT_refill_text*1
         + exp_preAge_text     ) 
     Experiment_Breakin= Experiment_RPT
