@@ -15,18 +15,13 @@ class BaseIntegrationTestLithiumIon:
 
     def test_basic_processing(self):
         options = {}
-        # use Ecker parameters for nonlinear diffusion
-        param = pybamm.ParameterValues("Ecker2015")
-        self.run_basic_processing_test(options, parameter_values=param)
+        self.run_basic_processing_test(options)
 
     def test_sensitivities(self):
         model = self.model()
         param = pybamm.ParameterValues("Ecker2015")
         modeltest = tests.StandardModelTest(model, parameter_values=param)
-        modeltest.test_sensitivities(
-            "Current function [A]",
-            0.15652,
-        )
+        modeltest.test_sensitivities("Current function [A]", 0.15652)
 
     def test_basic_processing_1plus1D(self):
         options = {"current collector": "potential pair", "dimensionality": 1}
@@ -256,7 +251,7 @@ class BaseIntegrationTestLithiumIon:
     def test_composite_graphite_silicon(self):
         options = {
             "particle phases": ("2", "1"),
-            "open circuit potential": (("single", "current sigmoid"), "single"),
+            "open-circuit potential": (("single", "current sigmoid"), "single"),
         }
         parameter_values = pybamm.ParameterValues("Chen2020_composite")
         name = "Negative electrode active material volume fraction"
@@ -269,7 +264,7 @@ class BaseIntegrationTestLithiumIon:
     def test_composite_graphite_silicon_sei(self):
         options = {
             "particle phases": ("2", "1"),
-            "open circuit potential": (("single", "current sigmoid"), "single"),
+            "open-circuit potential": (("single", "current sigmoid"), "single"),
             "SEI": "ec reaction limited",
         }
         parameter_values = pybamm.ParameterValues("Chen2020_composite")

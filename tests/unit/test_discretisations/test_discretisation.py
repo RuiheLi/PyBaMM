@@ -1,6 +1,7 @@
 #
 # Tests for the base model class
 #
+from tests import TestCase
 import pybamm
 
 import numpy as np
@@ -17,7 +18,7 @@ from scipy.sparse import block_diag, csc_matrix
 from scipy.sparse.linalg import inv
 
 
-class TestDiscretise(unittest.TestCase):
+class TestDiscretise(TestCase):
     def test_concatenate_in_order(self):
         a = pybamm.Variable("a")
         b = pybamm.Variable("b")
@@ -141,6 +142,14 @@ class TestDiscretise(unittest.TestCase):
 
         with self.assertRaisesRegex(TypeError, "y_slices should be"):
             disc.y_slices = 1
+
+        # bounds with an InputParameter
+        a = pybamm.InputParameter("a")
+        b = pybamm.InputParameter("b")
+        v = pybamm.Variable("v", domain=whole_cell, bounds=(a, b))
+        disc.set_variable_slices([v])
+        np.testing.assert_array_equal(disc.bounds[0], [-np.inf] * 100)
+        np.testing.assert_array_equal(disc.bounds[1], [np.inf] * 100)
 
     def test_process_symbol_base(self):
         # create discretisation
@@ -958,13 +967,13 @@ class TestDiscretise(unittest.TestCase):
             "a",
             domain=["negative electrode"],
             auxiliary_domains={"secondary": "current collector"},
-            bounds=(-5, -2),
+            bounds=(0, 1),
         )
         b = pybamm.Variable(
             "b",
             domain=["separator"],
             auxiliary_domains={"secondary": "current collector"},
-            bounds=(6, 10),
+            bounds=(0, 1),
         )
         c = pybamm.Variable(
             "c",
@@ -985,8 +994,6 @@ class TestDiscretise(unittest.TestCase):
         self.assertEqual(
             disc.y_slices[c], [slice(65, 100), slice(165, 200), slice(265, 300)]
         )
-        np.testing.assert_array_equal(disc.bounds[0], 6)
-        np.testing.assert_array_equal(disc.bounds[1], -2)
         expr = disc.process_symbol(conc)
         self.assertIsInstance(expr, pybamm.StateVector)
 
@@ -1217,9 +1224,7 @@ class TestDiscretise(unittest.TestCase):
         var = pybamm.Variable("var")
         model.rhs = {var: pybamm.Scalar(1)}
         model.initial_conditions = {var: pybamm.Scalar(1)}
-        model.length_scales = {"negative electrode": pybamm.Vector([1])}
         disc.process_model(model)
-        self.assertEqual(model.length_scales["negative electrode"], pybamm.Scalar(1))
 
     def test_independent_rhs(self):
         a = pybamm.Variable("a")

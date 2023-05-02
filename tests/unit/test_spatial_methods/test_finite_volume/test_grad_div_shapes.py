@@ -1,6 +1,7 @@
 #
 # Test for the gradient and divergence in Finite Volumes
 #
+from tests import TestCase
 import pybamm
 from tests import (
     get_mesh_for_testing,
@@ -12,7 +13,7 @@ import numpy as np
 import unittest
 
 
-class TestFiniteVolumeGradDiv(unittest.TestCase):
+class TestFiniteVolumeGradDiv(TestCase):
     def test_grad_div_shapes_Dirichlet_bcs(self):
         """
         Test grad and div with Dirichlet boundary conditions in Cartesian coordinates
@@ -169,8 +170,8 @@ class TestFiniteVolumeGradDiv(unittest.TestCase):
         y_linear = np.tile(submesh.nodes, sec_npts)
         boundary_conditions = {
             var: {
-                "left": (pybamm.Scalar(0), "Dirichlet"),
-                "right": (pybamm.Scalar(1), "Dirichlet"),
+                "left": (pybamm.Scalar(submesh.edges[0]), "Dirichlet"),
+                "right": (pybamm.Scalar(submesh.edges[-1]), "Dirichlet"),
             }
         }
         disc.bcs = boundary_conditions
@@ -186,8 +187,8 @@ class TestFiniteVolumeGradDiv(unittest.TestCase):
         div_eqn = pybamm.div(N)
         boundary_conditions = {
             var: {
-                "left": (pybamm.Scalar(0), "Dirichlet"),
-                "right": (pybamm.Scalar(1), "Dirichlet"),
+                "left": (pybamm.Scalar(submesh.nodes[0]), "Dirichlet"),
+                "right": (pybamm.Scalar(submesh.nodes[-1]), "Dirichlet"),
             }
         }
         disc.bcs = boundary_conditions
@@ -475,14 +476,14 @@ class TestFiniteVolumeGradDiv(unittest.TestCase):
         )
 
         # Test divergence of gradient
-        # div(grad(r^2)) = 6 , N_left = 0, N_right = 2
+        # div(grad(r^2)) = 6 , N_left = 2*0 = 0, N_right = 2*0.5=1
         quadratic_y = submesh.nodes**2
         N = pybamm.grad(var)
         div_eqn = pybamm.div(N)
         boundary_conditions = {
             var: {
                 "left": (pybamm.Scalar(0), "Neumann"),
-                "right": (pybamm.Scalar(2), "Neumann"),
+                "right": (pybamm.Scalar(1), "Neumann"),
             }
         }
         disc.bcs = boundary_conditions
@@ -528,13 +529,14 @@ class TestFiniteVolumeGradDiv(unittest.TestCase):
 
         # Test divergence of gradient
         # div(grad r^2) = 6, N_left = 0, N_right = 2
-        y_squared = np.tile(mesh["negative particle"].nodes ** 2, sec_pts)
+        submesh = mesh["negative particle"]
+        y_squared = np.tile(submesh.nodes**2, sec_pts)
         N = pybamm.grad(var)
         div_eqn = pybamm.div(N)
         boundary_conditions = {
             var: {
                 "left": (pybamm.Scalar(0), "Neumann"),
-                "right": (pybamm.Scalar(2), "Neumann"),
+                "right": (pybamm.Scalar(2 * submesh.edges[-1]), "Neumann"),
             }
         }
         disc.bcs = boundary_conditions

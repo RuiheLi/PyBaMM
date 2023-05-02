@@ -1,6 +1,7 @@
 #
 # Tests for the Binary Operator classes
 #
+from tests import TestCase
 import unittest
 
 import numpy as np
@@ -10,7 +11,7 @@ from scipy.sparse import coo_matrix
 import pybamm
 
 
-class TestBinaryOperators(unittest.TestCase):
+class TestBinaryOperators(TestCase):
     def test_binary_operator(self):
         a = pybamm.Symbol("a")
         b = pybamm.Symbol("b")
@@ -237,7 +238,9 @@ class TestBinaryOperators(unittest.TestCase):
     def test_inner(self):
         model = pybamm.lithium_ion.BaseModel()
 
-        phi_s = pybamm.standard_variables.phi_s_n
+        phi_s = pybamm.Variable(
+            "Negative electrode potential [V]", domain="negative electrode"
+        )
         i = pybamm.grad(phi_s)
 
         model.rhs = {phi_s: pybamm.inner(i, i)}

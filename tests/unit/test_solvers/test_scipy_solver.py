@@ -1,6 +1,7 @@
 # Tests for the Scipy Solver class
 #
 import pybamm
+from tests import TestCase
 import unittest
 import numpy as np
 from tests import get_mesh_for_testing, get_discretisation_for_testing
@@ -8,7 +9,7 @@ import warnings
 import sys
 
 
-class TestScipySolver(unittest.TestCase):
+class TestScipySolver(TestCase):
     def test_model_solver_python_and_jax(self):
         if pybamm.have_jax():
             formats = ["python", "jax"]
@@ -180,7 +181,7 @@ class TestScipySolver(unittest.TestCase):
         # Step again (return 5 points)
         step_sol_2 = solver.step(step_sol, model, dt, npts=5)
         np.testing.assert_array_equal(
-            step_sol_2.t, np.concatenate([np.array([0]), np.linspace(dt, 2 * dt, 5)])
+            step_sol_2.t, np.array([0, 1, 1 + 1e-9, 1.25, 1.5, 1.75, 2])
         )
         np.testing.assert_array_almost_equal(
             step_sol_2.y[0], np.exp(0.1 * step_sol_2.t)
@@ -492,7 +493,7 @@ class TestScipySolver(unittest.TestCase):
         )
 
 
-class TestScipySolverWithSensitivity(unittest.TestCase):
+class TestScipySolverWithSensitivity(TestCase):
     def test_solve_sensitivity_scalar_var_scalar_input(self):
         # Create model
         model = pybamm.BaseModel()
@@ -600,8 +601,6 @@ class TestScipySolverWithSensitivity(unittest.TestCase):
     def test_solve_sensitivity_vector_var_scalar_input(self):
         var = pybamm.Variable("var", "negative electrode")
         model = pybamm.BaseModel()
-        # Set length scales to avoid warning
-        model.length_scales = {"negative electrode": 1}
         param = pybamm.InputParameter("param")
         model.rhs = {var: -param * var}
         model.initial_conditions = {var: 2}
@@ -632,8 +631,6 @@ class TestScipySolverWithSensitivity(unittest.TestCase):
         # More complicated model
         # Create model
         model = pybamm.BaseModel()
-        # Set length scales to avoid warning
-        model.length_scales = {"negative electrode": 1}
         var = pybamm.Variable("var", "negative electrode")
         p = pybamm.InputParameter("p")
         q = pybamm.InputParameter("q")
@@ -709,8 +706,6 @@ class TestScipySolverWithSensitivity(unittest.TestCase):
     def test_solve_sensitivity_vector_var_vector_input(self):
         var = pybamm.Variable("var", "negative electrode")
         model = pybamm.BaseModel()
-        # Set length scales to avoid warning
-        model.length_scales = {"negative electrode": 1}
 
         param = pybamm.InputParameter("param", "negative electrode")
         model.rhs = {var: -param * var}

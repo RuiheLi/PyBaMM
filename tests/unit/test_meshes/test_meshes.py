@@ -1,12 +1,25 @@
 #
 # Test for the Finite Volume Mesh class
 #
+from tests import TestCase
 import pybamm
 import numpy as np
 import unittest
 
 
-class TestMesh(unittest.TestCase):
+def get_param():
+    return pybamm.ParameterValues(
+        {
+            "Negative electrode thickness [m]": 0.1,
+            "Separator thickness [m]": 0.2,
+            "Positive electrode thickness [m]": 0.3,
+            "Negative particle radius [m]": 0.4,
+            "Positive particle radius [m]": 0.5,
+        }
+    )
+
+
+class TestMesh(TestCase):
     def test_mesh_creation_no_parameters(self):
         r = pybamm.SpatialVariable(
             "r", domain=["negative particle"], coord_sys="spherical polar"
@@ -45,13 +58,7 @@ class TestMesh(unittest.TestCase):
             mesh = pybamm.Mesh(geometry, submesh_types, var_pts)
 
     def test_mesh_creation(self):
-        param = pybamm.ParameterValues(
-            values={
-                "Negative electrode thickness [m]": 0.1,
-                "Separator thickness [m]": 0.2,
-                "Positive electrode thickness [m]": 0.3,
-            }
-        )
+        param = get_param()
 
         geometry = pybamm.battery_geometry()
         param.process_geometry(geometry)
@@ -72,7 +79,7 @@ class TestMesh(unittest.TestCase):
 
         # check boundary locations
         self.assertEqual(mesh["negative electrode"].edges[0], 0)
-        self.assertEqual(mesh["positive electrode"].edges[-1], 1)
+        self.assertAlmostEqual(mesh["positive electrode"].edges[-1], 0.6)
 
         # check internal boundary locations
         self.assertEqual(
@@ -128,13 +135,7 @@ class TestMesh(unittest.TestCase):
             pybamm.Mesh(geometry, submesh_types, var_pts)
 
     def test_mesh_sizes(self):
-        param = pybamm.ParameterValues(
-            values={
-                "Negative electrode thickness [m]": 0.1,
-                "Separator thickness [m]": 0.2,
-                "Positive electrode thickness [m]": 0.3,
-            }
-        )
+        param = get_param()
 
         geometry = pybamm.battery_geometry()
         param.process_geometry(geometry)
@@ -162,13 +163,7 @@ class TestMesh(unittest.TestCase):
         self.assertEqual(len(mesh["positive electrode"].edges) - 1, var_pts["x_p"])
 
     def test_mesh_sizes_using_standard_spatial_vars(self):
-        param = pybamm.ParameterValues(
-            values={
-                "Negative electrode thickness [m]": 0.1,
-                "Separator thickness [m]": 0.2,
-                "Positive electrode thickness [m]": 0.3,
-            }
-        )
+        param = get_param()
 
         geometry = pybamm.battery_geometry()
         param.process_geometry(geometry)
@@ -197,13 +192,7 @@ class TestMesh(unittest.TestCase):
         self.assertEqual(len(mesh["positive electrode"].edges) - 1, var_pts[var.x_p])
 
     def test_combine_submeshes(self):
-        param = pybamm.ParameterValues(
-            values={
-                "Negative electrode thickness [m]": 0.1,
-                "Separator thickness [m]": 0.2,
-                "Positive electrode thickness [m]": 0.3,
-            }
-        )
+        param = get_param()
 
         geometry = pybamm.battery_geometry()
         param.process_geometry(geometry)
@@ -233,7 +222,7 @@ class TestMesh(unittest.TestCase):
             ),
             0,
         )
-        np.testing.assert_almost_equal(submesh.internal_boundaries, [0.1 / 0.6])
+        self.assertEqual(submesh.internal_boundaries, [0.1])
         with self.assertRaises(pybamm.DomainError):
             mesh.combine_submeshes("negative electrode", "positive electrode")
 
@@ -255,13 +244,7 @@ class TestMesh(unittest.TestCase):
             mesh.combine_submeshes()
 
     def test_ghost_cells(self):
-        param = pybamm.ParameterValues(
-            values={
-                "Negative electrode thickness [m]": 0.1,
-                "Separator thickness [m]": 0.2,
-                "Positive electrode thickness [m]": 0.3,
-            }
-        )
+        param = get_param()
 
         geometry = pybamm.battery_geometry()
         param.process_geometry(geometry)
@@ -294,13 +277,7 @@ class TestMesh(unittest.TestCase):
         )
 
     def test_mesh_coord_sys(self):
-        param = pybamm.ParameterValues(
-            values={
-                "Negative electrode thickness [m]": 0.1,
-                "Separator thickness [m]": 0.2,
-                "Positive electrode thickness [m]": 0.3,
-            }
-        )
+        param = get_param()
 
         geometry = pybamm.battery_geometry()
         param.process_geometry(geometry)
@@ -408,7 +385,7 @@ class TestMesh(unittest.TestCase):
         self.assertEqual(mesh["current collector"].tabs["positive tab"], "left")
 
 
-class TestMeshGenerator(unittest.TestCase):
+class TestMeshGenerator(TestCase):
     def test_init_name(self):
         mesh_generator = pybamm.MeshGenerator(pybamm.SubMesh0D)
         self.assertEqual(mesh_generator.__repr__(), "Generator for SubMesh0D")

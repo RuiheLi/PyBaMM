@@ -1,6 +1,7 @@
 #
 # Tests for the Base Solver class
 #
+from tests import TestCase
 import casadi
 import pybamm
 import numpy as np
@@ -9,7 +10,7 @@ from scipy.sparse import csr_matrix
 import unittest
 
 
-class TestBaseSolver(unittest.TestCase):
+class TestBaseSolver(TestCase):
     def test_base_solver_init(self):
         solver = pybamm.BaseSolver(rtol=1e-2, atol=1e-4)
         self.assertEqual(solver.rtol, 1e-2)
@@ -67,9 +68,11 @@ class TestBaseSolver(unittest.TestCase):
         ):
             solver.solve(model, np.array([1, 2, 3, 2]))
 
-        # Check stepping with negative step size
-        dt = -1
-        with self.assertRaisesRegex(pybamm.SolverError, "Step time must be positive"):
+        # Check stepping with step size too small
+        dt = 1e-9
+        with self.assertRaisesRegex(
+            pybamm.SolverError, "Step time must be at least 1.000 ns"
+        ):
             solver.step(None, model, dt)
 
     def test_solution_time_length_fail(self):
@@ -110,8 +113,6 @@ class TestBaseSolver(unittest.TestCase):
                 self.y0 = np.array([2])
                 self.rhs = {}
                 self.jac_algebraic_eval = None
-                self.timescale_eval = 1
-                self.length_scales = {}
                 t = casadi.MX.sym("t")
                 y = casadi.MX.sym("y")
                 p = casadi.MX.sym("p")
@@ -148,8 +149,6 @@ class TestBaseSolver(unittest.TestCase):
                 self.rhs = {"test": "test"}
                 self.concatenated_rhs = np.array([1])
                 self.jac_algebraic_eval = None
-                self.timescale_eval = 1
-                self.length_scales = {}
                 t = casadi.MX.sym("t")
                 y = casadi.MX.sym("y", vec.size)
                 p = casadi.MX.sym("p")
@@ -199,8 +198,6 @@ class TestBaseSolver(unittest.TestCase):
                 self.y0 = np.array([2])
                 self.rhs = {}
                 self.jac_algebraic_eval = None
-                self.timescale_eval = 1
-                self.length_scales = {}
                 t = casadi.MX.sym("t")
                 y = casadi.MX.sym("y")
                 p = casadi.MX.sym("p")
@@ -232,7 +229,7 @@ class TestBaseSolver(unittest.TestCase):
         # with casadi
         solver = pybamm.BaseSolver(root_method="casadi")
         with self.assertRaisesRegex(
-            pybamm.SolverError, "Could not find acceptable solution: .../casadi"
+            pybamm.SolverError, "Could not find acceptable solution: Error in Function"
         ):
             solver.calculate_consistent_state(Model())
 
@@ -275,18 +272,6 @@ class TestBaseSolver(unittest.TestCase):
         solver.set_up(model, {})
         self.assertEqual(model.convert_to_format, "casadi")
         pybamm.set_logging_level("WARNING")
-
-    def test_timescale_input_fail(self):
-        # Make sure timescale can't depend on inputs
-        model = pybamm.BaseModel()
-        v = pybamm.Variable("v")
-        model.rhs = {v: -1}
-        model.initial_conditions = {v: 1}
-        a = pybamm.InputParameter("a")
-        model.timescale = a
-        solver = pybamm.BaseSolver()
-        with self.assertRaisesRegex(ValueError, "model.timescale must be a scalar"):
-            solver.set_up(model)
 
     def test_inputs_step(self):
         # Make sure interpolant inputs are dropped

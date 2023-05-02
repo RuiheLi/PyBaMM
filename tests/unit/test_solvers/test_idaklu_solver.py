@@ -1,6 +1,7 @@
 #
 # Tests for the KLU Solver class
 #
+from tests import TestCase
 from contextlib import redirect_stdout
 import io
 import unittest
@@ -12,7 +13,7 @@ from tests import get_discretisation_for_testing
 
 
 @unittest.skipIf(not pybamm.have_idaklu(), "idaklu solver is not installed")
-class TestIDAKLUSolver(unittest.TestCase):
+class TestIDAKLUSolver(TestCase):
     def test_ida_roberts_klu(self):
         # this test implements a python version of the ida Roberts
         # example provided in sundials
@@ -199,6 +200,7 @@ class TestIDAKLUSolver(unittest.TestCase):
             model.rhs = {u: a * v}
             model.algebraic = {v: 1 - v}
             model.initial_conditions = {u: 0, v: 1}
+            model.variables = {"2u": 2 * u}
 
             disc = pybamm.Discretisation()
             disc.process_model(model)
@@ -249,6 +251,10 @@ class TestIDAKLUSolver(unittest.TestCase):
             dyda_fd = dyda_fd.transpose().reshape(-1, 1)
 
             np.testing.assert_array_almost_equal(dyda_ida, dyda_fd)
+
+            # get the sensitivities for the variable
+            d2uda = sol["2u"].sensitivities["a"]
+            np.testing.assert_array_almost_equal(2 * dyda_ida[0:200:2], d2uda)
 
     def test_sensitivities_with_events(self):
         # this test implements a python version of the ida Roberts
@@ -329,45 +335,6 @@ class TestIDAKLUSolver(unittest.TestCase):
             np.testing.assert_array_almost_equal(
                 dydb_ida[: (2 * max_index), :], dydb_fd
             )
-
-    def test_set_atol(self):
-        model = pybamm.lithium_ion.DFN()
-        geometry = model.default_geometry
-        param = model.default_parameter_values
-        param.process_model(model)
-        param.process_geometry(geometry)
-        mesh = pybamm.Mesh(geometry, model.default_submesh_types, model.default_var_pts)
-        disc = pybamm.Discretisation(mesh, model.default_spatial_methods)
-        disc.process_model(model)
-        solver = pybamm.IDAKLUSolver()
-
-        variable_tols = {"Porosity times concentration": 1e-3}
-        solver.set_atol_by_variable(variable_tols, model)
-
-        model = pybamm.BaseModel()
-        u = pybamm.Variable("u")
-        model.rhs = {u: -0.1 * u}
-        model.initial_conditions = {u: 1}
-        t_eval = np.linspace(0, 3, 100)
-
-        disc = pybamm.Discretisation()
-        disc.process_model(model)
-
-        # numpy array atol
-        atol = np.zeros(1)
-        solver = pybamm.IDAKLUSolver(atol=atol)
-        solver.solve(model, t_eval)
-
-        # list atol
-        atol = [1]
-        solver = pybamm.IDAKLUSolver(atol=atol)
-        solver.solve(model, t_eval)
-
-        # wrong size (should fail)
-        atol = [1, 2]
-        solver = pybamm.IDAKLUSolver(atol=atol)
-        with self.assertRaisesRegex(pybamm.SolverError, "Absolute tolerances"):
-            solver.solve(model, t_eval)
 
     def test_failures(self):
         # this test implements a python version of the ida Roberts

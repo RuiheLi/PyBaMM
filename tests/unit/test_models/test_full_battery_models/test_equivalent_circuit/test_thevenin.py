@@ -1,11 +1,12 @@
 #
 # Tests for the Thevenin equivalant circuit model
 #
+from tests import TestCase
 import pybamm
 import unittest
 
 
-class TestThevenin(unittest.TestCase):
+class TestThevenin(TestCase):
     def test_standard_model(self):
         model = pybamm.equivalent_circuit.Thevenin()
         model.check_well_posedness()
@@ -70,7 +71,7 @@ class TestThevenin(unittest.TestCase):
     def test_well_posed_external_circuit_function(self):
         def external_circuit_function(variables):
             I = variables["Current [A]"]
-            V = variables["Terminal voltage [V]"]
+            V = variables["Voltage [V]"]
             return (
                 V
                 + I

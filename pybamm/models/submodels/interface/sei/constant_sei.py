@@ -21,8 +21,6 @@ class ConstantSEI(BaseModel):
         A dictionary of options to be passed to the model.
     phase : str, optional
         Phase of the particle (default is "primary")
-
-    **Extends:** :class:`pybamm.sei.BaseModel`
     """
 
     def __init__(self, param, options, phase="primary", cracks=False):
@@ -54,8 +52,10 @@ class ConstantSEI(BaseModel):
         return variables
 
     def get_coupled_variables(self, variables):
+        # Concentrations (derived from thicknesses)
         variables.update(self._get_standard_concentration_variables(variables))
-        # Update whole cell variables, which also updates the "sum of" variables
+
+        # Add other standard coupled variables
         variables.update(super().get_coupled_variables(variables))
 
         return variables

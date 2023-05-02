@@ -1,6 +1,7 @@
 #
 # Test for the operator class
 #
+from tests import TestCase
 import pybamm
 
 import numpy as np
@@ -20,9 +21,11 @@ def get_mesh_for_testing(
             "Positive tab width [m]": 0.1,
             "Positive tab centre y-coordinate [m]": 0.3,
             "Positive tab centre z-coordinate [m]": 0.5,
-            "Negative electrode thickness [m]": 0.3,
-            "Separator thickness [m]": 0.3,
-            "Positive electrode thickness [m]": 0.3,
+            "Negative electrode thickness [m]": 1 / 3,
+            "Separator thickness [m]": 1 / 3,
+            "Positive electrode thickness [m]": 1 / 3,
+            "Negative particle radius [m]": 0.5,
+            "Positive particle radius [m]": 0.5,
         }
     )
 
@@ -73,7 +76,7 @@ def get_p2d_mesh_for_testing(xpts=None, rpts=10):
     return get_mesh_for_testing(xpts=xpts, rpts=rpts, geometry=geometry)
 
 
-class TestSpectralVolumeConvergence(unittest.TestCase):
+class TestSpectralVolumeConvergence(TestCase):
     def test_grad_div_broadcast(self):
         # create mesh and discretisation
         spatial_methods = {"macroscale": pybamm.SpectralVolume()}

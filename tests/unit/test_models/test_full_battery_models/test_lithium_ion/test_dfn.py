@@ -1,12 +1,13 @@
 #
 # Tests for the lithium-ion DFN model
 #
+from tests import TestCase
 import pybamm
 import unittest
 from tests import BaseUnitTestLithiumIon
 
 
-class TestDFN(BaseUnitTestLithiumIon, unittest.TestCase):
+class TestDFN(BaseUnitTestLithiumIon, TestCase):
     def setUp(self):
         self.model = pybamm.lithium_ion.DFN
 
@@ -29,7 +30,7 @@ class TestDFN(BaseUnitTestLithiumIon, unittest.TestCase):
 
     def test_well_posed_current_sigmoid_ocp_with_psd(self):
         options = {
-            "open circuit potential": "current sigmoid",
+            "open-circuit potential": "current sigmoid",
             "particle size": "distribution",
         }
         self.check_well_posedness(options)
