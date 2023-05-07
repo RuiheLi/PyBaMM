@@ -580,6 +580,32 @@ def electrolyte_diffusivity_Nyman2008Exp(c_e,c_EC, T):
     )
     return D_c_e
 
+def electrolyte_conductivity_Andrew2022_poly4(x1,y1, T):# x:Li+,y:ec
+    p00 =      0.9608 # (0.9188, 1.003)
+    p10 =      0.1502 # (0.09883, 0.2015)
+    p01 =       0.173 # (0.1481, 0.1979)
+    p20 =     -0.3934 # (-0.4666, -0.3202)
+    p11 =     -0.1179 # (-0.1627, -0.07308)
+    p02 =     -0.1472 # (-0.1767, -0.1176)
+    p30 =     0.04244 # (0.01066, 0.07422)
+    p21 =     -0.1197 # (-0.1423, -0.09704)
+    p12 =   -0.003226 # (-0.02331, 0.01686)
+    p40 =     0.01664 # (-0.01452, 0.0478)
+    p31 =     0.05145 # (0.02312, 0.07978)
+    p22 =     0.05983 # (0.0346, 0.08506)
+    x1 = (x1<2300)*x1 + (x1>=2300)*2300
+    x= (x1-971.4 )/733.1
+    y= (y1-4737) / 3439
+    kai  = (
+        (x1 > 0 )  * (
+        p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y + p30*x*x*x + p21*x*x*y 
+        + p12*x*y*y + p40*x*x*x*x + p31*x*x*x*y + p22*x*x*y*y
+        )
+        + (x1 <= 0 ) * 0 )
+    kai_final = (kai>0) * kai + (kai<0) * 0
+    return kai_final
+
+
 def diff_constant(c_e, c_EC , T):
     D_Li = (
         (c_EC >= 0 ) * 3e-10
@@ -1796,7 +1822,11 @@ def Run_P3_OneCycle_Dict(
     # molar mass in Taeho's paper: unit: g/mol
     M_EMC = 104.105; M_EC = 88.062; M_e = 151.905;
     c_EMC = 9778-0.5369*c_e-0.6411*c_EC
+    c_tot = c_EMC + 2*c_e + c_EC
     model.variables["c(EMC) [mol.m-3]"] =  c_EMC
+    model.variables["c_tot [mol.m-3]"] =  c_tot
+    model.variables["y_e"]  =  c_e  / c_tot
+    model.variables["y_EC"] =  c_EC / c_tot
     model.variables["EC:EMC wt%"] =  (c_EC*M_EC) / (c_EMC*M_EMC) 
     t_0plus = para_used["Cation transference number"]
     model.variables["Cation transference number"] = t_0plus(c_e,c_EC, T)
