@@ -1863,6 +1863,25 @@ def Run_P3_OneCycle_Dict(
     print(f'Finish Now! C rate: {Rate_Dis}')  
     return sol_return,cap,Trise,t_dis,vol_dis
 
+def EC_diffusivity_7E_10(c_e, c_EC , T):
+    D_ec_dim = (
+        (c_EC >= 0 ) * 7e-10
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_dim
+
+def EC_diffusivity_1E_10(c_e, c_EC , T):
+    D_ec_dim = (
+        (c_EC >= 0 ) * 1e-10
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_dim
+def EC_diffusivity_5E_11(c_e, c_EC , T):
+    D_ec_dim = (
+        (c_EC >= 0 ) * 5e-11
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_dim
 
 def Scan_Crate_Paper(
         index_i, Para_dd_i, Path_pack ,  str_model,
