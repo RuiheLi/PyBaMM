@@ -1,11 +1,12 @@
 #
 # Tests each parameter set with the standard model associated with that parameter set
 #
+from tests import TestCase
 import pybamm
 import unittest
 
 
-class TestParameterValuesWithModel(unittest.TestCase):
+class TestParameterValuesWithModel(TestCase):
     def test_parameter_values_with_model(self):
         param_to_model = {
             "Ai2020": pybamm.lithium_ion.DFN(
@@ -15,7 +16,7 @@ class TestParameterValuesWithModel(unittest.TestCase):
             "Chen2020_composite": pybamm.lithium_ion.DFN(
                 {
                     "particle phases": ("2", "1"),
-                    "open circuit potential": (("single", "current sigmoid"), "single"),
+                    "open-circuit potential": (("single", "current sigmoid"), "single"),
                 }
             ),
             "Ecker2015": pybamm.lithium_ion.DFN(),

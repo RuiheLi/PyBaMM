@@ -1,6 +1,7 @@
 #
 # Tests for the Casadi Algebraic Solver class
 #
+from tests import TestCase
 import casadi
 import pybamm
 import unittest
@@ -9,7 +10,7 @@ from scipy.optimize import least_squares
 import tests
 
 
-class TestCasadiAlgebraicSolver(unittest.TestCase):
+class TestCasadiAlgebraicSolver(TestCase):
     def test_algebraic_solver_init(self):
         solver = pybamm.CasadiAlgebraicSolver(tol=1e-4)
         self.assertEqual(solver.tol, 1e-4)
@@ -56,7 +57,6 @@ class TestCasadiAlgebraicSolver(unittest.TestCase):
             t = casadi.MX.sym("t")
             y = casadi.MX.sym("y")
             p = casadi.MX.sym("p")
-            length_scales = {}
             rhs = {}
             casadi_algebraic = casadi.Function("alg", [t, y, p], [y**2 + 1])
             bounds = (np.array([-np.inf]), np.array([np.inf]))
@@ -70,7 +70,7 @@ class TestCasadiAlgebraicSolver(unittest.TestCase):
 
         solver = pybamm.CasadiAlgebraicSolver()
         with self.assertRaisesRegex(
-            pybamm.SolverError, "Could not find acceptable solution: .../casadi"
+            pybamm.SolverError, "Could not find acceptable solution: Error in Function"
         ):
             solver._integrate(model, np.array([0]), {})
         solver = pybamm.CasadiAlgebraicSolver(extra_options={"error_on_fail": False})
@@ -174,7 +174,7 @@ class TestCasadiAlgebraicSolver(unittest.TestCase):
         np.testing.assert_array_equal(solution.y, -7)
 
 
-class TestCasadiAlgebraicSolverSensitivity(unittest.TestCase):
+class TestCasadiAlgebraicSolverSensitivity(TestCase):
     def test_solve_with_symbolic_input(self):
         # Simple system: a single algebraic equation
         var = pybamm.Variable("var")
@@ -204,7 +204,6 @@ class TestCasadiAlgebraicSolverSensitivity(unittest.TestCase):
         # Simple system: a single algebraic equation
         var = pybamm.Variable("var", domain="negative electrode")
         model = pybamm.BaseModel()
-        model._length_scales = {"negative electrode": pybamm.Scalar(1)}
         p = pybamm.InputParameter("p")
         q = pybamm.InputParameter("q")
         model.algebraic = {var: (var - p)}
@@ -244,7 +243,6 @@ class TestCasadiAlgebraicSolverSensitivity(unittest.TestCase):
     def test_solve_with_symbolic_input_1D_scalar_input(self):
         var = pybamm.Variable("var", "negative electrode")
         model = pybamm.BaseModel()
-        model._length_scales = {"negative electrode": pybamm.Scalar(1)}
         param = pybamm.InputParameter("param")
         model.algebraic = {var: var + param}
         model.initial_conditions = {var: 2}
@@ -270,7 +268,6 @@ class TestCasadiAlgebraicSolverSensitivity(unittest.TestCase):
     def test_solve_with_symbolic_input_1D_vector_input(self):
         var = pybamm.Variable("var", "negative electrode")
         model = pybamm.BaseModel()
-        model._length_scales = {"negative electrode": pybamm.Scalar(1)}
         param = pybamm.InputParameter("param", "negative electrode")
         model.algebraic = {var: var + param}
         model.initial_conditions = {var: 2}
@@ -329,7 +326,6 @@ class TestCasadiAlgebraicSolverSensitivity(unittest.TestCase):
         # Simple system: a single algebraic equation
         var = pybamm.Variable("var", domain="negative electrode")
         model = pybamm.BaseModel()
-        model._length_scales = {"negative electrode": pybamm.Scalar(1)}
         p = pybamm.InputParameter("p")
         q = pybamm.InputParameter("q")
         model.algebraic = {var: (var - p)}

@@ -1,13 +1,14 @@
 #
 # Tests for the lithium-ion MPM model
 #
+from tests import TestCase
 import pybamm
 import tests
 import numpy as np
 import unittest
 
 
-class TestMPM(unittest.TestCase):
+class TestMPM(TestCase):
     def test_basic_processing(self):
         options = {"thermal": "isothermal"}
         model = pybamm.lithium_ion.MPM(options)
@@ -49,7 +50,7 @@ class TestMPM(unittest.TestCase):
         modeltest.test_all()
 
     def test_current_sigmoid_ocp(self):
-        options = {"open circuit potential": ("current sigmoid", "single")}
+        options = {"open-circuit potential": ("current sigmoid", "single")}
         model = pybamm.lithium_ion.MPM(options)
         parameter_values = pybamm.ParameterValues("Chen2020")
         parameter_values = pybamm.get_size_distribution_parameters(parameter_values)

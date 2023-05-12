@@ -1,6 +1,7 @@
 #
 # Tests for the base model class
 #
+from tests import TestCase
 import os
 import platform
 import subprocess  # nosec
@@ -12,7 +13,7 @@ import numpy as np
 import pybamm
 
 
-class TestBaseModel(unittest.TestCase):
+class TestBaseModel(TestCase):
     def test_rhs_set_get(self):
         model = pybamm.BaseModel()
         rhs = {
@@ -100,12 +101,6 @@ class TestBaseModel(unittest.TestCase):
         bad_bcs = {c0: {"left": (-2, "bad type"), "right": (4, "bad type")}}
         with self.assertRaisesRegex(pybamm.ModelError, "boundary condition"):
             model.boundary_conditions = bad_bcs
-
-    def test_length_scales(self):
-        model = pybamm.BaseModel()
-        model.length_scales = {"a": 1.3}
-        self.assertIsInstance(model.length_scales["a"], pybamm.Scalar)
-        self.assertEqual(model.length_scales["a"].value, 1.3)
 
     def test_variables_set_get(self):
         model = pybamm.BaseModel()
@@ -273,7 +268,6 @@ class TestBaseModel(unittest.TestCase):
         self.assertEqual(new_model.name, model.name)
         self.assertEqual(new_model.use_jacobian, model.use_jacobian)
         self.assertEqual(new_model.convert_to_format, model.convert_to_format)
-        self.assertEqual(new_model.timescale, model.timescale)
 
     def test_check_no_repeated_keys(self):
         model = pybamm.BaseModel()
@@ -561,7 +555,7 @@ class TestBaseModel(unittest.TestCase):
         with self.assertRaisesRegex(
             pybamm.DiscretisationError, "Cannot automatically discretise model"
         ):
-            model.export_casadi_objects(["Electrolyte concentration"])
+            model.export_casadi_objects(["Electrolyte concentration [mol.m-3]"])
 
     @unittest.skipIf(platform.system() == "Windows", "Skipped for Windows")
     def test_generate_casadi(self):
@@ -627,11 +621,6 @@ class TestBaseModel(unittest.TestCase):
             "var_concat_neg": var_concat_neg,
             "var_concat_sep": var_concat_sep,
             "var_concat": var_concat,
-        }
-        model.length_scales = {
-            "negative electrode": pybamm.Scalar(1),
-            "separator": pybamm.Scalar(1),
-            "negative particle": pybamm.Scalar(1),
         }
 
         # Test original initial conditions
@@ -773,11 +762,6 @@ class TestBaseModel(unittest.TestCase):
             "var_concat_neg": new_var_concat_neg,
             "var_concat_sep": new_var_concat_sep,
             "var_concat": new_var_concat,
-        }
-        new_model.length_scales = {
-            "negative electrode": pybamm.Scalar(1),
-            "separator": pybamm.Scalar(1),
-            "negative particle": pybamm.Scalar(1),
         }
 
         # Update the new model with the solution from another model
@@ -986,6 +970,17 @@ class TestBaseModel(unittest.TestCase):
         v = model.variables["v"]
         self.assertEqual(model.rhs[u].value, 2)
         self.assertEqual(model.algebraic[v], -1.0 + v)
+
+    def test_timescale_lengthscale_get_set_not_implemented(self):
+        model = pybamm.BaseModel()
+        with self.assertRaises(NotImplementedError):
+            model.timescale
+        with self.assertRaises(NotImplementedError):
+            model.length_scales
+        with self.assertRaises(NotImplementedError):
+            model.timescale = 1
+        with self.assertRaises(NotImplementedError):
+            model.length_scales = 1
 
 
 if __name__ == "__main__":

@@ -1,13 +1,14 @@
 #
 # Test for the operator class
 #
+from tests import TestCase
 import pybamm
 from tests import get_2p1d_mesh_for_testing, get_unit_2p1D_mesh_for_testing
 import numpy as np
 import unittest
 
 
-class TestScikitFiniteElement(unittest.TestCase):
+class TestScikitFiniteElement(TestCase):
     def test_not_implemented(self):
         mesh = get_2p1d_mesh_for_testing(include_particles=False)
         spatial_method = pybamm.ScikitFiniteElement()
@@ -443,10 +444,10 @@ class TestScikitFiniteElement(unittest.TestCase):
         neg_disc = disc.process_symbol(neg)
         pos_disc = disc.process_symbol(pos)
 
-        # check integrating 1 gives correct *dimensionless* region lengths
-        perimeter = 2 * (1 + 0.8)
-        l_tab_n = 0.1 / 0.5
-        l_tab_p = 0.1 / 0.5
+        # check integrating 1 gives correct region lengths
+        perimeter = 0.4 + 0.4 + 0.5 + 0.5
+        l_tab_n = 0.1
+        l_tab_p = 0.1
         constant_y = np.ones(mesh["current collector"].npts)
         # Integral around boundary is exact
         np.testing.assert_array_almost_equal(

@@ -1,13 +1,14 @@
 #
 # Tests for the Algebraic Solver class
 #
+from tests import TestCase
 import pybamm
 import unittest
 import numpy as np
 from tests import get_discretisation_for_testing
 
 
-class TestAlgebraicSolver(unittest.TestCase):
+class TestAlgebraicSolver(TestCase):
     def test_algebraic_solver_init(self):
         solver = pybamm.AlgebraicSolver(
             method="hybr", tol=1e-4, extra_options={"maxfev": 100}
@@ -41,8 +42,6 @@ class TestAlgebraicSolver(unittest.TestCase):
         class Model(pybamm.BaseModel):
             y0 = np.array([2])
             rhs = {}
-            timescale_eval = 1
-            length_scales = {}
             jac_algebraic_eval = None
             len_rhs_and_alg = 1
 
@@ -68,8 +67,6 @@ class TestAlgebraicSolver(unittest.TestCase):
         class Model(pybamm.BaseModel):
             y0 = np.array([2])
             rhs = {}
-            timescale_eval = 1
-            length_scales = {}
             jac_algebraic_eval = None
             len_rhs_and_alg = 1
 
@@ -103,8 +100,6 @@ class TestAlgebraicSolver(unittest.TestCase):
         class Model(pybamm.BaseModel):
             y0 = np.zeros(2)
             rhs = {}
-            timescale_eval = 1
-            length_scales = {}
             len_rhs_and_alg = 2
 
             def __init__(self):

@@ -32,14 +32,6 @@ def update_version():
         file.seek(0)
         file.write(replace_version)
 
-    # docs/conf.py
-    with open(os.path.join(pybamm.root_dir(), "docs", "conf.py"), "r+") as file:
-        output = file.read()
-        replace_version = re.sub('(?<=version = ")(.+)(?=")', release_version, output)
-        file.truncate(0)
-        file.seek(0)
-        file.write(replace_version)
-
     # CITATION.cff
     with open(os.path.join(pybamm.root_dir(), "CITATION.cff"), "r+") as file:
         output = file.read()
@@ -47,6 +39,24 @@ def update_version():
         file.truncate(0)
         file.seek(0)
         file.write(replace_version)
+
+    # docs/source/_static/versions.json for readthedocs build
+    with open(
+        os.path.join(pybamm.root_dir(), "docs", "source", "_static", "versions.json"),
+        "r+",
+    ) as file:
+        output = file.read()
+        json_data = json.loads(output)
+        json_data.insert(
+            2,
+            {
+                "version": f"v{release_version}",
+                "url": f"https://pybamm.readthedocs.io/en/v{release_version}/",
+            },
+        )  # noqa: E501
+        file.truncate(0)
+        file.seek(0)
+        file.write(json.dumps(json_data, indent=4))
 
     # vcpkg.json
     with open(os.path.join(pybamm.root_dir(), "vcpkg.json"), "r+") as file:

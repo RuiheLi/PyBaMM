@@ -1,6 +1,7 @@
 #
 # Test for the operator class
 #
+from tests import TestCase
 import pybamm
 from tests import (
     get_mesh_for_testing,
@@ -12,7 +13,7 @@ import numpy as np
 import unittest
 
 
-class TestFiniteVolumeConvergence(unittest.TestCase):
+class TestFiniteVolumeConvergence(TestCase):
     def test_grad_div_broadcast(self):
         # create mesh and discretisation
         spatial_methods = {"macroscale": pybamm.FiniteVolume()}
@@ -109,7 +110,7 @@ class TestFiniteVolumeConvergence(unittest.TestCase):
             return div_approx[:, 0] - div_exact
 
         # Get errors
-        ns = 10 * 2 ** np.arange(6)
+        ns = 10 * 2 ** np.arange(1, 6)
         errs = {n: get_error(int(n)) for n in ns}
         # expect quadratic convergence everywhere
         err_norm = np.array([np.linalg.norm(errs[n], np.inf) for n in ns])

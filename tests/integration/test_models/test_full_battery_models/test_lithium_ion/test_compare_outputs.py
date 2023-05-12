@@ -1,13 +1,14 @@
 #
 # Tests for the surface formulation
 #
+from tests import TestCase
 import pybamm
 import numpy as np
 import unittest
 from tests import StandardOutputComparison
 
 
-class TestCompareOutputs(unittest.TestCase):
+class TestCompareOutputs(TestCase):
     def test_compare_outputs_surface_form(self):
         # load models
         options = [
@@ -22,7 +23,6 @@ class TestCompareOutputs(unittest.TestCase):
         for models in model_combos:
             # load parameter values (same for all models)
             param = models[0].default_parameter_values
-            param.update({"Current function [A]": 1})
             for model in models:
                 param.process_model(model)
 

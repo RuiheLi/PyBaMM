@@ -1,13 +1,14 @@
 #
 # Tests for the asymptotic convergence of the simplified models
 #
+from tests import TestCase
 import pybamm
 
 import numpy as np
 import unittest
 
 
-class TestAsymptoticConvergence(unittest.TestCase):
+class TestAsymptoticConvergence(TestCase):
     def test_leading_order_convergence(self):
         """
         Check that the leading-order model solution converges linearly in C_e to the
@@ -54,8 +55,8 @@ class TestAsymptoticConvergence(unittest.TestCase):
             )
 
             # Post-process variables
-            voltage_loqs = solution_loqs["Terminal voltage"]
-            voltage_full = solution_full["Terminal voltage"]
+            voltage_loqs = solution_loqs["Voltage [V]"]
+            voltage_full = solution_full["Voltage [V]"]
 
             # Compare
             t_loqs = solution_loqs.t

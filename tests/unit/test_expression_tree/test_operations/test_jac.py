@@ -1,6 +1,7 @@
 #
 # Tests for the jacobian methods
 #
+from tests import TestCase
 import pybamm
 
 import numpy as np
@@ -13,7 +14,7 @@ def test_multi_var_function(arg1, arg2):
     return arg1 + arg2
 
 
-class TestJacobian(unittest.TestCase):
+class TestJacobian(TestCase):
     def test_variable_is_statevector(self):
         a = pybamm.Symbol("a")
         with self.assertRaisesRegex(
@@ -283,7 +284,9 @@ class TestJacobian(unittest.TestCase):
         a = pybamm.Symbol("a")
         b = pybamm.Symbol("b")
 
-        phi_s = pybamm.standard_variables.phi_s_n
+        phi_s = pybamm.Variable(
+            "Negative electrode potential [V]", domain="negative electrode"
+        )
         i = pybamm.grad(phi_s)
 
         inner = pybamm.inner(2, i)
