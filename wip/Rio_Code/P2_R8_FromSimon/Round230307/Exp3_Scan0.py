@@ -45,7 +45,7 @@ Para_dict_All = {
       ],
     "Electrolyte diffusivity [m2.s-1]":[
       "electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019_Constant",],
-   "1 + dlnf/dlnc":[
+   "Thermodynamic factor":[
       "electrolyte_TDF_EC_EMC_3_7_Landesfeind2019_Constant",
       ],
     "Cation transference number":[

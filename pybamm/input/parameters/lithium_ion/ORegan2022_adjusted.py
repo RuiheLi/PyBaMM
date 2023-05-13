@@ -1095,7 +1095,7 @@ def get_parameter_values():
         "Cation transference number": 0.38,
         "Electrolyte diffusivity [m2.s-1]": electrolyte_diffusivity_Valoen2005,
         "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Valoen2005,
-        "1 + dlnf/dlnc": 1.0,
+        "Thermodynamic factor": 1.0,
         # experiment
         "Reference temperature [K]": 298.15,
         "Total heat transfer coefficient [W.m-2.K-1]": 10.0,
