@@ -32,13 +32,15 @@ class ReactionDriven(BaseModel):
                 L_pl_n = variables["Lithium plating thickness [m]"]
                 L_dead_n = variables["Dead lithium thickness [m]"]
                 L_sei_cr_n = variables["Total SEI on cracks thickness [m]"]
+                # need to deduce SEI on crack thickness - Mark Ruihe change
+                L_sei_cr_0 = self.param.n.prim.L_inner_crack_0 + self.param.n.prim.L_inner_crack_0
                 roughness_n = variables["Negative electrode roughness ratio"]
 
                 L_tot = (
-                    L_sei_n - L_sei_0
+                    L_sei_n- L_sei_0 # , mark: change back 
                     + L_pl_n
                     + L_dead_n
-                    + L_sei_cr_n * (roughness_n - 1)
+                    + (L_sei_cr_n-L_sei_cr_0) * (roughness_n - 1)  # 
                 )
 
                 a_n = variables["Negative electrode surface area to volume ratio [m-1]"]

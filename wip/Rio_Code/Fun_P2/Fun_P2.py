@@ -451,24 +451,24 @@ def Run_Model_Base_On_Last_Solution(
         #print(var._name)
         list_short.append(var._name)
     # delete Porosity times concentration and Electrolyte potential then add back
-    list_short.remove("Porosity times concentration");
-    list_short.remove("Electrolyte potential");
+    list_short.remove("Porosity times concentration [mol.m-3]");
+    list_short.remove("Electrolyte potential [V]");
     list_short.extend(
-        ("Negative electrode porosity times concentration",
-        "Separator porosity times concentration",
-        "Positive electrode porosity times concentration",   
+        ("Negative electrode porosity times concentration [mol.m-3]",
+        "Separator porosity times concentration [mol.m-3]",
+        "Positive electrode porosity times concentration [mol.m-3]",   
 
-        "Negative electrolyte potential",
-        "Separator electrolyte potential",
-        "Positive electrolyte potential",))
+        "Negative electrolyte potential [V]",
+        "Separator electrolyte potential [V]",
+        "Positive electrolyte potential [V]",))
     for list_short_i in list_short:
         dict_short.update( { list_short_i : Sol.last_state[list_short_i].data  }  )
-    dict_short["Negative electrode porosity times concentration"] = (
-        dict_short["Negative electrode porosity times concentration"] * Ratio_CeLi )# important: update sol here!
-    dict_short["Separator porosity times concentration"] = (
-        dict_short["Separator porosity times concentration"] * Ratio_CeLi )# important: update sol here!
-    dict_short["Positive electrode porosity times concentration"] = (
-        dict_short["Positive electrode porosity times concentration"] * Ratio_CeLi )# important: update sol here!
+    dict_short["Negative electrode porosity times concentration [mol.m-3]"] = (
+        dict_short["Negative electrode porosity times concentration [mol.m-3]"] * Ratio_CeLi )# important: update sol here!
+    dict_short["Separator porosity times concentration [mol.m-3]"] = (
+        dict_short["Separator porosity times concentration [mol.m-3]"] * Ratio_CeLi )# important: update sol here!
+    dict_short["Positive electrode porosity times concentration [mol.m-3]"] = (
+        dict_short["Positive electrode porosity times concentration [mol.m-3]"] * Ratio_CeLi )# important: update sol here!
     Model_new = Model.set_initial_conditions_from(dict_short, inplace=False)
     Para_update.update(   {'Ambient temperature [K]':Temper_i });   # run model at 45 degree C
     
@@ -549,24 +549,24 @@ def Run_Model_Base_On_Last_Solution_RPT(
         #print(var._name)
         list_short.append(var._name)
     # delete Porosity times concentration and Electrolyte potential then add back
-    list_short.remove("Porosity times concentration");
-    list_short.remove("Electrolyte potential");
+    list_short.remove("Porosity times concentration [mol.m-3]");
+    list_short.remove("Electrolyte potential [V]");
     list_short.extend(
-        ("Negative electrode porosity times concentration",
-        "Separator porosity times concentration",
-        "Positive electrode porosity times concentration",   
+        ("Negative electrode porosity times concentration [mol.m-3]",
+        "Separator porosity times concentration [mol.m-3]",
+        "Positive electrode porosity times concentration [mol.m-3]",   
 
-        "Negative electrolyte potential",
-        "Separator electrolyte potential",
-        "Positive electrolyte potential",))
+        "Negative electrolyte potential [V]",
+        "Separator electrolyte potential [V]",
+        "Positive electrolyte potential [V]",))
     for list_short_i in list_short:
         dict_short.update( { list_short_i : Sol.last_state[list_short_i].data  }  )
-    dict_short["Negative electrode porosity times concentration"] = (
-        dict_short["Negative electrode porosity times concentration"] * Ratio_CeLi )# important: update sol here!
-    dict_short["Separator porosity times concentration"] = (
-        dict_short["Separator porosity times concentration"] * Ratio_CeLi )# important: update sol here!
-    dict_short["Positive electrode porosity times concentration"] = (
-        dict_short["Positive electrode porosity times concentration"] * Ratio_CeLi )# important: update sol here!
+    dict_short["Negative electrode porosity times concentration [mol.m-3]"] = (
+        dict_short["Negative electrode porosity times concentration [mol.m-3]"] * Ratio_CeLi )# important: update sol here!
+    dict_short["Separator porosity times concentration [mol.m-3]"] = (
+        dict_short["Separator porosity times concentration [mol.m-3]"] * Ratio_CeLi )# important: update sol here!
+    dict_short["Positive electrode porosity times concentration [mol.m-3]"] = (
+        dict_short["Positive electrode porosity times concentration [mol.m-3]"] * Ratio_CeLi )# important: update sol here!
     Model_new = Model.set_initial_conditions_from(dict_short, inplace=False)
     Para_update.update(   {'Ambient temperature [K]':Temper_i });
     
@@ -1205,7 +1205,7 @@ def Plot_Cyc_RPT_4(
         my_dict_RPT["CDend LAM_pe [%]"],     '-o',  ) 
     axs[4].plot(
         my_dict_RPT["Throughput capacity [kA.h]"], 
-        np.array(my_dict_RPT["Mean_Res_0p1s"]),     '-o', ) 
+        np.array(my_dict_RPT["Res_0p5C_50SOC"]),     '-o', ) 
     # Plot Charge Throughput (A.h) vs SOH
     color_exp = [0, 0, 0,0.7]; marker_exp = "v";
     Exp_temp_i_cell = Temp_Cell_Exp[str(int(Temper_i- 273.15))]
@@ -1317,12 +1317,12 @@ def Plot_Cyc_RPT_4(
     plt.savefig(BasicPath + Target+"Plots/"  f"SOC_RPT_dis_Scan_{Scan_i}.png", dpi=dpi) 
 
     # update 230312: plot resistance in GITT:
-    N_RPT = len(my_dict_RPT["Res_0p1s"])
+    N_RPT = len(my_dict_RPT["Res_0p5C"])
     colormap_i = mpl.cm.get_cmap("gray", 14) 
     fig, axs = plt.subplots(figsize=(4,3.2),tight_layout=True)
     for i in range(N_RPT):
         axs.plot(
-            my_dict_RPT["SOC_GITT"][i], my_dict_RPT["Res_0p1s"][i] ,
+            my_dict_RPT["SOC_0p5C"][i], my_dict_RPT["Res_0p5C"][i] ,
             color=colormap_i(i),marker="o",  label=f"RPT {i}" )
     axs.set_xlabel("SOC-GITT %",   fontdict={'family':'DejaVu Sans','size':fs})
     axs.set_ylabel(r'0.1s Res (m$\Omega$)',   fontdict={'family':'DejaVu Sans','size':fs})
@@ -1447,7 +1447,8 @@ def Plot_Dryout(
     plt.savefig(BasicPath + Target+"Plots/" f"Volume_total_Scan_{Scan_i}.png", dpi=dpi)
     
     return
-# update 220312: add a function to get the discharge capacity and resistance
+
+# update 230312: add a function to get the discharge capacity and resistance
 def Get_0p1s_R0(sol_RPT,Index,cap_full):
     Res_0p1s = []; SOC = [100,];
     for i,index in enumerate(Index):
@@ -1462,6 +1463,26 @@ def Get_0p1s_R0(sol_RPT,Index,cap_full):
                 - cycle.steps[2]["Discharge capacity [A.h]"].entries[-1] )
             SOC.append(SOC[-1]-Dis_Cap/cap_full*100)
     return np.mean(Res_0p1s),Res_0p1s,SOC
+
+# update 230517 add a function to get R_50%SOC from C/2 discharge
+def Get_R_from_0P5C_CD(step_0P5C_CD,cap_full):
+    # print("Total data points: ",len(step_0P5C_CD["Time [h]"].entries))
+    Dis_Cap = abs(
+        step_0P5C_CD["Discharge capacity [A.h]"].entries[0] 
+        - step_0P5C_CD["Discharge capacity [A.h]"].entries )
+    SOC_0p5C = (1-Dis_Cap/cap_full)*100
+    #print(SOC_0p5C)
+    V_ohmic = (
+    step_0P5C_CD['Battery open-circuit voltage [V]'].entries 
+    - step_0P5C_CD["Terminal voltage [V]"].entries
+    + step_0P5C_CD["Battery particle concentration overpotential [V]"].entries 
+    + step_0P5C_CD["X-averaged battery concentration overpotential [V]" ].entries
+    )
+    # print("Applied current [A]:",step_0P5C_CD["Current [A]"].entries[0])
+    Res_0p5C = V_ohmic/step_0P5C_CD["Current [A]"].entries[0] * 1e3
+    Res_0p5C_50SOC = np.interp(50,np.flip(SOC_0p5C),np.flip(Res_0p5C),)
+    return SOC_0p5C,Res_0p5C,Res_0p5C_50SOC   #,Rohmic_CD_2
+
 
 def Run_P2_Opt_Timeout(
     index_i, Para_dict_i,   Path_pack ,  fs,
@@ -1494,26 +1515,24 @@ def Run_P2_Opt_Timeout(
     # set_start_method('fork') # from Patrick
 
     # Un-pack data:
-    [cycle_no,step_AGE_CD,step_AGE_CC,step_AGE_CV,
-        step_RPT_CD,step_RPT_RE , step_RPT_CC ] = exp_index_pack;
     [
-        exp_AGE_text,       exp_RPT_0p1C_text,  
-        exp_RPT_refill_text,exp_preAge_text] = exp_text_list;
+        cycle_no,
+        step_AGE_CD,step_AGE_CC,step_AGE_CV,
+        step_0p1C_CD, step_0p1C_CC,step_0p1C_RE, 
+        step_0p5C_CD_No ] = exp_index_pack
+    [exp_AGE_text,  exp_RPT_text     ] = exp_text_list
     [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
-    CyclePack,Para_0 = Para_init(Para_dict_i)
+    CyclePack,Para_0 = Para_init(Para_dict_i) # initialize the parameter
     [Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
-        Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options] = CyclePack;
+        Temper_i,Temper_RPT,mesh_list,submesh_strech,model_options] = CyclePack
     [keys_all_RPT,keys_all_AGE] = keys_all
-    str_exp_AGE_text  = str(exp_AGE_text);
-    str_exp_RPT_text  = str(exp_text_list[1:]);
+    str_exp_AGE_text  = str(exp_AGE_text)
+    str_exp_RPT_text  = str(exp_RPT_text)
 
     # define experiment
     Experiment_Long   = pb.Experiment( exp_AGE_text * Update_Cycles  )  
     # update 24-04-2023: delete GITT
-    Experiment_RPT    = pb.Experiment( 
-        exp_RPT_0p1C_text*1 
-        + exp_RPT_refill_text*1
-        + exp_preAge_text     ) 
+    Experiment_RPT    = pb.Experiment( exp_RPT_text*1 ) 
     Experiment_Breakin= Experiment_RPT
 
     #####  index definition ######################
@@ -1528,14 +1547,14 @@ def Run_P2_Opt_Timeout(
     my_dict_AGE = {}; 
     for keys in keys_all_AGE:
         for key in keys:
-            my_dict_AGE[key]=[];
-    my_dict_RPT["Cycle_RPT"] = []; 
-    my_dict_RPT["Mean_Res_0p1s"] = []; # one numer for one RPT
-    my_dict_RPT["Res_0p1s"] = [];      # one list for one RPT
-    my_dict_RPT["SOC_GITT"] = [];      # one list for one RPT
-    my_dict_AGE["Cycle_AGE"] = []; 
-    Cyc_Update_Index     =[]; 
-            
+            my_dict_AGE[key]=[]
+    my_dict_RPT["Cycle_RPT"] = []
+    my_dict_RPT["Res_0p5C"] = []
+    my_dict_RPT["Res_0p5C_50SOC"] = []
+    my_dict_RPT["SOC_0p5C"] = []
+    my_dict_AGE["Cycle_AGE"] = []
+    Cyc_Update_Index     =[]
+
     # update 220924: merge DryOut and Int_ElelyExces_Ratio
     temp_Int_ElelyExces_Ratio =  Para_0["Initial electrolyte excessive amount ratio"] 
     ce_EC_0 = Para_0['EC initial concentration in electrolyte [mol.m-3]'] # used to calculate ce_EC_All
@@ -1602,14 +1621,14 @@ def Run_P2_Opt_Timeout(
             print(f"Scan {Scan_i}: Finish break-in cycle")
         # post-process for break-in cycle - 0.1C only
         my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_0, 
-            0, step_RPT_CD , step_RPT_CC , step_RPT_RE, step_AGE_CV   )
-        # update 230312 - Get GITT result -need to make sure index goes like this
-        cap_full = 5; Index = np.arange(2,26,1) # index = 2:25
-        Mean_Res_0p1s,Res_0p1s,SOC = Get_0p1s_R0(Sol_0,Index,cap_full)
-        my_dict_RPT["Mean_Res_0p1s"].append(Mean_Res_0p1s) # one numer for one RPT
-        my_dict_RPT["Res_0p1s"].append(Res_0p1s)           # one list for one RPT
-        my_dict_RPT["SOC_GITT"].append(SOC)                # one list for one RPT
-        del Mean_Res_0p1s,Res_0p1s,SOC 
+            0, step_0p1C_CD, step_0p1C_CC,step_0p1C_RE , step_AGE_CV   )
+        # update 230517 - Get R from C/2 discharge only, discard GITT
+        cap_full = 5; step_0P5C_CD = Sol_0.cycles[0].steps[step_0p5C_CD_No]
+        SOC_0p5C,Res_0p5C,Res_0p5C_50SOC = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
+        my_dict_RPT["SOC_0p5C"].append(SOC_0p5C)
+        my_dict_RPT["Res_0p5C"].append(Res_0p5C)
+        my_dict_RPT["Res_0p5C_50SOC"].append(Res_0p5C_50SOC)             
+        del SOC_0p5C,Res_0p5C,Res_0p5C_50SOC
         cycle_count =0; 
         my_dict_RPT["Cycle_RPT"].append(cycle_count)
         Cyc_Update_Index.append(cycle_count);
@@ -1688,10 +1707,10 @@ def Run_P2_Opt_Timeout(
                     # post-process for first ageing cycle and every -1 ageing cycle
                     if k==0 and i==0:    
                         my_dict_AGE = GetSol_dict (my_dict_AGE,keys_all_AGE, Sol_Dry_old, 
-                            0, step_AGE_CD , step_AGE_CC , step_RPT_RE, step_AGE_CV   )     
+                            0, step_AGE_CD , step_AGE_CC , step_0p1C_RE, step_AGE_CV   )     
                         my_dict_AGE["Cycle_AGE"].append(1)
                     my_dict_AGE = GetSol_dict (my_dict_AGE,keys_all_AGE, Sol_Dry_old, 
-                        cycle_no, step_AGE_CD , step_AGE_CC , step_RPT_RE, step_AGE_CV   )    
+                        cycle_no, step_AGE_CD , step_AGE_CC , step_0p1C_RE, step_AGE_CV   )    
                     cycle_count +=  Update_Cycles; 
                     my_dict_AGE["Cycle_AGE"].append(cycle_count)           
                     Cyc_Update_Index.append(cycle_count)
@@ -1752,6 +1771,7 @@ def Run_P2_Opt_Timeout(
                     print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles, due to {str_error_RPT}")
                 break
             else:
+                # post-process for RPT
                 Cyc_Update_Index.append(cycle_count)
                 if Check_Small_Time == True:    
                     print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} RPT cycles within {SmallTimer.time()}")
@@ -1759,16 +1779,16 @@ def Run_P2_Opt_Timeout(
                 else:
                     print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} RPT cycles")
                 my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_Dry_i, 
-                    0, step_RPT_CD , step_RPT_CC , step_RPT_RE, step_AGE_CV   )
+                    0,step_0p1C_CD, step_0p1C_CC,step_0p1C_RE , step_AGE_CV   )
                 my_dict_RPT["Cycle_RPT"].append(cycle_count)
                 
-                # update 230312 - Get GITT result -need to make sure index goes like this
-                cap_full = 5; Index = np.arange(2,26,1) # index = 2:25
-                Mean_Res_0p1s,Res_0p1s,SOC = Get_0p1s_R0(Sol_Dry_i,Index,cap_full)
-                my_dict_RPT["Mean_Res_0p1s"].append(Mean_Res_0p1s) # one numer for one RPT
-                my_dict_RPT["Res_0p1s"].append(Res_0p1s)           # one list for one RPT
-                my_dict_RPT["SOC_GITT"].append(SOC)                # one list for one RPT
-                del Mean_Res_0p1s,Res_0p1s,SOC 
+                # update 230517 - Get R from C/2 discharge only, discard GITT
+                cap_full = 5; step_0P5C_CD = Sol_Dry_i.cycles[0].steps[step_0p5C_CD_No]
+                SOC_0p5C,Res_0p5C,Res_0p5C_50SOC = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
+                my_dict_RPT["SOC_0p5C"].append(SOC_0p5C)
+                my_dict_RPT["Res_0p5C"].append(Res_0p5C)
+                my_dict_RPT["Res_0p5C_50SOC"].append(Res_0p5C_50SOC)             
+                del SOC_0p5C,Res_0p5C,Res_0p5C_50SOC
                 if DryOut == "On":
                     mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
                 Para_0_Dry_old = Paraupdate;    Model_Dry_old = Model_Dry_i  ;     Sol_Dry_old = Sol_Dry_i    ;   
