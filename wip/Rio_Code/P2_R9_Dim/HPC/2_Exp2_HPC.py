@@ -1,6 +1,5 @@
 # magic lines that avoid re-start 
-%load_ext autoreload
-%autoreload 2
+
 import pybamm as pb;import pandas as pd   ;import numpy as np;
 import os;
 import matplotlib.pyplot as plt;import os;#import imageio
