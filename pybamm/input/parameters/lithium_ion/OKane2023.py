@@ -776,6 +776,95 @@ def nmc_LGM50_heat_capacity_ORegan2022(T):
 
     return cp_wet
 
+# define Landesfeind exp(initial) and constant 
+def electrolyte_conductivity_base_Landesfeind2019_Constant(c_e, T, coeffs):
+    # mol.m-3 -> mol.l
+    c = (c_e<4000)*c_e / 1000 +  (c_e>4000)* 4 # Mark Ruihe 
+    p1, p2, p3, p4, p5, p6 = coeffs
+    A = p1 * (1 + (T - p2))
+    B = 1 + p3 * pybamm.sqrt(c) + p4 * (1 + p5 * pybamm.exp(1000 / T)) * c
+    C = 1 + c ** 4 * (p6 * pybamm.exp(1000 / T))
+    sigma_e = A * c * B / C  # mS.cm-1
+
+    return sigma_e / 10
+
+def electrolyte_diffusivity_base_Landesfeind2019_Constant(c_e, T, coeffs):
+    # mol.m-3 -> mol.l
+    c = (c_e<4000)*c_e / 1000 +  (c_e>4000)* 4 # Mark Ruihe 
+    p1, p2, p3, p4 = coeffs
+    A = p1 *pybamm.exp(p2 * c)
+    B = pybamm.exp(p3 / T)
+    C = pybamm.exp(p4 * c / T)
+    D_e = A * B * C * 1e-10  # m2/s
+
+    return D_e
+
+def electrolyte_TDF_base_Landesfeind2019_Constant(c_e, T, coeffs):
+    c = (c_e<4000)*c_e / 1000 +  (c_e>4000)* 4 # Mark Ruihe 
+    p1, p2, p3, p4, p5, p6, p7, p8, p9 = coeffs
+    tdf = (
+        p1
+        + p2 * c
+        + p3 * T
+        + p4 * c ** 2
+        + p5 * c * T
+        + p6 * T ** 2
+        + p7 * c ** 3
+        + p8 * c ** 2 * T
+        + p9 * c * T ** 2
+    )
+    return tdf
+
+def electrolyte_transference_number_base_Landesfeind2019_Constant(c_e, T, coeffs):
+    c = (c_e<4000)*c_e / 1000 +  (c_e>4000)* 4 # Mark Ruihe 
+    p1, p2, p3, p4, p5, p6, p7, p8, p9 = coeffs
+    tplus = (
+        p1
+        + p2 * c
+        + p3 * T
+        + p4 * c ** 2
+        + p5 * c * T
+        + p6 * T ** 2
+        + p7 * c ** 3
+        + p8 * c ** 2 * T
+        + p9 * c * T ** 2
+    )
+
+    return tplus
+def electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019_Constant(c_e, T):
+    coeffs = np.array(
+        [
+            -1.28e1,
+            -6.12,
+            8.21e-2,
+            9.04e-1,
+            3.18e-2,
+            -1.27e-4,
+            1.75e-2,
+            -3.12e-3,
+            -3.96e-5,
+        ]
+    )
+
+    return electrolyte_transference_number_base_Landesfeind2019_Constant(c_e, T, coeffs)
+
+def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019_Constant(c_e, T):
+    coeffs = np.array(
+        [2.57e1, -4.51e1, -1.77e-1, 1.94, 2.95e-1, 3.08e-4, 2.59e-1, -9.46e-3, -4.54e-4]
+    )
+
+    return electrolyte_TDF_base_Landesfeind2019_Constant(c_e, T, coeffs)
+
+def electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019_Constant(c_e, T):
+    coeffs = np.array([1.01e3, 1.01, -1.56e3, -4.87e2])
+
+    return electrolyte_diffusivity_base_Landesfeind2019_Constant(c_e, T, coeffs)
+
+def electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019_Constant(c_e, T):
+    coeffs = np.array([5.21e-1, 2.28e2, -1.06, 3.53e-1, -3.59e-3, 1.48e-3])
+
+    return electrolyte_conductivity_base_Landesfeind2019_Constant(c_e, T, coeffs)
+
 
 def nmc_LGM50_thermal_conductivity_ORegan2022(T):
     """
@@ -1468,12 +1557,12 @@ def get_parameter_values():
         "Typical electrolyte concentration [mol.m-3]": 1000.0,
         "Initial concentration in electrolyte [mol.m-3]": 1000.0,
         "Cation transference number"
-        "": electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019,
-        "Thermodynamic factor": electrolyte_TDF_EC_EMC_3_7_Landesfeind2019,
+        "": electrolyte_transference_number_EC_EMC_3_7_Landesfeind2019_Constant,
+        "Thermodynamic factor": electrolyte_TDF_EC_EMC_3_7_Landesfeind2019_Constant,
         "Electrolyte diffusivity [m2.s-1]"
-        "": electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019,
+        "": electrolyte_diffusivity_EC_EMC_3_7_Landesfeind2019_Constant,
         "Electrolyte conductivity [S.m-1]"
-        "": electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019,
+        "": electrolyte_conductivity_EC_EMC_3_7_Landesfeind2019_Constant,
         "EC partial molar volume [m3.mol-1]": 6.667e-05,
         # experiment
         "Reference temperature [K]": 298.15,
@@ -1481,7 +1570,7 @@ def get_parameter_values():
         "Ambient temperature [K]": 298.15,
         "Number of electrodes connected in parallel to make a cell": 1.0,
         "Number of cells connected in series to make a battery": 1.0,
-        "Lower voltage cut-off [V]": 2.5,
+        "Lower voltage cut-off [V]": 2.4,
         "Upper voltage cut-off [V]": 4.4,
         "Initial concentration in negative electrode [mol.m-3]": 28543.0,
         "Initial concentration in positive electrode [mol.m-3]": 12727.0,

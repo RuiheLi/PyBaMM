@@ -1082,12 +1082,12 @@ def Update_mdic_dry(Data_Pack,mdic_dry):
     return mdic_dry
 
 def Get_Values_Excel(
-    model_options,my_dict_RPT,mdic_dry,
+    index_exp,Pass_Fail,mpe_all,model_options,my_dict_RPT,mdic_dry,
     DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
     str_exp_RPT_text,str_error_AGE_final,
     str_error_RPT):
     if model_options.__contains__("SEI on cracks"):
-            LossCap_seioncrack = my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"][-1]
+        LossCap_seioncrack = my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"][-1]
     else:
         LossCap_seioncrack = "nan"
     if model_options.__contains__("lithium plating"):
@@ -1107,12 +1107,12 @@ def Get_Values_Excel(
         Vol_Elely_JR_All_final  = "nan"
         Width_all_final         = "nan"
     value_list_temp = list(Para_dict_i.values())
-    values = []
+    values_para = []
     for value_list_temp_i in value_list_temp:
-        values.append(str(value_list_temp_i))
-    values.insert(0,str(Scan_i));
-    values.insert(1,DryOut);
-    values.extend([
+        values_para.append(str(value_list_temp_i))
+    # sequence: scan no, exp, pass or fail, mpe, dry-out, 
+    value_Pre = [str(Scan_i),index_exp,Pass_Fail,*mpe_all,DryOut,]
+    values_pos = [
         str_exp_AGE_text,
         str_exp_RPT_text,
         str(my_dict_RPT["Discharge capacity [A.h]"][0] 
@@ -1136,7 +1136,8 @@ def Get_Values_Excel(
         str(Width_all_final),
         str_error_AGE_final, # Mark Ruihe
         str_error_RPT   # Mark Ruihe
-        ])
+        ]
+    values = [*value_Pre,*values_para,*values_pos]
     return values        
 
 # Function to read exp
@@ -1172,10 +1173,11 @@ def Read_Exp(BasicPath,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
 
 # plot inside the function:
 def Plot_Cyc_RPT_4(
-        my_dict_RPT,
-        Exp_Any_AllData,Temp_Cell_Exp, Plot_Exp,  # need to be specific for one expeirment
-        Scan_i,
-        Temper_i,model_options,BasicPath, Target,fs,dpi):
+        my_dict_RPT, Exp_Any_AllData,Temp_Cell_Exp,
+        XY_pack,index_exp, Plot_Exp,  
+        Scan_i,Temper_i,model_options,
+        BasicPath, Target,fs,dpi):
+    
     Num_subplot = 5;
     fig, axs = plt.subplots(Num_subplot,1, figsize=(6,13),tight_layout=True)
     axs[0].plot(
@@ -1207,35 +1209,53 @@ def Plot_Cyc_RPT_4(
         my_dict_RPT["Throughput capacity [kA.h]"], 
         np.array(my_dict_RPT["Res_0p5C_50SOC"]),     '-o', ) 
     # Plot Charge Throughput (A.h) vs SOH
-    color_exp = [0, 0, 0,0.7]; marker_exp = "v";
+    color_exp     = [0, 0, 0, 0.3]; marker_exp     = "v";
+    color_exp_Avg = [0, 0, 0, 0.7]; marker_exp_Avg = "s";
     Exp_temp_i_cell = Temp_Cell_Exp[str(int(Temper_i- 273.15))]
     if Plot_Exp == True:
         for cell in Exp_temp_i_cell:
+            df = Exp_Any_AllData[cell]["Extract Data"]
+            chThr_temp = np.array(df["Charge Throughput (A.h)"])/1e3
+            df_DMA = Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]
             axs[0].plot(
-                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
-                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["SoH"])*100,
+                chThr_temp,np.array(df_DMA["SoH"])*100,
                 color=color_exp,marker=marker_exp,label=f"Cell {cell}") 
             axs[1].plot(
-                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
-                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LLI"])*100,
+                chThr_temp,np.array(df_DMA["LLI"])*100,
                 color=color_exp,marker=marker_exp,label=f"Cell {cell}")  
             axs[2].plot(
-                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
-                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LAM NE_tot"])*100,
+                chThr_temp,np.array(df_DMA["LAM NE_tot"])*100,
                 color=color_exp,marker=marker_exp, )
             axs[3].plot(
-                np.array(Exp_Any_AllData[cell]["Extract Data"]["Charge Throughput (A.h)"])/1e3,
-                np.array(Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]["LAM PE"])*100,
+                chThr_temp,np.array(df_DMA["LAM PE"])*100,
                 color=color_exp,marker=marker_exp,)
             # update 230312- plot resistance here
             df = Exp_Any_AllData[cell]["Extract Data"]
             # Exp_1_AllData["A"]["Extract Data"]["0.1s Resistance (Ohms)"]
-            index_Res = df[df['Mean_R (Ohms)'].le(10)].index
+            index_Res = df[df['0.1s Resistance (Ohms)'].le(10)].index
             axs[4].plot(
                 #df["Days of degradation"][index_Res],
                 np.array(df["Charge Throughput (A.h)"][index_Res])/1e3,
-                np.array(df["Mean_R (Ohms)"][index_Res])*1e3,
+                np.array(df["0.1s Resistance (Ohms)"][index_Res])*1e3,
                 color=color_exp,marker=marker_exp)
+        # Update 230518: Plot Experiment Average - at 1 expeirment and 1 temperature
+        [X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,
+            Y_3_st_avg,Y_4_st_avg,Y_5_st_avg]  = XY_pack
+        axs[0].plot(
+            X_1_st,Y_1_st_avg,color=color_exp_Avg,
+            marker=marker_exp_Avg,label=f"Exp-Avg") 
+        axs[1].plot(
+            X_1_st,Y_2_st_avg,color=color_exp_Avg,
+            marker=marker_exp_Avg,label=f"Exp-Avg")  
+        axs[2].plot(
+            X_1_st,Y_3_st_avg,color=color_exp_Avg,
+            marker=marker_exp_Avg, )
+        axs[3].plot(
+            X_1_st,Y_4_st_avg,
+            color=color_exp_Avg,marker=marker_exp_Avg,)
+        axs[4].plot(
+            X_5_st,Y_5_st_avg,
+            color=color_exp_Avg,marker=marker_exp_Avg)
     axs[0].set_ylabel("SOH %")
     axs[1].set_ylabel("LLI %")
     axs[2].set_ylabel("LAM NE %")
@@ -1243,15 +1263,19 @@ def Plot_Cyc_RPT_4(
     axs[4].set_ylabel(r"Lump resistance [m$\Omega$]")
     axs[4].set_xlabel("Charge Throughput (kA.h)")
     for i in range(0,Num_subplot):
-        labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
+        labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); 
+        [label.set_fontname('DejaVu Sans') for label in labels]
         axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
     axs[4].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
     axs[0].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
     axs[1].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
     fig.suptitle(
-        f"Scan {str(Scan_i)}-{str(int(Temper_i- 273.15))}"+r"$^\circ$C - Summary", fontsize=fs+2)
+        f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}"
+        +r"$^\circ$C - Summary", fontsize=fs+2)
 
-    plt.savefig(BasicPath + Target+"Plots/"   f"{str(int(Temper_i- 273.15))}degC Cap-LLI_Scan_{Scan_i}.png", dpi=dpi)
+    plt.savefig(
+        BasicPath + Target+"Plots/" +  
+        f"0_Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Summary.png", dpi=dpi)
 
     if model_options.__contains__("SEI on cracks"):
         Num_subplot = 2;
@@ -1267,7 +1291,8 @@ def Plot_Cyc_RPT_4(
             axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
         axs[0].set_title("X-avg tot Neg SEI on cracks thickness",   fontdict={'family':'DejaVu Sans','size':fs+1})
         axs[1].set_title("X-avg Neg roughness ratio",   fontdict={'family':'DejaVu Sans','size':fs+1})
-        plt.savefig(BasicPath + Target+"Plots/" f"{str(int(Temper_i- 273.15))}degC - Cracks related_Scan_{Scan_i}.png", dpi=dpi)
+        plt.savefig(BasicPath + Target+"Plots/" +
+            f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC - Cracks related_Scan.png", dpi=dpi)
 
         Num_subplot = 2;
         fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
@@ -1297,7 +1322,8 @@ def Plot_Cyc_RPT_4(
             axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
             axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
         axs[1].set_title("LAM of Neg and Pos",   fontdict={'family':'DejaVu Sans','size':fs+1})
-        plt.savefig(BasicPath + Target+"Plots/"  f"LAM-IR_Scan_{Scan_i}.png", dpi=dpi)
+        plt.savefig(BasicPath + Target+"Plots/" +
+            f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC LAM-IR.png", dpi=dpi)
 
     Num_subplot = 2;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
@@ -1314,9 +1340,10 @@ def Plot_Cyc_RPT_4(
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)     
     axs[0].set_title("Neg Sto. range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
     axs[1].set_title("Pos Sto. range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
-    plt.savefig(BasicPath + Target+"Plots/"  f"SOC_RPT_dis_Scan_{Scan_i}.png", dpi=dpi) 
+    plt.savefig(BasicPath + Target+"Plots/"+
+        f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC SOC_RPT_dis.png", dpi=dpi) 
 
-    # update 230312: plot resistance in GITT:
+    # update 230518: plot resistance in C/2 discharge:
     N_RPT = len(my_dict_RPT["Res_0p5C"])
     colormap_i = mpl.cm.get_cmap("gray", 14) 
     fig, axs = plt.subplots(figsize=(4,3.2),tight_layout=True)
@@ -1324,15 +1351,16 @@ def Plot_Cyc_RPT_4(
         axs.plot(
             my_dict_RPT["SOC_0p5C"][i], my_dict_RPT["Res_0p5C"][i] ,
             color=colormap_i(i),marker="o",  label=f"RPT {i}" )
-    axs.set_xlabel("SOC-GITT %",   fontdict={'family':'DejaVu Sans','size':fs})
-    axs.set_ylabel(r'0.1s Res (m$\Omega$)',   fontdict={'family':'DejaVu Sans','size':fs})
+    axs.set_xlabel("SOC-C/2 %",   fontdict={'family':'DejaVu Sans','size':fs})
+    axs.set_ylabel(r'Res C/2 (m$\Omega$)',   fontdict={'family':'DejaVu Sans','size':fs})
     # axs.legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)     
-    axs.set_title("Neg Sto. range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
-    plt.savefig(BasicPath + Target +  f"0.1s Resistance with SOC_Scan_{Scan_i}.png", dpi=dpi) 
+    axs.set_title("Res during C/2 Dis",   fontdict={'family':'DejaVu Sans','size':fs+1})
+    plt.savefig(BasicPath + Target+ "Plots/"+
+        f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Res_0p5C.png", dpi=dpi) 
 
     return
 
-def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi):
+def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,index_exp,Temper_i,model_options,BasicPath, Target,fs,dpi):
     Num_subplot = 2;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
     axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Porosity"][0],'-o',label="First")
@@ -1355,7 +1383,9 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi):
         axs[i].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
         axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
-    plt.savefig(BasicPath + Target+"Plots/" f"Por Neg_S_eta_Scan_{Scan_i}.png", dpi=dpi)
+    plt.savefig(BasicPath + Target+"Plots/" +
+        f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Por Neg_S_eta.png", dpi=dpi) 
+
 
     if model_options.__contains__("SEI on cracks"):
         Num_subplot = 2;
@@ -1374,7 +1404,8 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi):
             axs[i].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
             axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
             axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
-        plt.savefig(BasicPath + Target+"Plots/" f"Cracks related spatial_Scan_{Scan_i}.png", dpi=dpi)
+        plt.savefig(BasicPath + Target+"Plots/" +
+            f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Cracks related spatial.png", dpi=dpi) 
 
     Num_subplot = 2;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
@@ -1392,7 +1423,8 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi):
         axs[i].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
         axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
-    plt.savefig(BasicPath + Target+"Plots/" f"Electrolyte concentration and potential_Scan_{Scan_i}.png", dpi=dpi)
+    plt.savefig(BasicPath + Target+"Plots/" +
+            f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Electrolyte concentration and potential.png", dpi=dpi)
     
     Num_subplot = 2;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
@@ -1410,12 +1442,13 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi):
         axs[i].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
         axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
-    plt.savefig(BasicPath + Target+"Plots/" f"Electrolyte diffusivity and conductivity_Scan_{Scan_i}.png", dpi=dpi)
+    plt.savefig(BasicPath + Target+"Plots/" +
+            f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Electrolyte diffusivity and conductivity.png", dpi=dpi)
 
     return
 
 def Plot_Dryout(
-    Cyc_Update_Index,mdic_dry,ce_EC_0,
+    Cyc_Update_Index,mdic_dry,ce_EC_0,index_exp,Temper_i,
     Scan_i,BasicPath, Target,fs,dpi):
     
     CeEC_All =np.full(np.size(mdic_dry["Ratio_CeEC_All"]),ce_EC_0); 
@@ -1444,7 +1477,9 @@ def Plot_Dryout(
         labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
         axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
-    plt.savefig(BasicPath + Target+"Plots/" f"Volume_total_Scan_{Scan_i}.png", dpi=dpi)
+    plt.savefig(BasicPath + Target+"Plots/" +
+        f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Volume_total.png", 
+        dpi=dpi)
     
     return
 
@@ -1483,11 +1518,163 @@ def Get_R_from_0P5C_CD(step_0P5C_CD,cap_full):
     Res_0p5C_50SOC = np.interp(50,np.flip(SOC_0p5C),np.flip(Res_0p5C),)
     return SOC_0p5C,Res_0p5C,Res_0p5C_50SOC   #,Rohmic_CD_2
 
+# Update 23-05-18
+# function to get cell average index from several cells in one T and one Exp
+def Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell):
+    # Get the cell with smallest X "Charge Throughput (A.h)" - to interpolate
+    X_1_last = [];    X_5_last = [];
+    for cell in Exp_temp_i_cell:
+        df = Exp_Any_AllData[cell]["Extract Data"]
+        xtemp = np.array(df["Charge Throughput (A.h)"])/1e3
+        X_1_last.append(xtemp[-1])
+        index_Res = df[df['0.1s Resistance (Ohms)'].le(10)].index
+        xtemp2 = np.array(df["Charge Throughput (A.h)"][index_Res])/1e3
+        X_5_last.append(xtemp2[-1])
+    index_X1 = np.argmin(X_1_last) # find index of the smallest value
+    index_X5 = np.argmin(X_5_last)
+    # Get the interpolate ones
+    Y_1_st = []; Y_2_st = []; Y_3_st = []; Y_4_st = []; Y_5_st = [];
+    df_t1 = Exp_Any_AllData[Exp_temp_i_cell[index_X1]]["Extract Data"]
+    X_1_st = np.array(df_t1["Charge Throughput (A.h)"])/1e3
+    df_t5 = Exp_Any_AllData[Exp_temp_i_cell[index_X5]]["Extract Data"]
+    index_Res_5 = df_t5[df_t5['0.1s Resistance (Ohms)'].le(10)].index
+    X_5_st = np.array(df_t5["Charge Throughput (A.h)"][index_Res_5])/1e3
+    for cell in Exp_temp_i_cell:
+        df = Exp_Any_AllData[cell]["Extract Data"]
+        chThr_temp = np.array(df["Charge Throughput (A.h)"])/1e3
+        df_DMA = Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]
+        Y_1_st.append( list(np.interp(X_1_st,chThr_temp,
+                        np.array(df_DMA["SoH"])*100)) )
+        Y_2_st.append( list(np.interp(X_1_st,chThr_temp,
+                        np.array(df_DMA["LLI"])*100)) )
+        Y_3_st.append( list(np.interp(X_1_st,chThr_temp,
+                        np.array(df_DMA["LAM NE_tot"])*100)) )
+        Y_4_st.append( list(np.interp(X_1_st,chThr_temp,
+                        np.array(df_DMA["LAM PE"])*100)) )
+        index_Res = df[df['0.1s Resistance (Ohms)'].le(10)].index
+        Y_5_st.append( list(np.interp(
+            X_5_st,np.array(df["Charge Throughput (A.h)"][index_Res])/1e3,
+            np.array(df["0.1s Resistance (Ohms)"][index_Res])*1e3, )) )
+    # Get the mean values of the interpolate ones:
+    def Get_Mean(X_1_st,Y_1_st):
+        Y_1_st_avg = []
+        for i in range(len(X_1_st)):
+            sum=0
+            for j in range(len(Y_1_st)):
+                sum += Y_1_st[j][i]
+            Y_1_st_avg.append(sum/len(Y_1_st))
+        return Y_1_st_avg   
+    Y_1_st_avg = Get_Mean(X_1_st,Y_1_st)
+    Y_2_st_avg = Get_Mean(X_1_st,Y_2_st)
+    Y_3_st_avg = Get_Mean(X_1_st,Y_3_st)
+    Y_4_st_avg = Get_Mean(X_1_st,Y_4_st)
+    Y_5_st_avg = Get_Mean(X_5_st,Y_5_st)
+    XY_pack = [
+        X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,
+        Y_3_st_avg,Y_4_st_avg,Y_5_st_avg]
+    return XY_pack
+
+# Update 23-05-18 Compare MPE - code created by ChatGPT
+def mean_percentage_error(A, B):
+    if 0 in A:
+        indices = np.where(A == 0)[0]
+        A = np.delete(A, indices)
+        B = np.delete(B, indices)
+        print(A,B)
+    errors = np.abs(A - B) / np.abs(A)
+    mpe = np.mean(errors) * 100
+    return mpe
+
+# Update 23-05-18
+# compare modelling result with modelling:
+# idea: do interpolation following TODO this is where weighting works
+# initial:: X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,Y_3_st_avg,Y_4_st_avg,Y_5_st_avg
+# to compare: my_dict_RPT
+def Compare_Exp_Model(
+        my_dict_RPT, XY_pack, Scan_i,
+        index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck):
+    
+    [X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,
+        Y_3_st_avg,Y_4_st_avg,Y_5_st_avg] = XY_pack
+    mX_1 = my_dict_RPT['Throughput capacity [kA.h]']
+    if mX_1[-1] > X_1_st[-1]:
+        mX_1_st = X_1_st   # do interpolation on modelling result
+        mY_1_st = np.interp(mX_1_st,my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT['CDend SOH [%]'])
+        mY_2_st = np.interp(mX_1_st,my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT["CDend LLI [%]"])
+        mY_3_st = np.interp(mX_1_st,my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT["CDend LAM_ne [%]"])
+        mY_4_st = np.interp(mX_1_st,my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT["CDend LAM_pe [%]"])
+        # experiment result remain unchanged
+        Y_1_st_avgm = Y_1_st_avg
+        Y_2_st_avgm = Y_2_st_avg
+        Y_3_st_avgm = Y_3_st_avg
+        Y_4_st_avgm = Y_4_st_avg
+    else:                # do interpolation on expeirment results
+        mX_1_st = mX_1 #  standard for experiment following modelling
+        Y_1_st_avgm = np.interp(mX_1_st,X_1_st,Y_1_st_avg)
+        Y_2_st_avgm = np.interp(mX_1_st,X_1_st,Y_2_st_avg)
+        Y_3_st_avgm = np.interp(mX_1_st,X_1_st,Y_3_st_avg)
+        Y_4_st_avgm = np.interp(mX_1_st,X_1_st,Y_4_st_avg)
+        mY_1_st = my_dict_RPT['CDend SOH [%]']
+        mY_2_st = my_dict_RPT["CDend LLI [%]"]
+        mY_3_st = my_dict_RPT["CDend LAM_ne [%]"]
+        mY_4_st = my_dict_RPT["CDend LAM_pe [%]"]
+    if mX_1[-1] > X_5_st[-1]:
+        mX_5_st = X_5_st   
+        mY_5_st = np.interp(mX_5_st,my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT["Res_0p5C_50SOC"])
+        Y_5_st_avgm = Y_5_st_avg
+    else:
+        mX_5_st = mX_1 #  standard for experiment following modelling
+        mY_5_st = my_dict_RPT["Res_0p5C_50SOC"]
+        Y_5_st_avgm = np.interp(mX_5_st,X_5_st,Y_5_st_avg)
+    # Now we can calculate MPE! mean_percentage_error
+    mpe_1 = np.sum(abs(np.array(Y_1_st_avgm)-np.array(mY_1_st)))/len(Y_1_st_avgm) # SOH [%]
+    mpe_2 = np.sum(abs(np.array(Y_2_st_avgm)-np.array(mY_2_st)))/len(Y_2_st_avgm) # LLI [%]
+    mpe_3 = np.sum(abs(np.array(Y_3_st_avgm)-np.array(mY_3_st)))/len(Y_3_st_avgm) # LAM_ne [%]
+    mpe_4 = np.sum(abs(np.array(Y_4_st_avgm)-np.array(mY_4_st)))/len(Y_4_st_avgm) # LAM_pe [%]
+    mpe_5 = mean_percentage_error(Y_5_st_avgm, mY_5_st) # Res_0p5C_50SOC
+    # total MPE: TODO this is where weighting works
+    # SOH and Resistance are directly measured so give more weight; 
+    # DMA result is derived from pOCV and come with certain errors
+    mpe_tot = 0.55*mpe_1 + 0.1*(mpe_2+mpe_3+mpe_4) + 0.15*mpe_5
+    # plot and check:
+    if PlotCheck == True:
+        fig, axs = plt.subplots(5,1, figsize=(6,13),tight_layout=True)
+        axs[0].plot(mX_1_st, mY_1_st,'-o', label="Model" )
+        axs[0].plot(mX_1_st, Y_1_st_avgm,'-o', label="Exp"  )
+        axs[1].plot(mX_1_st, mY_2_st,'-o', label="Model" )
+        axs[1].plot(mX_1_st, Y_2_st_avgm,'-o', label="Exp"  )
+        axs[2].plot(mX_1_st, mY_3_st,'-o', label="Model" )
+        axs[2].plot(mX_1_st, Y_3_st_avgm,'-o', label="Exp"  )
+        axs[3].plot(mX_1_st, mY_4_st,'-o', label="Model" )
+        axs[3].plot(mX_1_st, Y_4_st_avgm,'-o', label="Exp"  )
+        axs[4].plot(mX_5_st, mY_5_st,'-o', label="Model" )
+        axs[4].plot(mX_5_st, Y_5_st_avgm,'-o', label="Exp"  )
+        axs[0].legend()
+        axs[0].set_ylabel("SOH %")
+        axs[1].set_ylabel("LLI %")
+        axs[2].set_ylabel("LAM NE %")
+        axs[3].set_ylabel("LAM PE %")
+        axs[4].set_ylabel(r"Lump resistance [m$\Omega$]")
+        axs[4].set_xlabel("Charge Throughput (kA.h)")
+        fig.suptitle(
+            f"Scan {str(Scan_i)}-Exp-{index_exp}-{str(int(Temper_i-273.15))}"
+            +r"$^\circ$C - Calculate Error", fontsize=fs+2)
+        plt.savefig(BasicPath + Target
+            +"Plots/"+ f"Scan {str(Scan_i)}-Exp-{index_exp}-{str(int(Temper_i-273.15))}degC"
+            +r"- Calculate Error.png", dpi=dpi)
+    mpe_all = np.around([mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,])
+    return mpe_all
+
 
 def Run_P2_Opt_Timeout(
-    index_i, Para_dict_i,   Path_pack ,  fs,
+    index_i, index_exp , Para_dict_i,   Path_pack ,  fs,
     keys_all,   exp_text_list, exp_index_pack , 
-    Exp_Any_AllData,Temp_Cell_Exp, 
+    Exp_Any_AllData,Temp_Cell_Exp, dpi,
     Plot_Exp,Timeout,Return_Sol,Check_Small_Time ): # true or false to plot,timeout,return,check small time
 
     ##########################################################
@@ -1805,26 +1992,30 @@ def Run_P2_Opt_Timeout(
     #########   An extremely bad case: cannot even finish breakin
     if Flag_Breakin == False: 
         value_list_temp = list(Para_dict_i.values())
-        values = []
+        values_para = []
         for value_list_temp_i in value_list_temp:
-            values.append(str(value_list_temp_i))
-        values.insert(0,str(Scan_i));
-        values.insert(1,DryOut);
-        values.extend([
+            values_para.append(str(value_list_temp_i))
+        # sequence: scan no, exp, pass or fail, mpe, dry-out, 
+        mpe_all = ["nan","nan",
+            "nan","nan", 
+            "nan","nan",]
+        Pass_Fail = "Die"
+        value_Pre = [str(Scan_i),index_exp,Pass_Fail,*mpe_all,DryOut,]
+        values_pos =[
             str_exp_AGE_text,
             str_exp_RPT_text,
             "nan","nan",
             "nan","nan", 
             "nan","nan",
             "nan","nan",
-            "nan",str_error_Breakin])
-        values = [values,]
+            "nan",str_error_Breakin]
+        values = [*value_Pre,*values_para,*values_pos]
         print(str_error_Breakin)
         print("Fail in {}".format(ModelTimer.time())) 
         book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
         sheet_name_xlsx =  str(Scan_i);
         write_excel_xlsx(
-            BasicPath + Target + book_name_xlsx_seperate, 
+            BasicPath + Target + "Excel/" +book_name_xlsx_seperate, 
             sheet_name_xlsx, values)
         
         midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
@@ -1837,9 +2028,8 @@ def Run_P2_Opt_Timeout(
     # Newly add (221114): make plotting as functions
     # Niall_data = loadmat( 'Extracted_all_cell.mat'
     else:
-        if not os.path.exists(BasicPath + Target + str(Scan_i)):
-            os.mkdir(BasicPath + Target + str(Scan_i) );
-        dpi= 100;
+        #if not os.path.exists(BasicPath + Target + str(Scan_i)):
+        #os.mkdir(BasicPath + Target + str(Scan_i) );
         # Update 230221 - Add model LLI, LAM manually 
         my_dict_RPT['Throughput capacity [kA.h]'] = (
             np.array(my_dict_RPT['Throughput capacity [A.h]'])/1e3).tolist()
@@ -1881,16 +2071,39 @@ def Run_P2_Opt_Timeout(
             SmallTimer.reset()
         else:
             pass
+        # Newly add: update 23-05-18: evaluate errors systematically:
+        Exp_temp_i_cell = Temp_Cell_Exp[str(int(Temper_i- 273.15))]
+        XY_pack = Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell) # interpolate for exp only
+        mpe_all = Compare_Exp_Model( my_dict_RPT, XY_pack, Scan_i,
+            index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck=True)
+        [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5] = mpe_all
+        # set pass or fail TODO figure out how much should be appropriate:
+        if mpe_tot < 3:
+            Pass_Fail = "Pass"
+        else:
+            Pass_Fail = "Fail"
+        my_dict_RPT["Error tot %"] = mpe_tot
+        my_dict_RPT["Error SOH %"] = mpe_1
+        my_dict_RPT["Error LLI %"] = mpe_2
+        my_dict_RPT["Error LAM NE %"] = mpe_3
+        my_dict_RPT["Error LAM PE %"] = mpe_4
+        my_dict_RPT["Error Res %"] = mpe_5
+
         ##########################################################
         #########      3-1: Plot cycle,location, Dryout related 
         Plot_Cyc_RPT_4(
-            my_dict_RPT,
-            Exp_Any_AllData,Temp_Cell_Exp, Plot_Exp ,  # =True or False,
-            Scan_i,Temper_i,model_options,BasicPath, Target,fs,dpi)
+            my_dict_RPT, Exp_Any_AllData,Temp_Cell_Exp,
+            XY_pack,index_exp, Plot_Exp,  
+            Scan_i,Temper_i,model_options,
+            BasicPath, Target,fs,dpi)
         if len(my_dict_AGE["CDend Porosity"])>1:
-            Plot_Loc_AGE_4(my_dict_AGE,Scan_i,model_options,BasicPath, Target,fs,dpi)
+            Plot_Loc_AGE_4(
+                my_dict_AGE,Scan_i,index_exp,Temper_i,
+                model_options,BasicPath, Target,fs,dpi)
         if DryOut == "On":
-            Plot_Dryout(Cyc_Update_Index,mdic_dry,ce_EC_0,Scan_i,BasicPath, Target,fs,dpi)
+            Plot_Dryout(
+                Cyc_Update_Index,mdic_dry,ce_EC_0,index_exp,Temper_i,
+                Scan_i,BasicPath, Target,fs,dpi)
         if Check_Small_Time == True:    
             print(f"Scan {Scan_i}: Finish all plots within {SmallTimer.time()}")
             SmallTimer.reset()
@@ -1905,16 +2118,15 @@ def Run_P2_Opt_Timeout(
         ##########################################################
         #########      3-3: Save summary to excel 
         values=Get_Values_Excel(
-            model_options,my_dict_RPT,mdic_dry,
+            index_exp,Pass_Fail,mpe_all,model_options,my_dict_RPT,mdic_dry,
             DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
-            str_exp_RPT_text,
-            str_error_AGE_final,
+            str_exp_RPT_text,str_error_AGE_final,
             str_error_RPT)
         values = [values,]
         book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
         sheet_name_xlsx =  str(Scan_i);
         write_excel_xlsx(
-            BasicPath + Target + book_name_xlsx_seperate, 
+            BasicPath + Target + "Excel/" + book_name_xlsx_seperate, 
             sheet_name_xlsx, values)
         if Check_Small_Time == True:    
             print(f"Scan {Scan_i}: Finish saving mat and xlsx within {SmallTimer.time()}")
