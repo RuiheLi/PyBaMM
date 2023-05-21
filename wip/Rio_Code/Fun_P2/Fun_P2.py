@@ -1274,7 +1274,7 @@ def Plot_Cyc_RPT_4(
         +r"$^\circ$C - Summary", fontsize=fs+2)
 
     plt.savefig(
-        BasicPath + Target+"Plots/" +  
+        BasicPath + Target+   # "Plots/" +  
         f"0_Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Summary.png", dpi=dpi)
 
     if model_options.__contains__("SEI on cracks"):
@@ -1613,6 +1613,7 @@ def Compare_Exp_Model(
         Y_3_st_avgm = Y_3_st_avg
         Y_4_st_avgm = Y_4_st_avg
     else:                # do interpolation on expeirment results
+        punish = X_1_st[-1] / mX_1[-1]  # punishment error, add when simulation end early
         mX_1_st = mX_1 #  standard for experiment following modelling
         Y_1_st_avgm = np.interp(mX_1_st,X_1_st,Y_1_st_avg)
         Y_2_st_avgm = np.interp(mX_1_st,X_1_st,Y_2_st_avg)
@@ -1640,7 +1641,7 @@ def Compare_Exp_Model(
     # total MPE: TODO this is where weighting works
     # SOH and Resistance are directly measured so give more weight; 
     # DMA result is derived from pOCV and come with certain errors
-    mpe_tot = 0.55*mpe_1 + 0.1*(mpe_2+mpe_3+mpe_4) + 0.15*mpe_5
+    mpe_tot = 0.55*mpe_1 + 0.1*(mpe_2+mpe_3+mpe_4) + 0.15*mpe_5 + (punish>1.4) * 5
     # plot and check:
     if PlotCheck == True:
         fig, axs = plt.subplots(5,1, figsize=(6,13),tight_layout=True)
