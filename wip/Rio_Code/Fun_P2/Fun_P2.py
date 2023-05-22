@@ -1272,10 +1272,10 @@ def Plot_Cyc_RPT_4(
     fig.suptitle(
         f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}"
         +r"$^\circ$C - Summary", fontsize=fs+2)
-
     plt.savefig(
         BasicPath + Target+   # "Plots/" +  
         f"0_Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Summary.png", dpi=dpi)
+    plt.close()  # close the figure to save RAM
 
     if model_options.__contains__("SEI on cracks"):
         Num_subplot = 2;
@@ -1293,6 +1293,7 @@ def Plot_Cyc_RPT_4(
         axs[1].set_title("X-avg Neg roughness ratio",   fontdict={'family':'DejaVu Sans','size':fs+1})
         plt.savefig(BasicPath + Target+"Plots/" +
             f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC - Cracks related_Scan.png", dpi=dpi)
+        plt.close()  # close the figure to save RAM
 
         Num_subplot = 2;
         fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
@@ -1324,7 +1325,7 @@ def Plot_Cyc_RPT_4(
         axs[1].set_title("LAM of Neg and Pos",   fontdict={'family':'DejaVu Sans','size':fs+1})
         plt.savefig(BasicPath + Target+"Plots/" +
             f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC LAM-IR.png", dpi=dpi)
-
+        plt.close()  # close the figure to save RAM
     Num_subplot = 2;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
     axs[0].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDsta Positive electrode stoichiometry"] ,'-o',label="Start" )
@@ -1342,7 +1343,7 @@ def Plot_Cyc_RPT_4(
     axs[1].set_title("Pos Sto. range (Dis)",   fontdict={'family':'DejaVu Sans','size':fs+1})
     plt.savefig(BasicPath + Target+"Plots/"+
         f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC SOC_RPT_dis.png", dpi=dpi) 
-
+    plt.close()  # close the figure to save RAM
     # update 230518: plot resistance in C/2 discharge:
     N_RPT = len(my_dict_RPT["Res_0p5C"])
     colormap_i = mpl.cm.get_cmap("gray", 14) 
@@ -1357,6 +1358,7 @@ def Plot_Cyc_RPT_4(
     axs.set_title("Res during C/2 Dis",   fontdict={'family':'DejaVu Sans','size':fs+1})
     plt.savefig(BasicPath + Target+ "Plots/"+
         f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Res_0p5C.png", dpi=dpi) 
+    plt.close()  # close the figure to save RAM
 
     return
 
@@ -1385,7 +1387,7 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,index_exp,Temper_i,model_options,BasicPath
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
     plt.savefig(BasicPath + Target+"Plots/" +
         f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Por Neg_S_eta.png", dpi=dpi) 
-
+    plt.close()  # close the figure to save RAM
 
     if model_options.__contains__("SEI on cracks"):
         Num_subplot = 2;
@@ -1406,7 +1408,7 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,index_exp,Temper_i,model_options,BasicPath
             axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
         plt.savefig(BasicPath + Target+"Plots/" +
             f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Cracks related spatial.png", dpi=dpi) 
-
+        plt.close()  # close the figure to save RAM
     Num_subplot = 2;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
     axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte concentration [mol.m-3]"][0],'-o',label="First")
@@ -1425,7 +1427,7 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,index_exp,Temper_i,model_options,BasicPath
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
     plt.savefig(BasicPath + Target+"Plots/" +
             f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Electrolyte concentration and potential.png", dpi=dpi)
-    
+    plt.close()  # close the figure to save RAM
     Num_subplot = 2;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
     axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte diffusivity [m2.s-1]"][0],'-o',label="First")
@@ -1444,7 +1446,7 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,index_exp,Temper_i,model_options,BasicPath
         axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
     plt.savefig(BasicPath + Target+"Plots/" +
             f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Electrolyte diffusivity and conductivity.png", dpi=dpi)
-
+    plt.close()  # close the figure to save RAM
     return
 
 def Plot_Dryout(
@@ -1480,7 +1482,7 @@ def Plot_Dryout(
     plt.savefig(BasicPath + Target+"Plots/" +
         f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Volume_total.png", 
         dpi=dpi)
-    
+    plt.close()  # close the figure to save RAM
     return
 
 # update 230312: add a function to get the discharge capacity and resistance
@@ -1668,6 +1670,7 @@ def Compare_Exp_Model(
         plt.savefig(BasicPath + Target
             +"Plots/"+ f"Scan {str(Scan_i)}-Exp-{index_exp}-{str(int(Temper_i-273.15))}degC"
             +r"- Calculate Error.png", dpi=dpi)
+        plt.close()  # close the figure to save RAM
     mpe_all = np.around([mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,])
     return mpe_all
 
