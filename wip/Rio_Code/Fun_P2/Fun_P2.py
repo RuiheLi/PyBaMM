@@ -1082,10 +1082,13 @@ def Update_mdic_dry(Data_Pack,mdic_dry):
     return mdic_dry
 
 def Get_Values_Excel(
-    index_exp,Pass_Fail,mpe_all,model_options,my_dict_RPT,mdic_dry,
+    index_exp,Pass_Fail,
+    mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+    model_options,my_dict_RPT,mdic_dry,
     DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
     str_exp_RPT_text,str_error_AGE_final,
     str_error_RPT):
+
     if model_options.__contains__("SEI on cracks"):
         LossCap_seioncrack = my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"][-1]
     else:
@@ -1111,7 +1114,10 @@ def Get_Values_Excel(
     for value_list_temp_i in value_list_temp:
         values_para.append(str(value_list_temp_i))
     # sequence: scan no, exp, pass or fail, mpe, dry-out, 
-    value_Pre = [str(Scan_i),index_exp,Pass_Fail,*mpe_all,DryOut,]
+    value_Pre = [
+        str(Scan_i),index_exp,Pass_Fail,
+        mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+        DryOut,]
     values_pos = [
         str_exp_AGE_text,
         str_exp_RPT_text,
@@ -1600,6 +1606,7 @@ def Compare_Exp_Model(
         Y_3_st_avg,Y_4_st_avg,Y_5_st_avg] = XY_pack
     mX_1 = my_dict_RPT['Throughput capacity [kA.h]']
     if mX_1[-1] > X_1_st[-1]:
+        punish = 1; 
         mX_1_st = X_1_st   # do interpolation on modelling result
         mY_1_st = np.interp(mX_1_st,my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT['CDend SOH [%]'])
@@ -1643,7 +1650,9 @@ def Compare_Exp_Model(
     # total MPE: TODO this is where weighting works
     # SOH and Resistance are directly measured so give more weight; 
     # DMA result is derived from pOCV and come with certain errors
-    mpe_tot = 0.55*mpe_1 + 0.1*(mpe_2+mpe_3+mpe_4) + 0.15*mpe_5 + (punish>1.4) * 5
+    mpe_tot = (
+        0.55*mpe_1 + 0.1*(mpe_2+mpe_3+mpe_4) 
+        + 0.15*mpe_5 + (punish>1.0)* punish * 2 )
     # plot and check:
     if PlotCheck == True:
         fig, axs = plt.subplots(5,1, figsize=(6,13),tight_layout=True)
@@ -2114,15 +2123,12 @@ def Run_P2_Opt_Timeout(
         else:
             pass
         ##########################################################
-        #########      3-2: Save data as .mat 
-        my_dict_RPT["Cyc_Update_Index"] = Cyc_Update_Index
-        my_dict_RPT["SaveTimes"]    = SaveTimes
-        midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
-        savemat(BasicPath + Target+"Mats/" + str(Scan_i)+ '-StructDara_for_Mat.mat',midc_merge)  
         ##########################################################
         #########      3-3: Save summary to excel 
         values=Get_Values_Excel(
-            index_exp,Pass_Fail,mpe_all,model_options,my_dict_RPT,mdic_dry,
+            index_exp,Pass_Fail,
+            mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+            model_options,my_dict_RPT,mdic_dry,
             DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
             str_exp_RPT_text,str_error_AGE_final,
             str_error_RPT)
@@ -2137,6 +2143,12 @@ def Run_P2_Opt_Timeout(
             SmallTimer.reset()
         else:
             pass
+        
+        #########      3-2: Save data as .mat 
+        my_dict_RPT["Cyc_Update_Index"] = Cyc_Update_Index
+        my_dict_RPT["SaveTimes"]    = SaveTimes
+        midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
+        # savemat(BasicPath + Target+"Mats/" + str(Scan_i)+ '-StructDara_for_Mat.mat',midc_merge)  
         print("Succeed doing something in {}".format(ModelTimer.time()))
         print('This is the end of No.', Scan_i, ' scan')
         return midc_merge,Sol_RPT,Sol_AGE
