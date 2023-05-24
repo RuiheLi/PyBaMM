@@ -1421,7 +1421,7 @@ def get_parameter_values():
         "SEI reaction exchange current density [A.m-2]": 1.5e-07,
         "SEI resistivity [Ohm.m]": 200000.0,
         "Outer SEI solvent diffusivity [m2.s-1]": 2.5000000000000002e-22,
-        "Bulk solvent concentration [mol.m-3]": 2636.0,
+        "Bulk solvent concentration [mol.m-3]": 4541.0,
         "Inner SEI open-circuit potential [V]": 0.1,
         "Outer SEI open-circuit potential [V]": 0.8,
         "Inner SEI electron conductivity [S.m-1]": 8.95e-14,

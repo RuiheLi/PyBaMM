@@ -326,7 +326,7 @@ def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
         print('Model error! Electrolyte in JR is larger than in the cell!')
     Vol_Pore_tot_old  = PoreVolNeg_0 + PoreVolSep_0 + PoreVolPos_0    # pore volume at start time of the run
     Vol_Pore_tot_new  = PoreVolNeg_1 + PoreVolSep_1 + PoreVolPos_1    # pore volume at end   time of the run, intrinsic variable 
-    Vol_Pore_decrease = Vol_Elely_JR_old  - Vol_Pore_tot_new;
+    Vol_Pore_decrease = Vol_Elely_JR_old  - Vol_Pore_tot_new # WHY Vol_Elely_JR_old not Vol_Pore_tot_old here? Because even the last state of the last solution (n-1) and the first state of the next solution (n) can be slightly different! 
     # EC:lithium:SEI=2:1:1     for SEI=(CH2OCO2Li)2, but because of too many changes are required, change to 2:1:1 for now
     # Because inner and outer SEI partial molar volume is the same, just set one for whole SEI
     VmolSEI   = Para["Outer SEI partial molar volume [m3.mol-1]"] # 9.8e-5,
@@ -421,19 +421,31 @@ def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
     #############################################################################################################################  
     ###################       Step-4 Update parameters here        ##############################################################
     #############################################################################################################################
-    Para.update(   {'Bulk solvent concentration [mol.m-3]':  c_EC_JR_old * Ratio_CeEC_JR  })
+    Para.update(   
+        {'Bulk solvent concentration [mol.m-3]':  
+         c_EC_JR_old * Ratio_CeEC_JR  })
     Para.update(
-        {'EC initial concentration in electrolyte [mol.m-3]':c_EC_JR_old * Ratio_CeEC_JR }, 
-        check_already_exists=False) 
+        {'EC initial concentration in electrolyte [mol.m-3]':
+         c_EC_JR_old * Ratio_CeEC_JR },) 
     Para.update(   
         {'Ratio of Li-ion concentration change in electrolyte consider solvent consumption':  
         Ratio_CeLi_JR }, check_already_exists=False) 
-    Para.update(   {'Current total electrolyte volume in whole cell [m3]':  Vol_Elely_Tot_new  }, check_already_exists=False)
-    Para.update(   {'Current total electrolyte volume in jelly roll [m3]':  Vol_Elely_JR_new  }, check_already_exists=False)
-    Para.update(   {'Ratio of electrolyte dry out in jelly roll':Ratio_Dryout}, check_already_exists=False)
+    Para.update(   
+        {'Current total electrolyte volume in whole cell [m3]':  Vol_Elely_Tot_new  }, 
+        check_already_exists=False)
+    Para.update(   
+        {'Current total electrolyte volume in jelly roll [m3]':  Vol_Elely_JR_new  }, 
+        check_already_exists=False)
+    Para.update(   
+        {'Ratio of electrolyte dry out in jelly roll':Ratio_Dryout}, 
+        check_already_exists=False)
     Para.update(   {'Electrode width [m]':Width_new})    
-    Para.update(   {'Current solvent concentration in the reservoir [mol.m-3]':c_EC_r_new}, check_already_exists=False)     
-    Para.update(   {'Current electrolyte concentration in the reservoir [mol.m-3]':c_e_r_new}, check_already_exists=False)             
+    Para.update(   
+        {'Current solvent concentration in the reservoir [mol.m-3]':c_EC_r_new}, 
+        check_already_exists=False)     
+    Para.update(   
+        {'Current electrolyte concentration in the reservoir [mol.m-3]':c_e_r_new}, 
+        check_already_exists=False)             
     return Data_Pack,Para
 
 # Define a function to calculate based on previous solution
@@ -1710,6 +1722,8 @@ def Run_P2_Opt_Timeout(
     
     Scan_i = int(index_i)
     print('Start Now! Scan %d.' % Scan_i)  
+
+    print('After break point')  
     Sol_RPT = [];  Sol_AGE = [];
     # pb.set_logging_level('INFO') # show more information!
     # set_start_method('fork') # from Patrick
@@ -1894,7 +1908,6 @@ def Run_P2_Opt_Timeout(
                     str_error_AGE_final = str_error_AGE
                     break
                 else:
-                    
                     Para_0_Dry_old = Paraupdate;       Model_Dry_old = Model_Dry_i;      Sol_Dry_old = Sol_Dry_i;   
                     del Paraupdate,Model_Dry_i,Sol_Dry_i
                     
