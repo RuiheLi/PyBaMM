@@ -156,10 +156,7 @@ class BaseModel(BaseInterface):
                 L_to_n_outer_0 = L_to_n_outer
             else:
                 # m * (mol/m4) = mol/m3 (n is a bulk quantity)
-                a = variables[
-                    f"Negative electrode {self.phase_name}"
-                    "surface area to volume ratio [m-1]"
-                ]
+                a = phase_param.a_typ  # Mark Simon edit
                 L_to_n_inner = a / phase_param.V_bar_inner
                 L_to_n_outer = a / phase_param.V_bar_outer
                 L_to_n_inner_0 = phase_param.a_typ / phase_param.V_bar_inner
