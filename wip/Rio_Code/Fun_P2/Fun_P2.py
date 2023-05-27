@@ -1100,6 +1100,7 @@ def Update_mdic_dry(Data_Pack,mdic_dry):
 def Get_Values_Excel(
     index_exp,Pass_Fail,
     mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+    # Start_shape,Middle_shape,End_shape, # add 230526
     model_options,my_dict_RPT,mdic_dry,
     DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
     str_exp_RPT_text,str_error_AGE_final,
@@ -1133,6 +1134,7 @@ def Get_Values_Excel(
     value_Pre = [
         str(Scan_i),index_exp,Pass_Fail,
         mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+        # Start_shape,Middle_shape,End_shape, 
         DryOut,]
     values_pos = [
         str_exp_AGE_text,
@@ -1192,6 +1194,62 @@ def Read_Exp(BasicPath,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
             index_col=0)
     print("Finish reading Experiment!")
     return Exp_Any_AllData
+# judge ageing shape: - NOT Ready yet!
+def check_concave_convex(x_values, y_values):
+    # Check if the series has at least three points
+    if len(x_values) < 3 or len(y_values) < 3:
+        return ["None","None""None"]
+
+    # Calculate the slopes between adjacent points based on "x" and "y" values
+    slopes = []
+    for i in range(1, len(y_values)):
+        slope = (y_values[i] - y_values[i - 1]) / (x_values[i] - x_values[i - 1])
+        slopes.append(slope)
+
+    # Determine the indices for the start, middle, and end groups
+    start_index = 0
+    middle_index = len(y_values) // 2 - 1
+    end_index = len(y_values) - 3
+
+    # Check if the start group is concave, convex, or linear
+    start_group = slopes[:3]
+    start_avg = sum(start_group[:2]) / 2
+    start_point = start_group[1]
+    # TODO we still need to consider a proper index to judge linear
+    if abs(start_avg - start_point) <= 0.005 * start_point:
+        start_shape = "Linear"
+    elif start_avg <= start_point:
+        start_shape = "Sub"
+    else:
+        start_shape = "Super"
+
+    # Check if the middle group is concave, convex, or linear
+    middle_group = slopes[middle_index:middle_index + 3]
+    middle_avg = sum(middle_group[:2]) / 2
+    middle_point = middle_group[1]
+    if abs(middle_avg - middle_point) <= 0.005 * middle_point:
+        middle_shape = "Linear"
+    elif middle_avg <= middle_point:
+        middle_shape = "Sub"
+    else:
+        middle_shape = "Super"
+
+    # Check if the end group is concave, convex, or linear
+    end_group = slopes[end_index:]
+    end_avg = sum(end_group[:2]) / 2
+    end_point = end_group[1]
+    if abs(end_avg - end_point) <= 0.005 * end_point:
+        end_shape = "Linear"
+    elif end_avg <= end_point:
+        end_shape = "Sub"
+    else:
+        end_shape = "Super"
+
+    # Return the shape results
+    shape_results = [start_shape, middle_shape, end_shape]
+    return shape_results
+
+
 
 # plot inside the function:
 def Plot_Cyc_RPT_4(
@@ -2051,6 +2109,12 @@ def Run_P2_Opt_Timeout(
         write_excel_xlsx(
             BasicPath + Target + "Excel/" +book_name_xlsx_seperate, 
             sheet_name_xlsx, values)
+        my_dict_RPT["Error tot %"] = "nan"
+        my_dict_RPT["Error SOH %"] = "nan"
+        my_dict_RPT["Error LLI %"] = "nan"
+        my_dict_RPT["Error LAM NE %"] = "nan"
+        my_dict_RPT["Error LAM PE %"] = "nan"
+        my_dict_RPT["Error Res %"] = "nan"
         
         midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
 
@@ -2146,12 +2210,17 @@ def Run_P2_Opt_Timeout(
             SmallTimer.reset()
         else:
             pass
+        # update 23-05-26 judge ageing shape: contain 3 index
+        """ [Start_shape,Middle_shape,End_shape] = check_concave_convex(
+        my_dict_RPT['Throughput capacity [kA.h]'], 
+        my_dict_RPT['CDend SOH [%]']) """
         ##########################################################
         ##########################################################
         #########      3-3: Save summary to excel 
         values=Get_Values_Excel(
             index_exp,Pass_Fail,
             mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+            # Start_shape,Middle_shape,End_shape,
             model_options,my_dict_RPT,mdic_dry,
             DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
             str_exp_RPT_text,str_error_AGE_final,
@@ -2162,8 +2231,18 @@ def Run_P2_Opt_Timeout(
         write_excel_xlsx(
             BasicPath + Target + "Excel/" + book_name_xlsx_seperate, 
             sheet_name_xlsx, values)
-        
-        
+        # pick only the cyc - most concern
+        Keys_cyc_mat =[
+            'Throughput capacity [kA.h]',
+            'CDend SOH [%]',
+            "CDend LLI [%]",
+            "CDend LAM_ne [%]",
+            "CDend LAM_pe [%]",
+            "Res_0p5C_50SOC",
+        ]
+        my_dict_mat = {}
+        for key in Keys_cyc_mat:
+            my_dict_mat[key]=my_dict_RPT[key]
         #########      3-2: Save data as .mat or .json
         my_dict_RPT["Cyc_Update_Index"] = Cyc_Update_Index
         my_dict_RPT["SaveTimes"]    = SaveTimes
@@ -2183,8 +2262,8 @@ def Run_P2_Opt_Timeout(
         try:
             savemat(
                 BasicPath + Target+"Mats/" 
-                + str(Scan_i)+ '-StructData_for_Mat.mat',
-                midc_merge)  
+                + str(Scan_i)+ '-Ageing_summary_only.mat',
+                my_dict_mat)  
         except:
             print(f"Scan {Scan_i}: Encounter problems when saving mat file!")
         else: 
