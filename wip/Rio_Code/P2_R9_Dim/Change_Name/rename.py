@@ -4,8 +4,9 @@ def Creat_file(Scan_start,Scan_end):
     BasicPath =  os.path.expanduser(
         "~/EnvPBGEM_Linux/SimSave/P2_R9_Dim")
     Target = "/JobFiles/"
-    source_file =BasicPath+Target+ "Run_case_1_10.py"  # Name of the source .py file
-    destination_file = BasicPath+Target+ f"Run_case_{Scan_start}_{Scan_end}.py"  # Name of the destination .py file (copy)
+    purpose = "Latin_6para_200cases_wideRange"
+    source_file =BasicPath+Target+ f"{purpose}_1_10.py"  # Name of the source .py file
+    destination_file = BasicPath+Target+ f"{purpose}_{Scan_start}_{Scan_end}.py"  # Name of the destination .py file (copy)
     old_text = "Scan_start = 1;    Scan_end = 10;"  # Text to be replaced
     new_text = f"Scan_start = {Scan_start};    Scan_end = {Scan_end};"
 
@@ -27,10 +28,10 @@ def Creat_file(Scan_start,Scan_end):
 
 
     ### change .pbs file
-    source_file = BasicPath+Target+"Run_case_1_10.pbs"  # Name of the source .pbs file
-    destination_file = BasicPath+Target+f"Run_case_{Scan_start}_{Scan_end}.pbs"  # Name of the destination .pbs file (copy)
-    old_content = "python3 Run_case_1_10.py"  # Text to be replaced
-    new_content = f"python3 Run_case_{Scan_start}_{Scan_end}.py"  # New text to replace the old_content
+    source_file = BasicPath+Target+f"{purpose}_1_10.pbs"  # Name of the source .pbs file
+    destination_file = BasicPath+Target+f"{purpose}_{Scan_start}_{Scan_end}.pbs"  # Name of the destination .pbs file (copy)
+    old_content = f"python3 {purpose}_1_10.py"  # Text to be replaced
+    new_content = f"python3 {purpose}_{Scan_start}_{Scan_end}.py"  # New text to replace the old_content
 
     # Read the contents of the source file
     with open(source_file, "r") as file:
@@ -43,7 +44,7 @@ def Creat_file(Scan_start,Scan_end):
     with open(destination_file, "w") as file:
         file.write(modified_content)
 
-    print(f"Finish creating Run_case_{Scan_start}_{Scan_end}.py")
+    print(f"Finish creating {purpose}_{Scan_start}_{Scan_end}.py")
 
 
 # create a bunch of files!
