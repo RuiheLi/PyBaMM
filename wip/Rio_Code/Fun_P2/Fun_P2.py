@@ -723,6 +723,18 @@ def Para_init(Para_dict):
             {"Initial concentration in positive electrode [mol.m-3]":
             c_Pos1SOC_in})
         Para_dict_used.pop("Initial Pos SOC")
+    # 'Outer SEI partial molar volume [m3.mol-1]'
+    if Para_dict_used.__contains__(
+        "Outer SEI partial molar volume [m3.mol-1]"): 
+        Para_0.update(
+            {"Outer SEI partial molar volume [m3.mol-1]":
+            Para_dict_used["Outer SEI partial molar volume [m3.mol-1]"]})
+        Para_0.update(
+            {"Inner SEI partial molar volume [m3.mol-1]":
+            Para_dict_used["Outer SEI partial molar volume [m3.mol-1]"]})
+        
+        Para_dict_used.pop("Outer SEI partial molar volume [m3.mol-1]")
+
 
     CyclePack = [ 
         Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
