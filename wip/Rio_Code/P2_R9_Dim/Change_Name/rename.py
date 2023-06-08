@@ -3,7 +3,7 @@ import os;
 def Creat_file(Scan_start,Scan_end):
     BasicPath =  os.path.expanduser(
         "~/EnvPBGEM_Linux/SimSave/P2_R9_Dim")
-    Target = "/Exp2_AAT/"
+    Target = "/JobFiles/"
     source_file =BasicPath+Target+ "Run_case_1_10.py"  # Name of the source .py file
     destination_file = BasicPath+Target+ f"Run_case_{Scan_start}_{Scan_end}.py"  # Name of the destination .py file (copy)
     old_text = "Scan_start = 1;    Scan_end = 10;"  # Text to be replaced

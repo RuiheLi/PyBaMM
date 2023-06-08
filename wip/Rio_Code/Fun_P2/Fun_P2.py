@@ -342,7 +342,7 @@ def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
         )    #  volume increase due to SEI+total LiP 
     #################   KEY EQUATION FOR DRY-OUT MODEL                   #################
 
-    Test_V = Vol_SEILiP_increase - Vol_Pore_decrease  #  This value should always be zero, but now not, which becomes the source of error!
+    Test_V = (Vol_SEILiP_increase - Vol_Pore_decrease)/Vol_Pore_decrease*100  #  This value should always be zero, but now not, which becomes the source of error!
     Test_V2= (Vol_Pore_tot_old - Vol_Elely_JR_old) / Vol_Elely_JR_old * 100; # Porosity errors due to first time step
     
     # Start from here, there are serveral variables to be determined:
