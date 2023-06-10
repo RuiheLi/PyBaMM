@@ -1111,7 +1111,7 @@ def Update_mdic_dry(Data_Pack,mdic_dry):
 
 def Get_Values_Excel(
     index_exp,Pass_Fail,
-    mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+    mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,punish,
     # Start_shape,Middle_shape,End_shape, # add 230526
     model_options,my_dict_RPT,mdic_dry,
     DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
@@ -1145,7 +1145,7 @@ def Get_Values_Excel(
     # sequence: scan no, exp, pass or fail, mpe, dry-out, 
     value_Pre = [
         str(Scan_i),index_exp,Pass_Fail,
-        mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+        mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,punish,
         # Start_shape,Middle_shape,End_shape, 
         DryOut,]
     values_pos = [
@@ -1769,7 +1769,11 @@ def Compare_Exp_Model(
             +"Plots/"+ f"Scan {str(Scan_i)}-Exp-{index_exp}-{str(int(Temper_i-273.15))}degC"
             +r"- Calculate Error.png", dpi=dpi)
         plt.close()  # close the figure to save RAM
-    mpe_all = np.around([mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,])
+    mpe_all = np.around(
+        [
+            mpe_tot,mpe_1,mpe_2,
+            mpe_3,mpe_4,mpe_5,
+            punish],2)
     return mpe_all
 
 
@@ -2102,7 +2106,7 @@ def Run_P2_Opt_Timeout(
         # sequence: scan no, exp, pass or fail, mpe, dry-out, 
         mpe_all = ["nan","nan",
             "nan","nan", 
-            "nan","nan",]
+            "nan","nan","nan"]
         Pass_Fail = "Die"
         value_Pre = [str(Scan_i),index_exp,Pass_Fail,*mpe_all,DryOut,]
         values_pos =[
@@ -2186,7 +2190,7 @@ def Run_P2_Opt_Timeout(
         XY_pack = Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell) # interpolate for exp only
         mpe_all = Compare_Exp_Model( my_dict_RPT, XY_pack, Scan_i,
             index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck=True)
-        [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5] = mpe_all
+        [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,punish] = mpe_all
         # set pass or fail TODO figure out how much should be appropriate:
         if mpe_tot < 3:
             Pass_Fail = "Pass"
@@ -2198,6 +2202,7 @@ def Run_P2_Opt_Timeout(
         my_dict_RPT["Error LAM NE %"] = mpe_3
         my_dict_RPT["Error LAM PE %"] = mpe_4
         my_dict_RPT["Error Res %"] = mpe_5
+        my_dict_RPT["punish"] = punish
 
         ##########################################################
         #########      3-1: Plot cycle,location, Dryout related 
@@ -2231,7 +2236,7 @@ def Run_P2_Opt_Timeout(
         #########      3-3: Save summary to excel 
         values=Get_Values_Excel(
             index_exp,Pass_Fail,
-            mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+            mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,punish,
             # Start_shape,Middle_shape,End_shape,
             model_options,my_dict_RPT,mdic_dry,
             DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
