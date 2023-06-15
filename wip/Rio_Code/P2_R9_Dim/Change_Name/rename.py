@@ -3,8 +3,8 @@ import os;
 def Creat_file(Scan_start,Scan_end):
     BasicPath =  os.path.expanduser(
         "~/EnvPBGEM_Linux/SimSave/P2_R9_Dim")
-    Target = "/Latin_6para_200cases_narrow/"
-    purpose = "Latin_6para_200cases_40oC_narrow"
+    Target = "/Case17_Eact_SEI/"
+    purpose = "Case17_Eact_SEI"
     source_file =BasicPath+Target+ f"{purpose}_1_10.py"  # Name of the source .py file
     destination_file = BasicPath+Target+ f"{purpose}_{Scan_start}_{Scan_end}.py"  # Name of the destination .py file (copy)
     old_text = "Scan_start = 1;    Scan_end = 10;"  # Text to be replaced
@@ -49,15 +49,11 @@ def Creat_file(Scan_start,Scan_end):
 
 # create a bunch of files!
 # Big_start = 101; Big_end = 200; case_no=10;
-Scan_start_all = [
-    1, 11, 21, 31, 41, 51, 61, 71, 81, 91, 
-    101, 111, 121, 131, 141, 151, 161, 171, 181, 191]
+Scan_start_all = [11,21]
 """ (
     np.arange(Big_start,Big_end+1,case_no)
     ).tolist() """
-Scan_end_all = [
-    10, 20, 30, 40, 50, 60, 70, 80, 90, 
-    100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200]
+Scan_end_all = [20,30]
 """ (
     np.arange(Big_start+case_no-1,Big_end+case_no,case_no)
     ).tolist() """
