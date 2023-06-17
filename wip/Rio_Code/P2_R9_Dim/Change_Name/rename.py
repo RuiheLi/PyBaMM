@@ -3,8 +3,8 @@ import os;
 def Creat_file(Scan_start,Scan_end):
     BasicPath =  os.path.expanduser(
         "~/EnvPBGEM_Linux/SimSave/P2_R9_Dim")
-    Target = "/Case17_Eact_SEI/"
-    purpose = "Case17_Eact_SEI"
+    Target = "/Simon_w_cr_h/Jobs/"
+    purpose = "Simon_w_cr_h"
     source_file =BasicPath+Target+ f"{purpose}_1_10.py"  # Name of the source .py file
     destination_file = BasicPath+Target+ f"{purpose}_{Scan_start}_{Scan_end}.py"  # Name of the destination .py file (copy)
     old_text = "Scan_start = 1;    Scan_end = 10;"  # Text to be replaced
@@ -46,18 +46,16 @@ def Creat_file(Scan_start,Scan_end):
 
     print(f"Finish creating {purpose}_{Scan_start}_{Scan_end}.py")
 
-
+import numpy as np
 # create a bunch of files!
-# Big_start = 101; Big_end = 200; case_no=10;
-Scan_start_all = [11,21]
-""" (
+Big_start = 1; Big_end = 600; case_no=10;
+Scan_start_all = (
     np.arange(Big_start,Big_end+1,case_no)
-    ).tolist() """
-Scan_end_all = [20,30]
-""" (
+    ).tolist() 
+Scan_end_all = (
     np.arange(Big_start+case_no-1,Big_end+case_no,case_no)
-    ).tolist() """
-print(Scan_start_all)
-print(Scan_end_all)
+    ).tolist()
+#print(Scan_start_all)
+#print(Scan_end_all)
 for Scan_start,Scan_end in zip(Scan_start_all,Scan_end_all):
     Creat_file(Scan_start,Scan_end)

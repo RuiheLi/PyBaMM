@@ -1046,7 +1046,9 @@ def graphite_cracking_rate_Ai2020(T_dim):
         where m_cr is another Paris' law constant
     """
     k_cr = 3.9e-20
-    Eac_cr = 0  # to be implemented
+    # Eac_cr = 0  # to be implemented - Mark Ruihe implemented on 17/06/2023
+    Eac_cr = pybamm.Parameter(
+        "Negative cracking growth activation energy [J.mol-1]")
     arrhenius = pybamm.exp(Eac_cr / pybamm.constants.R * (1 / T_dim - 1 / 298.15))
     return k_cr * arrhenius
 
@@ -1434,6 +1436,7 @@ def get_parameter_values():
         "SEI kinetic rate constant [m.s-1]": 1e-12,
         "SEI open-circuit potential [V]": 0.4,
         "SEI growth activation energy [J.mol-1]": 38000.0,
+        "Negative cracking growth activation energy [J.mol-1]": 38000.0,
         "Negative electrode reaction-driven LAM factor [m3.mol-1]": 0.0,
         "Positive electrode reaction-driven LAM factor [m3.mol-1]": 0.0,
         # cell

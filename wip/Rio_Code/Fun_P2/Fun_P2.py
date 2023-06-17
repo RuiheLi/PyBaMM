@@ -1126,7 +1126,7 @@ def Update_mdic_dry(Data_Pack,mdic_dry):
 
 def Get_Values_Excel(
     index_exp,Pass_Fail,
-    mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,punish,
+    mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish,
     # Start_shape,Middle_shape,End_shape, # add 230526
     model_options,my_dict_RPT,mdic_dry,
     DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
@@ -1160,7 +1160,7 @@ def Get_Values_Excel(
     # sequence: scan no, exp, pass or fail, mpe, dry-out, 
     value_Pre = [
         str(Scan_i),index_exp,Pass_Fail,
-        mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,punish,
+        mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish,
         # Start_shape,Middle_shape,End_shape, 
         DryOut,]
     values_pos = [
@@ -1201,6 +1201,8 @@ def Read_Exp(BasicPath,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
             BasicPath+Exp_Path[i]+
             f"{Exp_head[i]} - cell {cell} ({Exp_Any_Temp[cell]}degC) - Extracted Data.csv", 
             index_col=0)
+        Exp_Any_AllData[cell]["Extract Data"].loc[     # update 230617- fill this with avg T
+            0, 'Age set average temperature (degC)'] = float(Exp_Any_Temp[cell])
         # Read for DMA results, further a dictionary
         Exp_Any_AllData[cell]["DMA"] = {}
         Exp_Any_AllData[cell]["DMA"]["Cap_Offset"]=pd.read_csv(
@@ -1276,8 +1278,6 @@ def check_concave_convex(x_values, y_values):
     shape_results = [start_shape, middle_shape, end_shape]
     return shape_results
 
-
-
 # plot inside the function:
 def Plot_Cyc_RPT_4(
         my_dict_RPT, Exp_Any_AllData,Temp_Cell_Exp,
@@ -1286,35 +1286,38 @@ def Plot_Cyc_RPT_4(
         BasicPath, Target,fs,dpi):
     
     Num_subplot = 5;
-    fig, axs = plt.subplots(Num_subplot,1, figsize=(6,13),tight_layout=True)
-    axs[0].plot(
+    fig, axs = plt.subplots(2,3, figsize=(15,7.8),tight_layout=True)
+    axs[0,0].plot(
         my_dict_RPT['Throughput capacity [kA.h]'], 
         my_dict_RPT['CDend SOH [%]'],     
         '-o', label="Scan=" + str(Scan_i) )
-    axs[1].plot(
+    axs[0,1].plot(
         my_dict_RPT['Throughput capacity [kA.h]'], 
         my_dict_RPT["CDend LLI [%]"],'-o', label="total LLI")
     if model_options.__contains__("lithium plating"):
-        axs[1].plot(
+        axs[0,1].plot(
             my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LLI lithium plating [%]"],'--o', label="LiP")
     if model_options.__contains__("SEI"):
-        axs[1].plot(
+        axs[0,1].plot(
             my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LLI SEI [%]"] ,'--o', label="SEI")
     if model_options.__contains__("SEI on cracks"):
-        axs[1].plot(
+        axs[0,1].plot(
             my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LLI SEI on cracks [%]"] ,'--o', label="SEI-on-cracks")
-    axs[2].plot(
+    axs[0,2].plot(
         my_dict_RPT["Throughput capacity [kA.h]"], 
         my_dict_RPT["CDend LAM_ne [%]"],     '-o', ) 
-    axs[3].plot(
+    axs[1,0].plot(
         my_dict_RPT["Throughput capacity [kA.h]"], 
         my_dict_RPT["CDend LAM_pe [%]"],     '-o',  ) 
-    axs[4].plot(
+    axs[1,1].plot(
         my_dict_RPT["Throughput capacity [kA.h]"], 
         np.array(my_dict_RPT["Res_0p5C_50SOC"]),     '-o', ) 
+    axs[1,2].plot(
+        my_dict_RPT["Throughput capacity [kA.h]"][1:], 
+        np.array(my_dict_RPT["avg_Age_T"][1:]),     '-o', ) 
     # Plot Charge Throughput (A.h) vs SOH
     color_exp     = [0, 0, 0, 0.3]; marker_exp     = "v";
     color_exp_Avg = [0, 0, 0, 0.7]; marker_exp_Avg = "s";
@@ -1324,58 +1327,67 @@ def Plot_Cyc_RPT_4(
             df = Exp_Any_AllData[cell]["Extract Data"]
             chThr_temp = np.array(df["Charge Throughput (A.h)"])/1e3
             df_DMA = Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]
-            axs[0].plot(
+            axs[0,0].plot(
                 chThr_temp,np.array(df_DMA["SoH"])*100,
                 color=color_exp,marker=marker_exp,label=f"Cell {cell}") 
-            axs[1].plot(
+            axs[0,1].plot(
                 chThr_temp,np.array(df_DMA["LLI"])*100,
                 color=color_exp,marker=marker_exp,label=f"Cell {cell}")  
-            axs[2].plot(
+            axs[0,2].plot(
                 chThr_temp,np.array(df_DMA["LAM NE_tot"])*100,
                 color=color_exp,marker=marker_exp, )
-            axs[3].plot(
+            axs[1,0].plot(
                 chThr_temp,np.array(df_DMA["LAM PE"])*100,
                 color=color_exp,marker=marker_exp,)
             # update 230312- plot resistance here
-            df = Exp_Any_AllData[cell]["Extract Data"]
             # Exp_1_AllData["A"]["Extract Data"]["0.1s Resistance (Ohms)"]
             index_Res = df[df['0.1s Resistance (Ohms)'].le(10)].index
-            axs[4].plot(
+            axs[1,1].plot(
                 #df["Days of degradation"][index_Res],
                 np.array(df["Charge Throughput (A.h)"][index_Res])/1e3,
                 np.array(df["0.1s Resistance (Ohms)"][index_Res])*1e3,
                 color=color_exp,marker=marker_exp)
+            axs[1,2].plot(
+                chThr_temp[1:],
+                np.array(df["Age set average temperature (degC)"][1:]).astype(float),
+                color=color_exp,marker=marker_exp,)
         # Update 230518: Plot Experiment Average - at 1 expeirment and 1 temperature
         [X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,
-            Y_3_st_avg,Y_4_st_avg,Y_5_st_avg]  = XY_pack
-        axs[0].plot(
+            Y_3_st_avg,Y_4_st_avg,Y_5_st_avg,Y_6_st_avg]  = XY_pack
+        axs[0,0].plot(
             X_1_st,Y_1_st_avg,color=color_exp_Avg,
             marker=marker_exp_Avg,label=f"Exp-Avg") 
-        axs[1].plot(
+        axs[0,1].plot(
             X_1_st,Y_2_st_avg,color=color_exp_Avg,
             marker=marker_exp_Avg,label=f"Exp-Avg")  
-        axs[2].plot(
+        axs[0,2].plot(
             X_1_st,Y_3_st_avg,color=color_exp_Avg,
             marker=marker_exp_Avg, )
-        axs[3].plot(
+        axs[1,0].plot(
             X_1_st,Y_4_st_avg,
             color=color_exp_Avg,marker=marker_exp_Avg,)
-        axs[4].plot(
+        axs[1,1].plot(
             X_5_st,Y_5_st_avg,
             color=color_exp_Avg,marker=marker_exp_Avg)
-    axs[0].set_ylabel("SOH %")
-    axs[1].set_ylabel("LLI %")
-    axs[2].set_ylabel("LAM NE %")
-    axs[3].set_ylabel("LAM PE %")
-    axs[4].set_ylabel(r"Lump resistance [m$\Omega$]")
-    axs[4].set_xlabel("Charge Throughput (kA.h)")
-    for i in range(0,Num_subplot):
-        labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); 
+        axs[1,2].plot(
+            X_1_st[1:],Y_6_st_avg[1:],
+            color=color_exp_Avg,marker=marker_exp_Avg,)
+    axs[0,0].set_ylabel("SOH %")
+    axs[0,1].set_ylabel("LLI %")
+    axs[0,2].set_ylabel("LAM NE %")
+    axs[1,0].set_ylabel("LAM PE %")
+    axs[1,1].set_ylabel(r"Lump resistance [m$\Omega$]")
+    axs[1,2].set_ylabel(r"Avg age T [$^\circ$C]")
+    axs[0,2].set_xlabel("Charge Throughput (kA.h)")
+    axs[1,2].set_xlabel("Charge Throughput (kA.h)")
+    axf = axs.flatten()
+    for i in range(0,6):
+        labels = axf[i].get_xticklabels() + axf[i].get_yticklabels(); 
         [label.set_fontname('DejaVu Sans') for label in labels]
-        axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-    axs[4].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
-    axs[0].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
-    axs[1].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
+        axf[i].tick_params(labelcolor='k', labelsize=fs, width=1);del labels
+    axs[1,1].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
+    axs[0,0].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
+    axs[0,1].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
     fig.suptitle(
         f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}"
         +r"$^\circ$C - Summary", fontsize=fs+2)
@@ -1645,7 +1657,7 @@ def Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell):
     index_X1 = np.argmin(X_1_last) # find index of the smallest value
     index_X5 = np.argmin(X_5_last)
     # Get the interpolate ones
-    Y_1_st = []; Y_2_st = []; Y_3_st = []; Y_4_st = []; Y_5_st = [];
+    Y_1_st = []; Y_2_st = []; Y_3_st = []; Y_4_st = []; Y_5_st = [];Y_6_st = [];
     df_t1 = Exp_Any_AllData[Exp_temp_i_cell[index_X1]]["Extract Data"]
     X_1_st = np.array(df_t1["Charge Throughput (A.h)"])/1e3
     df_t5 = Exp_Any_AllData[Exp_temp_i_cell[index_X5]]["Extract Data"]
@@ -1663,6 +1675,10 @@ def Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell):
                         np.array(df_DMA["LAM NE_tot"])*100)) )
         Y_4_st.append( list(np.interp(X_1_st,chThr_temp,
                         np.array(df_DMA["LAM PE"])*100)) )
+        Y_6_st.append(list(
+            np.interp(X_1_st, chThr_temp, 
+            df["Age set average temperature (degC)"].astype(float))))
+
         index_Res = df[df['0.1s Resistance (Ohms)'].le(10)].index
         Y_5_st.append( list(np.interp(
             X_5_st,np.array(df["Charge Throughput (A.h)"][index_Res])/1e3,
@@ -1681,9 +1697,10 @@ def Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell):
     Y_3_st_avg = Get_Mean(X_1_st,Y_3_st)
     Y_4_st_avg = Get_Mean(X_1_st,Y_4_st)
     Y_5_st_avg = Get_Mean(X_5_st,Y_5_st)
+    Y_6_st_avg = Get_Mean(X_1_st,Y_6_st)
     XY_pack = [
         X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,
-        Y_3_st_avg,Y_4_st_avg,Y_5_st_avg]
+        Y_3_st_avg,Y_4_st_avg,Y_5_st_avg,Y_6_st_avg]
     return XY_pack
 
 # Update 23-05-18 Compare MPE - code created by ChatGPT
@@ -1707,7 +1724,7 @@ def Compare_Exp_Model(
         index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck):
     
     [X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,
-        Y_3_st_avg,Y_4_st_avg,Y_5_st_avg] = XY_pack
+        Y_3_st_avg,Y_4_st_avg,Y_5_st_avg,Y_6_st_avg] = XY_pack
     mX_1 = my_dict_RPT['Throughput capacity [kA.h]']
     if mX_1[-1] > X_1_st[-1]:
         punish = 1; 
@@ -1725,6 +1742,7 @@ def Compare_Exp_Model(
         Y_2_st_avgm = Y_2_st_avg
         Y_3_st_avgm = Y_3_st_avg
         Y_4_st_avgm = Y_4_st_avg
+        Y_6_st_avgm = Y_6_st_avg
     else:                # do interpolation on expeirment results
         punish = X_1_st[-1] / mX_1[-1]  # punishment error, add when simulation end early
         mX_1_st = mX_1 #  standard for experiment following modelling
@@ -1732,10 +1750,12 @@ def Compare_Exp_Model(
         Y_2_st_avgm = np.interp(mX_1_st,X_1_st,Y_2_st_avg)
         Y_3_st_avgm = np.interp(mX_1_st,X_1_st,Y_3_st_avg)
         Y_4_st_avgm = np.interp(mX_1_st,X_1_st,Y_4_st_avg)
+        Y_6_st_avgm = np.interp(mX_1_st,X_1_st,Y_6_st_avg)
         mY_1_st = my_dict_RPT['CDend SOH [%]']
         mY_2_st = my_dict_RPT["CDend LLI [%]"]
         mY_3_st = my_dict_RPT["CDend LAM_ne [%]"]
         mY_4_st = my_dict_RPT["CDend LAM_pe [%]"]
+        mY_6_st = my_dict_RPT["avg_Age_T"]
     if mX_1[-1] > X_5_st[-1]:
         mX_5_st = X_5_st   
         mY_5_st = np.interp(mX_5_st,my_dict_RPT['Throughput capacity [kA.h]'], 
@@ -1751,12 +1771,14 @@ def Compare_Exp_Model(
     mpe_3 = np.sum(abs(np.array(Y_3_st_avgm)-np.array(mY_3_st)))/len(Y_3_st_avgm) # LAM_ne [%]
     mpe_4 = np.sum(abs(np.array(Y_4_st_avgm)-np.array(mY_4_st)))/len(Y_4_st_avgm) # LAM_pe [%]
     mpe_5 = mean_percentage_error(Y_5_st_avgm, mY_5_st) # Res_0p5C_50SOC
+    mpe_6 = mean_percentage_error(Y_6_st_avgm, mY_6_st) # Age set average temperature (degC)
     # total MPE: TODO this is where weighting works
     # SOH and Resistance are directly measured so give more weight; 
     # DMA result is derived from pOCV and come with certain errors
     mpe_tot = (
         0.55*mpe_1 + 0.1*(mpe_2+mpe_3+mpe_4) 
-        + 0.15*mpe_5 + (punish>1.0)* punish * 2 )
+        + 0.15*mpe_5 + 0.15* mpe_6 +
+        (punish>1.0)* punish * 2 )
     # plot and check:
     if PlotCheck == True:
         fig, axs = plt.subplots(5,1, figsize=(6,13),tight_layout=True)
@@ -1787,7 +1809,7 @@ def Compare_Exp_Model(
     mpe_all = np.around(
         [
             mpe_tot,mpe_1,mpe_2,
-            mpe_3,mpe_4,mpe_5,
+            mpe_3,mpe_4,mpe_5,mpe_6,
             punish],2)
     return mpe_all
 
@@ -2207,7 +2229,7 @@ def Run_P2_Opt_Timeout(
         XY_pack = Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell) # interpolate for exp only
         mpe_all = Compare_Exp_Model( my_dict_RPT, XY_pack, Scan_i,
             index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck=True)
-        [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,punish] = mpe_all
+        [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish] = mpe_all
         # set pass or fail TODO figure out how much should be appropriate:
         if mpe_tot < 3:
             Pass_Fail = "Pass"
@@ -2219,6 +2241,7 @@ def Run_P2_Opt_Timeout(
         my_dict_RPT["Error LAM NE %"] = mpe_3
         my_dict_RPT["Error LAM PE %"] = mpe_4
         my_dict_RPT["Error Res %"] = mpe_5
+        my_dict_RPT["Error ageT %"] = mpe_6
         my_dict_RPT["punish"] = punish
 
         ##########################################################
@@ -2253,7 +2276,7 @@ def Run_P2_Opt_Timeout(
         #########      3-3: Save summary to excel 
         values=Get_Values_Excel(
             index_exp,Pass_Fail,
-            mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,punish,
+            mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish,
             # Start_shape,Middle_shape,End_shape,
             model_options,my_dict_RPT,mdic_dry,
             DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
@@ -2374,7 +2397,7 @@ def Run_P2_Excel(
             tot_cyc = 1170; cyc_age = 78;
     else:
         if index_exp == 2:
-            tot_cyc = 3; cyc_age = 1;
+            tot_cyc = 2; cyc_age = 1;
         if index_exp == 3:
             tot_cyc = 3; cyc_age = 1;
         if index_exp == 5:
@@ -2471,6 +2494,7 @@ def Run_P2_Excel(
     my_dict_RPT["Res_0p5C_50SOC"] = []
     my_dict_RPT["SOC_0p5C"] = []
     my_dict_AGE["Cycle_AGE"] = []
+    my_dict_RPT["avg_Age_T"] = [] # Update add 230617 
     Cyc_Update_Index     =[]
 
     # update 220924: merge DryOut and Int_ElelyExces_Ratio
@@ -2545,7 +2569,8 @@ def Run_P2_Excel(
         SOC_0p5C,Res_0p5C,Res_0p5C_50SOC = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
         my_dict_RPT["SOC_0p5C"].append(SOC_0p5C)
         my_dict_RPT["Res_0p5C"].append(Res_0p5C)
-        my_dict_RPT["Res_0p5C_50SOC"].append(Res_0p5C_50SOC)             
+        my_dict_RPT["Res_0p5C_50SOC"].append(Res_0p5C_50SOC)     
+        my_dict_RPT["avg_Age_T"].append(Temper_i-273.15)  # Update add 230617              
         del SOC_0p5C,Res_0p5C,Res_0p5C_50SOC
         cycle_count =0
         my_dict_RPT["Cycle_RPT"].append(cycle_count)
@@ -2565,7 +2590,8 @@ def Run_P2_Excel(
         # Para_All.append(Para_0);Model_All.append(Model_0);Sol_All_i.append(Sol_0); 
         Para_0_Dry_old = Para_0;     Model_Dry_old = Model_0  ; Sol_Dry_old = Sol_0;   del Model_0,Sol_0
         while k < SaveTimes:    
-            i=0    
+            i=0  
+            avg_Age_T = []  
             while i < Small_Loop:
                 if DryOut == "On":
                     Data_Pack,Paraupdate   = Cal_new_con_Update (  Sol_Dry_old,   Para_0_Dry_old )
@@ -2629,6 +2655,8 @@ def Run_P2_Excel(
                     my_dict_AGE = GetSol_dict (my_dict_AGE,keys_all_AGE, Sol_Dry_old, 
                         cycle_no, step_AGE_CD , step_AGE_CC , step_0p1C_RE, step_AGE_CV   )    
                     cycle_count +=  Update_Cycles; 
+                    avg_Age_T.append(np.mean(
+                        Sol_Dry_old["Volume-averaged cell temperature [C]"].entries))
                     my_dict_AGE["Cycle_AGE"].append(cycle_count)           
                     Cyc_Update_Index.append(cycle_count)
                     
@@ -2641,7 +2669,7 @@ def Run_P2_Excel(
                     else:
                         pass
                     i += 1;   ##################### Finish small loop and add 1 to i 
-
+            my_dict_RPT["avg_Age_T"].append(np.mean(avg_Age_T)) 
             # run RPT, and also update parameters (otherwise will have problems)
             if DryOut == "On":
                 Data_Pack , Paraupdate  = Cal_new_con_Update (  Sol_Dry_old,   Para_0_Dry_old   )
@@ -2814,7 +2842,7 @@ def Run_P2_Excel(
         XY_pack = Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell) # interpolate for exp only
         mpe_all = Compare_Exp_Model( my_dict_RPT, XY_pack, Scan_i,
             index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck=True)
-        [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,punish] = mpe_all
+        [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish] = mpe_all
         # set pass or fail TODO figure out how much should be appropriate:
         if mpe_tot < 3:
             Pass_Fail = "Pass"
@@ -2826,6 +2854,7 @@ def Run_P2_Excel(
         my_dict_RPT["Error LAM NE %"] = mpe_3
         my_dict_RPT["Error LAM PE %"] = mpe_4
         my_dict_RPT["Error Res %"] = mpe_5
+        my_dict_RPT["Error ageT %"] = mpe_6
         my_dict_RPT["punish"] = punish
 
         ##########################################################
@@ -2860,7 +2889,7 @@ def Run_P2_Excel(
         #########      3-3: Save summary to excel 
         values=Get_Values_Excel(
             index_exp,Pass_Fail,
-            mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,punish,
+            mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish,
             # Start_shape,Middle_shape,End_shape,
             model_options,my_dict_RPT,mdic_dry,
             DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
