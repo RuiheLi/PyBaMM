@@ -1737,6 +1737,8 @@ def Compare_Exp_Model(
             my_dict_RPT["CDend LAM_ne [%]"])
         mY_4_st = np.interp(mX_1_st,my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LAM_pe [%]"])
+        mY_6_st = np.interp(mX_1_st,my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT["avg_Age_T"])
         # experiment result remain unchanged
         Y_1_st_avgm = Y_1_st_avg
         Y_2_st_avgm = Y_2_st_avg
