@@ -1,16 +1,31 @@
-df_10degC = pd.read_excel(BasicPath+"Summary of 200 cases-10oC.xlsx")
-# Display the DataFrame
-# print(df_10degC.head())
-column_mapping = {
-    "Inner SEI lithium interstitial diffusivity [m2.s-1]":"Dint",
-    "Dead lithium decay constant [s-1]":"Decay",
-    "Lithium plating kinetic rate constant [m.s-1]"	:"k_LiP",
-    "Negative electrode LAM constant proportional term [s-1]"	:"pLAM_Ne",
-    "Negative electrode cracking rate":"k_Ne_cr",
-    "Outer SEI partial molar volume [m3.mol-1]":"V_SEI",	
-}
-# Rename the columns using the mapping   - Error_1~6;   Para_1~8
-df_10degC = df_10degC.rename(columns=column_mapping)
-df_10degC_s = df_10degC[df_10degC["Error Tot%"] != "Unknown"].copy()
-df_10degC_f = df_10degC[df_10degC["Error Tot%"] == "Unknown"].copy()
-df_10degC_f = df_10degC_f[~df_10degC_f["Scan No"].isin(df_10degC_s["Scan No"])].copy()
+    axs[0,0].plot(
+        All_Scans[str(scan)]['Throughput capacity [kA.h]'], 
+        All_Scans[str(scan)]['CDend SOH [%]'],     
+        '-o', label="Scan=" + str(scan) )
+    axs[0,1].plot(
+        All_Scans[str(scan)]['Throughput capacity [kA.h]'], 
+        All_Scans[str(scan)]["CDend LLI [%]"],'-o', label="total LLI")
+    if model_options.__contains__("lithium plating"):
+        axs[0,1].plot(
+            All_Scans[str(scan)]['Throughput capacity [kA.h]'], 
+            All_Scans[str(scan)]["CDend LLI lithium plating [%]"],'--o', label="LiP")
+    if model_options.__contains__("SEI"):
+        axs[0,1].plot(
+            All_Scans[str(scan)]['Throughput capacity [kA.h]'], 
+            All_Scans[str(scan)]["CDend LLI SEI [%]"] ,'--o', label="SEI")
+    if model_options.__contains__("SEI on cracks"):
+        axs[0,1].plot(
+            All_Scans[str(scan)]['Throughput capacity [kA.h]'], 
+            All_Scans[str(scan)]["CDend LLI SEI on cracks [%]"] ,'--o', label="SEI-on-cracks")
+    axs[0,2].plot(
+        All_Scans[str(scan)]["Throughput capacity [kA.h]"], 
+        All_Scans[str(scan)]["CDend LAM_ne [%]"],     '-o', ) 
+    axs[1,0].plot(
+        All_Scans[str(scan)]["Throughput capacity [kA.h]"], 
+        All_Scans[str(scan)]["CDend LAM_pe [%]"],     '-o',  ) 
+    axs[1,1].plot(
+        All_Scans[str(scan)]["Throughput capacity [kA.h]"], 
+        np.array(All_Scans[str(scan)]["Res_0p5C_50SOC"]),     '-o', ) 
+    axs[1,2].plot(
+        All_Scans[str(scan)]["Throughput capacity [kA.h]"][1:], 
+        np.array(All_Scans[str(scan)]["avg_Age_T"][1:]),     '-o', ) 

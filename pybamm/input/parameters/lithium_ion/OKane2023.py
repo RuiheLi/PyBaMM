@@ -1049,7 +1049,7 @@ def graphite_cracking_rate_Ai2020(T_dim):
     # Eac_cr = 0  # to be implemented - Mark Ruihe implemented on 17/06/2023
     Eac_cr = pybamm.Parameter(
         "Negative cracking growth activation energy [J.mol-1]")
-    arrhenius = pybamm.exp(Eac_cr / pybamm.constants.R * (1 / T_dim - 1 / 298.15))
+    arrhenius = pybamm.exp( - Eac_cr / pybamm.constants.R * (1 / T_dim - 1 / 298.15))
     return k_cr * arrhenius
 
 
@@ -1109,7 +1109,7 @@ def cracking_rate_Ai2020(T_dim):
     """
     k_cr = 3.9e-20
     Eac_cr = 0  # to be implemented
-    arrhenius = pybamm.exp(Eac_cr / pybamm.constants.R * (1 / T_dim - 1 / 298.15))
+    arrhenius = pybamm.exp( - Eac_cr / pybamm.constants.R * (1 / T_dim - 1 / 298.15))
     return k_cr * arrhenius
 
 
@@ -1429,14 +1429,14 @@ def get_parameter_values():
         "Inner SEI electron conductivity [S.m-1]": 8.95e-14,
         "Inner SEI lithium interstitial diffusivity [m2.s-1]": 1e-20,
         "Lithium interstitial reference concentration [mol.m-3]": 15.0,
-        "Initial inner SEI thickness [m]": 1.2362e-08,
-        "Initial outer SEI thickness [m]": 1.2362e-08,
+        "Initial inner SEI thickness [m]": 1.23625e-08,
+        "Initial outer SEI thickness [m]": 1.23625e-08,
         "EC initial concentration in electrolyte [mol.m-3]": 4541.0,
         "EC diffusivity [m2.s-1]": 2e-18,
         "SEI kinetic rate constant [m.s-1]": 1e-12,
         "SEI open-circuit potential [V]": 0.4,
         "SEI growth activation energy [J.mol-1]": 38000.0,
-        "Negative cracking growth activation energy [J.mol-1]": 38000.0,
+        "Negative cracking growth activation energy [J.mol-1]": 0.0,
         "Negative electrode reaction-driven LAM factor [m3.mol-1]": 0.0,
         "Positive electrode reaction-driven LAM factor [m3.mol-1]": 0.0,
         # cell
