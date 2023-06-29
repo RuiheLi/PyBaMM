@@ -40,8 +40,8 @@ class ConstantCracks(BaseMechanics):
         zero_av = pybamm.x_average(zero)
         variables.update(
             {
-                f"{Domain} particle cracking rate": zero,
-                f"X-averaged {domain} particle cracking rate": zero_av,
+                f"{Domain} particle cracking rate [m.s-1]": zero,
+                f"X-averaged {domain} particle cracking rate [m.s-1]": zero_av,
             }
         )
         return variables
