@@ -332,12 +332,17 @@ def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
     VmolSEI   = Para["Outer SEI partial molar volume [m3.mol-1]"] # 9.8e-5,
     VmolLiP   = Para["Lithium metal partial molar volume [m3.mol-1]"] # 1.3e-05
     VmolEC    = Para["EC partial molar volume [m3.mol-1]"]
-    Vol_EC_consumed  =  ( LLINegSEI + LLINegSEIcr + LLINegDeadLiP  ) * 2 * VmolEC    # Mark: Ruihe add LLINegDeadLiP, either with 2 or not, will decide how fast electrolyte being consumed!
+    #################   KEY EQUATION FOR DRY-OUT MODEL                   #################
+    # UPDATE 230525: assume the formation of dead lithium doesn’t consumed EC
+    Vol_EC_consumed  =  ( LLINegSEI + LLINegSEIcr   ) * 2 * VmolEC    # Mark: either with 2 or not, will decide how fast electrolyte being consumed!
     Vol_Elely_need   = Vol_EC_consumed - Vol_Pore_decrease
     Vol_SEILiP_increase = 1.0*(
         (LLINegSEI+LLINegSEIcr) * VmolSEI 
-        + LLINegLiP * VmolLiP)    #  volume increase due to SEI+total LiP 
-    Test_V = Vol_SEILiP_increase - Vol_Pore_decrease  #  This value should always be zero, but now not, which becomes the source of error!
+        #+ LLINegLiP * VmolLiP
+        )    #  volume increase due to SEI+total LiP 
+    #################   KEY EQUATION FOR DRY-OUT MODEL                   #################
+
+    Test_V = (Vol_SEILiP_increase - Vol_Pore_decrease)/Vol_Pore_decrease*100  #  This value should always be zero, but now not, which becomes the source of error!
     Test_V2= (Vol_Pore_tot_old - Vol_Elely_JR_old) / Vol_Elely_JR_old * 100; # Porosity errors due to first time step
     
     # Start from here, there are serveral variables to be determined:
@@ -352,7 +357,7 @@ def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
 
     
     if Vol_Elely_need < 0:
-        print('Electrolyte is being squeezed out, check plated lithium (reversible part)')
+        print('Electrolyte is being squeezed out, check plated lithium (active and dead)')
         Vol_Elely_squeezed = - Vol_Elely_need;   # Make Vol_Elely_squeezed>0 for simplicity 
         Vol_Elely_add = 0.0;
         Vol_Elely_JR_new = Vol_Pore_tot_new; 
@@ -649,7 +654,10 @@ def write_excel_xlsx(path, sheet_name, value):
     sheet = workbook.active  # 获得当前活跃的工作页，默认为第一个工作页
     sheet.title = sheet_name  # 给sheet页的title赋值
     for i in range(0, index):
-        for j in range(0, len(value[i])):
+        value_i = value[i]
+        if isinstance(value_i, int):
+            value_i = [[value_i]]
+        for j in range(0, len(value_i)):
             sheet.cell(row=i + 1, column=j + 1, value=str(value[i][j]))  # 行，列，值 这里是从1开始计数的
     workbook.save(path)  # 一定要保存
     print("Successfully create a excel file")
@@ -671,6 +679,12 @@ def Para_init(Para_dict):
     Para_dict_used = Para_dict.copy();
     Para_0=pb.ParameterValues(Para_dict_used["Para_Set"]  )
     Para_dict_used.pop("Para_Set")
+    import ast,json
+
+    if Para_dict_used.__contains__("Scan No"):
+        Para_dict_used.pop("Scan No")
+    if Para_dict_used.__contains__("Exp No."):
+        Para_dict_used.pop("Exp No.")
 
     if Para_dict_used.__contains__("Total ageing cycles"):
         Total_Cycles = Para_dict_used["Total ageing cycles"]  
@@ -691,7 +705,8 @@ def Para_init(Para_dict):
         Temper_RPT = Para_dict_used["RPT temperature"] + 273.15 # update: change to K 
         Para_dict_used.pop("RPT temperature")
     if Para_dict_used.__contains__("Mesh list"):
-        mesh_list = Para_dict_used["Mesh list"]  
+        mesh_list = Para_dict_used["Mesh list"]
+        mesh_list = json.loads(mesh_list)  
         Para_dict_used.pop("Mesh list")
     if Para_dict_used.__contains__("Exponential mesh stretch"):
         submesh_strech = Para_dict_used["Exponential mesh stretch"]  
@@ -699,7 +714,9 @@ def Para_init(Para_dict):
     else:
         submesh_strech = "nan";
     if Para_dict_used.__contains__("Model option"):
-        model_options = Para_dict_used["Model option"]  
+        model_options = Para_dict_used["Model option"] 
+        # careful: need to change str to dict 
+        model_options = ast.literal_eval(model_options)
         Para_dict_used.pop("Model option")
 
     if Para_dict_used.__contains__("Initial Neg SOC"):
@@ -718,6 +735,18 @@ def Para_init(Para_dict):
             {"Initial concentration in positive electrode [mol.m-3]":
             c_Pos1SOC_in})
         Para_dict_used.pop("Initial Pos SOC")
+    # 'Outer SEI partial molar volume [m3.mol-1]'
+    if Para_dict_used.__contains__(
+        "Outer SEI partial molar volume [m3.mol-1]"): 
+        Para_0.update(
+            {"Outer SEI partial molar volume [m3.mol-1]":
+            Para_dict_used["Outer SEI partial molar volume [m3.mol-1]"]})
+        Para_0.update(
+            {"Inner SEI partial molar volume [m3.mol-1]":
+            Para_dict_used["Outer SEI partial molar volume [m3.mol-1]"]})
+        
+        Para_dict_used.pop("Outer SEI partial molar volume [m3.mol-1]")
+
 
     CyclePack = [ 
         Total_Cycles,Cycle_bt_RPT,Update_Cycles,RPT_Cycles,
@@ -744,15 +773,14 @@ def GetSol_dict (my_dict, keys_all, Sol,
         for key in keys_tim:
             step_no = eval("step_{}".format(key[0:2]))
             if key[3:] == "Time [h]":
-                my_dict[key].append  (
+                my_dict[key].append  (  (
                     Sol.cycles[cycle_no].steps[step_no][key[3:]].entries
                     -
-                    Sol.cycles[cycle_no].steps[step_no][key[3:]].entries[0])
+                    Sol.cycles[cycle_no].steps[step_no][key[3:]].entries[0]).tolist()  )
             else:
-                #print("Solve up to Step",step_no)
-                my_dict[key].append  (
-                    Sol.cycles[cycle_no].steps[step_no][key[3:]].entries)
-    # get cycle_step_based variables:
+                my_dict[key].append(  (
+                    Sol.cycles[cycle_no].steps[step_no][key[3:]].entries).tolist()  )
+    # get cycle_step_based variables: # isn't an array
     if len(keys_cyc): 
         for key in keys_cyc:
             if key in ["Discharge capacity [A.h]"]:
@@ -788,17 +816,17 @@ def GetSol_dict (my_dict, keys_all, Sol,
             if key in ["x_n [m]","x [m]","x_s [m]","x_p [m]"]:
                 #print("These variables only add once")
                 if not len(my_dict[key]):   # special: add only once
-                    my_dict[key] = Sol[key].entries[:,-1]
+                    my_dict[key] = (Sol[key].entries[:,-1]).tolist()
             elif key[0:5] in ["CDend","CCend","CVend","REend",
                             "CDsta","CCsta","CVsta","REsta",]:      
                 #print("These variables add multiple times")
                 step_no = eval("step_{}".format(key[0:2]))
                 if key[2:5] == "sta":
-                    my_dict[key].append  (
-                        Sol.cycles[cycle_no].steps[step_no][key[6:]].entries[:,0])
+                    my_dict[key].append  ((
+                        Sol.cycles[cycle_no].steps[step_no][key[6:]].entries[:,0]).tolist() )
                 elif key[2:5] == "end":
-                    my_dict[key].append  (
-                        Sol.cycles[cycle_no].steps[step_no][key[6:]].entries[:,-1])
+                    my_dict[key].append ( (
+                        Sol.cycles[cycle_no].steps[step_no][key[6:]].entries[:,-1]).tolist()  )
     return my_dict                              
 
 ############## Get initial cap ############## 
@@ -823,7 +851,9 @@ def Get_initial_cap(Para_dict_i,Neg1SOC_in,Pos1SOC_in,):
         f"Charge at 0.1C until {V_max} V" ) ] # (5 minute period)
     Experiment_RPT    = pb.Experiment( exp_RPT_text * RPT_Cycles     ) 
 
-    Model_0 = pb.lithium_ion.DFN(options=model_options ) 
+    import ast
+    model_option_dict = ast.literal_eval(model_options)
+    Model_0 = pb.lithium_ion.DFN(options=model_option_dict)
 
     var = pb.standard_spatial_vars  
     var_pts = {
@@ -892,8 +922,9 @@ def Get_initial_cap2(Para_dict_i):
         "Rest for 1 hours (5 minute period)",  
         f"Charge at 0.1C until {V_max} V (30 minute period)" ) ] # 
     Experiment_RPT    = pb.Experiment( exp_RPT_text * RPT_Cycles     ) 
-
-    Model_0 = pb.lithium_ion.DFN(options=model_options ) 
+    import ast
+    model_option_dict = ast.literal_eval(model_options)
+    Model_0 = pb.lithium_ion.DFN(options=model_option_dict)
 
     var = pb.standard_spatial_vars  
     var_pts = {
@@ -940,7 +971,7 @@ def Run_Breakin(
     model_options, Experiment_Breakin, 
     Para_0, mesh_list, submesh_strech):
 
-    Model_0 = pb.lithium_ion.DFN(options=model_options ) #
+    Model_0 = pb.lithium_ion.DFN(options=model_options)
     # update 220926 - add diffusivity and conductivity as variables:
     c_e = Model_0.variables["Electrolyte concentration [mol.m-3]"]
     T = Model_0.variables["Cell temperature [K]"]
@@ -1095,7 +1126,8 @@ def Update_mdic_dry(Data_Pack,mdic_dry):
 
 def Get_Values_Excel(
     index_exp,Pass_Fail,
-    mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+    mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish,
+    # Start_shape,Middle_shape,End_shape, # add 230526
     model_options,my_dict_RPT,mdic_dry,
     DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
     str_exp_RPT_text,str_error_AGE_final,
@@ -1128,7 +1160,8 @@ def Get_Values_Excel(
     # sequence: scan no, exp, pass or fail, mpe, dry-out, 
     value_Pre = [
         str(Scan_i),index_exp,Pass_Fail,
-        mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+        mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish,
+        # Start_shape,Middle_shape,End_shape, 
         DryOut,]
     values_pos = [
         str_exp_AGE_text,
@@ -1168,6 +1201,8 @@ def Read_Exp(BasicPath,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
             BasicPath+Exp_Path[i]+
             f"{Exp_head[i]} - cell {cell} ({Exp_Any_Temp[cell]}degC) - Extracted Data.csv", 
             index_col=0)
+        Exp_Any_AllData[cell]["Extract Data"].loc[     # update 230617- fill this with avg T
+            0, 'Age set average temperature (degC)'] = float(Exp_Any_Temp[cell])
         # Read for DMA results, further a dictionary
         Exp_Any_AllData[cell]["DMA"] = {}
         Exp_Any_AllData[cell]["DMA"]["Cap_Offset"]=pd.read_csv(
@@ -1188,6 +1223,60 @@ def Read_Exp(BasicPath,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
             index_col=0)
     print("Finish reading Experiment!")
     return Exp_Any_AllData
+# judge ageing shape: - NOT Ready yet!
+def check_concave_convex(x_values, y_values):
+    # Check if the series has at least three points
+    if len(x_values) < 3 or len(y_values) < 3:
+        return ["None","None""None"]
+
+    # Calculate the slopes between adjacent points based on "x" and "y" values
+    slopes = []
+    for i in range(1, len(y_values)):
+        slope = (y_values[i] - y_values[i - 1]) / (x_values[i] - x_values[i - 1])
+        slopes.append(slope)
+
+    # Determine the indices for the start, middle, and end groups
+    start_index = 0
+    middle_index = len(y_values) // 2 - 1
+    end_index = len(y_values) - 3
+
+    # Check if the start group is concave, convex, or linear
+    start_group = slopes[:3]
+    start_avg = sum(start_group[:2]) / 2
+    start_point = start_group[1]
+    # TODO we still need to consider a proper index to judge linear
+    if abs(start_avg - start_point) <= 0.005 * start_point:
+        start_shape = "Linear"
+    elif start_avg <= start_point:
+        start_shape = "Sub"
+    else:
+        start_shape = "Super"
+
+    # Check if the middle group is concave, convex, or linear
+    middle_group = slopes[middle_index:middle_index + 3]
+    middle_avg = sum(middle_group[:2]) / 2
+    middle_point = middle_group[1]
+    if abs(middle_avg - middle_point) <= 0.005 * middle_point:
+        middle_shape = "Linear"
+    elif middle_avg <= middle_point:
+        middle_shape = "Sub"
+    else:
+        middle_shape = "Super"
+
+    # Check if the end group is concave, convex, or linear
+    end_group = slopes[end_index:]
+    end_avg = sum(end_group[:2]) / 2
+    end_point = end_group[1]
+    if abs(end_avg - end_point) <= 0.005 * end_point:
+        end_shape = "Linear"
+    elif end_avg <= end_point:
+        end_shape = "Sub"
+    else:
+        end_shape = "Super"
+
+    # Return the shape results
+    shape_results = [start_shape, middle_shape, end_shape]
+    return shape_results
 
 # plot inside the function:
 def Plot_Cyc_RPT_4(
@@ -1197,35 +1286,38 @@ def Plot_Cyc_RPT_4(
         BasicPath, Target,fs,dpi):
     
     Num_subplot = 5;
-    fig, axs = plt.subplots(Num_subplot,1, figsize=(6,13),tight_layout=True)
-    axs[0].plot(
+    fig, axs = plt.subplots(2,3, figsize=(15,7.8),tight_layout=True)
+    axs[0,0].plot(
         my_dict_RPT['Throughput capacity [kA.h]'], 
         my_dict_RPT['CDend SOH [%]'],     
         '-o', label="Scan=" + str(Scan_i) )
-    axs[1].plot(
+    axs[0,1].plot(
         my_dict_RPT['Throughput capacity [kA.h]'], 
         my_dict_RPT["CDend LLI [%]"],'-o', label="total LLI")
     if model_options.__contains__("lithium plating"):
-        axs[1].plot(
+        axs[0,1].plot(
             my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LLI lithium plating [%]"],'--o', label="LiP")
     if model_options.__contains__("SEI"):
-        axs[1].plot(
+        axs[0,1].plot(
             my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LLI SEI [%]"] ,'--o', label="SEI")
     if model_options.__contains__("SEI on cracks"):
-        axs[1].plot(
+        axs[0,1].plot(
             my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LLI SEI on cracks [%]"] ,'--o', label="SEI-on-cracks")
-    axs[2].plot(
+    axs[0,2].plot(
         my_dict_RPT["Throughput capacity [kA.h]"], 
         my_dict_RPT["CDend LAM_ne [%]"],     '-o', ) 
-    axs[3].plot(
+    axs[1,0].plot(
         my_dict_RPT["Throughput capacity [kA.h]"], 
         my_dict_RPT["CDend LAM_pe [%]"],     '-o',  ) 
-    axs[4].plot(
+    axs[1,1].plot(
         my_dict_RPT["Throughput capacity [kA.h]"], 
         np.array(my_dict_RPT["Res_0p5C_50SOC"]),     '-o', ) 
+    axs[1,2].plot(
+        my_dict_RPT["Throughput capacity [kA.h]"][1:], 
+        np.array(my_dict_RPT["avg_Age_T"][1:]),     '-o', ) 
     # Plot Charge Throughput (A.h) vs SOH
     color_exp     = [0, 0, 0, 0.3]; marker_exp     = "v";
     color_exp_Avg = [0, 0, 0, 0.7]; marker_exp_Avg = "s";
@@ -1235,63 +1327,72 @@ def Plot_Cyc_RPT_4(
             df = Exp_Any_AllData[cell]["Extract Data"]
             chThr_temp = np.array(df["Charge Throughput (A.h)"])/1e3
             df_DMA = Exp_Any_AllData[cell]["DMA"]["LLI_LAM"]
-            axs[0].plot(
+            axs[0,0].plot(
                 chThr_temp,np.array(df_DMA["SoH"])*100,
                 color=color_exp,marker=marker_exp,label=f"Cell {cell}") 
-            axs[1].plot(
+            axs[0,1].plot(
                 chThr_temp,np.array(df_DMA["LLI"])*100,
                 color=color_exp,marker=marker_exp,label=f"Cell {cell}")  
-            axs[2].plot(
+            axs[0,2].plot(
                 chThr_temp,np.array(df_DMA["LAM NE_tot"])*100,
                 color=color_exp,marker=marker_exp, )
-            axs[3].plot(
+            axs[1,0].plot(
                 chThr_temp,np.array(df_DMA["LAM PE"])*100,
                 color=color_exp,marker=marker_exp,)
             # update 230312- plot resistance here
-            df = Exp_Any_AllData[cell]["Extract Data"]
             # Exp_1_AllData["A"]["Extract Data"]["0.1s Resistance (Ohms)"]
             index_Res = df[df['0.1s Resistance (Ohms)'].le(10)].index
-            axs[4].plot(
+            axs[1,1].plot(
                 #df["Days of degradation"][index_Res],
                 np.array(df["Charge Throughput (A.h)"][index_Res])/1e3,
                 np.array(df["0.1s Resistance (Ohms)"][index_Res])*1e3,
                 color=color_exp,marker=marker_exp)
+            axs[1,2].plot(
+                chThr_temp[1:],
+                np.array(df["Age set average temperature (degC)"][1:]).astype(float),
+                color=color_exp,marker=marker_exp,)
         # Update 230518: Plot Experiment Average - at 1 expeirment and 1 temperature
         [X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,
-            Y_3_st_avg,Y_4_st_avg,Y_5_st_avg]  = XY_pack
-        axs[0].plot(
+            Y_3_st_avg,Y_4_st_avg,Y_5_st_avg,Y_6_st_avg]  = XY_pack
+        axs[0,0].plot(
             X_1_st,Y_1_st_avg,color=color_exp_Avg,
             marker=marker_exp_Avg,label=f"Exp-Avg") 
-        axs[1].plot(
+        axs[0,1].plot(
             X_1_st,Y_2_st_avg,color=color_exp_Avg,
             marker=marker_exp_Avg,label=f"Exp-Avg")  
-        axs[2].plot(
+        axs[0,2].plot(
             X_1_st,Y_3_st_avg,color=color_exp_Avg,
             marker=marker_exp_Avg, )
-        axs[3].plot(
+        axs[1,0].plot(
             X_1_st,Y_4_st_avg,
             color=color_exp_Avg,marker=marker_exp_Avg,)
-        axs[4].plot(
+        axs[1,1].plot(
             X_5_st,Y_5_st_avg,
             color=color_exp_Avg,marker=marker_exp_Avg)
-    axs[0].set_ylabel("SOH %")
-    axs[1].set_ylabel("LLI %")
-    axs[2].set_ylabel("LAM NE %")
-    axs[3].set_ylabel("LAM PE %")
-    axs[4].set_ylabel(r"Lump resistance [m$\Omega$]")
-    axs[4].set_xlabel("Charge Throughput (kA.h)")
-    for i in range(0,Num_subplot):
-        labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); 
+        axs[1,2].plot(
+            X_1_st[1:],Y_6_st_avg[1:],
+            color=color_exp_Avg,marker=marker_exp_Avg,)
+    axs[0,0].set_ylabel("SOH %")
+    axs[0,1].set_ylabel("LLI %")
+    axs[0,2].set_ylabel("LAM NE %")
+    axs[1,0].set_ylabel("LAM PE %")
+    axs[1,1].set_ylabel(r"Lump resistance [m$\Omega$]")
+    axs[1,2].set_ylabel(r"Avg age T [$^\circ$C]")
+    axs[0,2].set_xlabel("Charge Throughput (kA.h)")
+    axs[1,2].set_xlabel("Charge Throughput (kA.h)")
+    axf = axs.flatten()
+    for i in range(0,6):
+        labels = axf[i].get_xticklabels() + axf[i].get_yticklabels(); 
         [label.set_fontname('DejaVu Sans') for label in labels]
-        axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
-    axs[4].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
-    axs[0].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
-    axs[1].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
+        axf[i].tick_params(labelcolor='k', labelsize=fs, width=1);del labels
+    axs[1,1].ticklabel_format(style='sci', axis='x', scilimits=(-1e-2,1e-2))
+    axs[0,0].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
+    axs[0,1].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
     fig.suptitle(
         f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}"
         +r"$^\circ$C - Summary", fontsize=fs+2)
     plt.savefig(
-        BasicPath + Target+   # "Plots/" +  
+        BasicPath + Target+    "Plots/" +  
         f"0_Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Summary.png", dpi=dpi)
     plt.close()  # close the figure to save RAM
 
@@ -1475,7 +1576,7 @@ def Plot_Dryout(
     for i in range(1,np.size(mdic_dry["Ratio_CeEC_All"])):
         for k in range(0,i):
             CeEC_All[i] *= mdic_dry["Ratio_CeEC_All"][k]
-    mdic_dry["CeEC_All"]= CeEC_All
+    mdic_dry["CeEC_All"]= CeEC_All.tolist()
 
     Num_subplot = 3;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(12,3.2),tight_layout=True)
@@ -1536,6 +1637,9 @@ def Get_R_from_0P5C_CD(step_0P5C_CD,cap_full):
     # print("Applied current [A]:",step_0P5C_CD["Current [A]"].entries[0])
     Res_0p5C = V_ohmic/step_0P5C_CD["Current [A]"].entries[0] * 1e3
     Res_0p5C_50SOC = np.interp(50,np.flip(SOC_0p5C),np.flip(Res_0p5C),)
+    SOC_0p5C = SOC_0p5C.tolist()
+    Res_0p5C = Res_0p5C.tolist()
+    Res_0p5C_50SOC = Res_0p5C_50SOC.tolist()
     return SOC_0p5C,Res_0p5C,Res_0p5C_50SOC   #,Rohmic_CD_2
 
 # Update 23-05-18
@@ -1553,7 +1657,7 @@ def Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell):
     index_X1 = np.argmin(X_1_last) # find index of the smallest value
     index_X5 = np.argmin(X_5_last)
     # Get the interpolate ones
-    Y_1_st = []; Y_2_st = []; Y_3_st = []; Y_4_st = []; Y_5_st = [];
+    Y_1_st = []; Y_2_st = []; Y_3_st = []; Y_4_st = []; Y_5_st = [];Y_6_st = [];
     df_t1 = Exp_Any_AllData[Exp_temp_i_cell[index_X1]]["Extract Data"]
     X_1_st = np.array(df_t1["Charge Throughput (A.h)"])/1e3
     df_t5 = Exp_Any_AllData[Exp_temp_i_cell[index_X5]]["Extract Data"]
@@ -1571,6 +1675,10 @@ def Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell):
                         np.array(df_DMA["LAM NE_tot"])*100)) )
         Y_4_st.append( list(np.interp(X_1_st,chThr_temp,
                         np.array(df_DMA["LAM PE"])*100)) )
+        Y_6_st.append(list(
+            np.interp(X_1_st, chThr_temp, 
+            df["Age set average temperature (degC)"].astype(float))))
+
         index_Res = df[df['0.1s Resistance (Ohms)'].le(10)].index
         Y_5_st.append( list(np.interp(
             X_5_st,np.array(df["Charge Throughput (A.h)"][index_Res])/1e3,
@@ -1589,9 +1697,10 @@ def Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell):
     Y_3_st_avg = Get_Mean(X_1_st,Y_3_st)
     Y_4_st_avg = Get_Mean(X_1_st,Y_4_st)
     Y_5_st_avg = Get_Mean(X_5_st,Y_5_st)
+    Y_6_st_avg = Get_Mean(X_1_st,Y_6_st)
     XY_pack = [
         X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,
-        Y_3_st_avg,Y_4_st_avg,Y_5_st_avg]
+        Y_3_st_avg,Y_4_st_avg,Y_5_st_avg,Y_6_st_avg]
     return XY_pack
 
 # Update 23-05-18 Compare MPE - code created by ChatGPT
@@ -1615,7 +1724,7 @@ def Compare_Exp_Model(
         index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck):
     
     [X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,
-        Y_3_st_avg,Y_4_st_avg,Y_5_st_avg] = XY_pack
+        Y_3_st_avg,Y_4_st_avg,Y_5_st_avg,Y_6_st_avg] = XY_pack
     mX_1 = my_dict_RPT['Throughput capacity [kA.h]']
     if mX_1[-1] > X_1_st[-1]:
         punish = 1; 
@@ -1628,11 +1737,14 @@ def Compare_Exp_Model(
             my_dict_RPT["CDend LAM_ne [%]"])
         mY_4_st = np.interp(mX_1_st,my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend LAM_pe [%]"])
+        mY_6_st = np.interp(mX_1_st,my_dict_RPT['Throughput capacity [kA.h]'], 
+            my_dict_RPT["avg_Age_T"])
         # experiment result remain unchanged
         Y_1_st_avgm = Y_1_st_avg
         Y_2_st_avgm = Y_2_st_avg
         Y_3_st_avgm = Y_3_st_avg
         Y_4_st_avgm = Y_4_st_avg
+        Y_6_st_avgm = Y_6_st_avg
     else:                # do interpolation on expeirment results
         punish = X_1_st[-1] / mX_1[-1]  # punishment error, add when simulation end early
         mX_1_st = mX_1 #  standard for experiment following modelling
@@ -1640,10 +1752,12 @@ def Compare_Exp_Model(
         Y_2_st_avgm = np.interp(mX_1_st,X_1_st,Y_2_st_avg)
         Y_3_st_avgm = np.interp(mX_1_st,X_1_st,Y_3_st_avg)
         Y_4_st_avgm = np.interp(mX_1_st,X_1_st,Y_4_st_avg)
+        Y_6_st_avgm = np.interp(mX_1_st,X_1_st,Y_6_st_avg)
         mY_1_st = my_dict_RPT['CDend SOH [%]']
         mY_2_st = my_dict_RPT["CDend LLI [%]"]
         mY_3_st = my_dict_RPT["CDend LAM_ne [%]"]
         mY_4_st = my_dict_RPT["CDend LAM_pe [%]"]
+        mY_6_st = my_dict_RPT["avg_Age_T"]
     if mX_1[-1] > X_5_st[-1]:
         mX_5_st = X_5_st   
         mY_5_st = np.interp(mX_5_st,my_dict_RPT['Throughput capacity [kA.h]'], 
@@ -1659,12 +1773,14 @@ def Compare_Exp_Model(
     mpe_3 = np.sum(abs(np.array(Y_3_st_avgm)-np.array(mY_3_st)))/len(Y_3_st_avgm) # LAM_ne [%]
     mpe_4 = np.sum(abs(np.array(Y_4_st_avgm)-np.array(mY_4_st)))/len(Y_4_st_avgm) # LAM_pe [%]
     mpe_5 = mean_percentage_error(Y_5_st_avgm, mY_5_st) # Res_0p5C_50SOC
+    mpe_6 = mean_percentage_error(Y_6_st_avgm, mY_6_st) # Age set average temperature (degC)
     # total MPE: TODO this is where weighting works
     # SOH and Resistance are directly measured so give more weight; 
     # DMA result is derived from pOCV and come with certain errors
     mpe_tot = (
         0.55*mpe_1 + 0.1*(mpe_2+mpe_3+mpe_4) 
-        + 0.15*mpe_5 + (punish>1.0)* punish * 2 )
+        + 0.15*mpe_5 + 0.15* mpe_6 +
+        (punish>1.0)* punish * 2 )
     # plot and check:
     if PlotCheck == True:
         fig, axs = plt.subplots(5,1, figsize=(6,13),tight_layout=True)
@@ -1692,7 +1808,11 @@ def Compare_Exp_Model(
             +"Plots/"+ f"Scan {str(Scan_i)}-Exp-{index_exp}-{str(int(Temper_i-273.15))}degC"
             +r"- Calculate Error.png", dpi=dpi)
         plt.close()  # close the figure to save RAM
-    mpe_all = np.around([mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,])
+    mpe_all = np.around(
+        [
+            mpe_tot,mpe_1,mpe_2,
+            mpe_3,mpe_4,mpe_5,mpe_6,
+            punish],2)
     return mpe_all
 
 
@@ -1711,6 +1831,8 @@ def Run_P2_Opt_Timeout(
     # add 230221: do sol_new['Throughput capacity [A.h]'].entries += sol_old['Throughput capacity [A.h]'].entries 
     #             and for "Throughput energy [W.h]", when use Model.set_initial_conditions_from
     #             this is done inside the two functions Run_Model_Base_On_Last_Solution(_RPT)
+    # change 230621: add ability to scan one parameter set at different temperature 
+    #                and at Exp-2,3,5
     ModelTimer = pb.Timer()
     if Check_Small_Time == True:
         SmallTimer = pb.Timer()
@@ -1723,7 +1845,7 @@ def Run_P2_Opt_Timeout(
     Scan_i = int(index_i)
     print('Start Now! Scan %d.' % Scan_i)  
 
-    print('After break point')  
+    # print('After break point')  
     Sol_RPT = [];  Sol_AGE = [];
     # pb.set_logging_level('INFO') # show more information!
     # set_start_method('fork') # from Patrick
@@ -1733,7 +1855,7 @@ def Run_P2_Opt_Timeout(
         cycle_no,
         step_AGE_CD,step_AGE_CC,step_AGE_CV,
         step_0p1C_CD, step_0p1C_CC,step_0p1C_RE, 
-        step_0p5C_CD_No ] = exp_index_pack
+        step_0p5C_CD ] = exp_index_pack
     [exp_AGE_text,  exp_RPT_text     ] = exp_text_list
     [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,] = Path_pack
     CyclePack,Para_0 = Para_init(Para_dict_i) # initialize the parameter
@@ -1837,15 +1959,15 @@ def Run_P2_Opt_Timeout(
         my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_0, 
             0, step_0p1C_CD, step_0p1C_CC,step_0p1C_RE , step_AGE_CV   )
         # update 230517 - Get R from C/2 discharge only, discard GITT
-        cap_full = 5; step_0P5C_CD = Sol_0.cycles[0].steps[step_0p5C_CD_No]
+        cap_full = 5; step_0P5C_CD = Sol_0.cycles[0].steps[step_0p5C_CD]
         SOC_0p5C,Res_0p5C,Res_0p5C_50SOC = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
         my_dict_RPT["SOC_0p5C"].append(SOC_0p5C)
         my_dict_RPT["Res_0p5C"].append(Res_0p5C)
         my_dict_RPT["Res_0p5C_50SOC"].append(Res_0p5C_50SOC)             
         del SOC_0p5C,Res_0p5C,Res_0p5C_50SOC
-        cycle_count =0; 
+        cycle_count =0
         my_dict_RPT["Cycle_RPT"].append(cycle_count)
-        Cyc_Update_Index.append(cycle_count);
+        Cyc_Update_Index.append(cycle_count)
         Flag_Breakin = True
         if Check_Small_Time == True:    
             print(f"Scan {Scan_i}: Finish post-process for break-in cycle within {SmallTimer.time()}")
@@ -1869,7 +1991,7 @@ def Run_P2_Opt_Timeout(
                     Paraupdate = Para_0
                 # Run aging cycle:
                 try:
-                    Timelimit = int(60*10)
+                    Timelimit = int(60*60*2)
                     if Timeout == True:
                         timeout_AGE = TimeoutFunc(
                             Run_Model_Base_On_Last_Solution, 
@@ -1898,7 +2020,7 @@ def Run_P2_Opt_Timeout(
                         print("Fail due to Model error or solver error")
                         str_error_AGE = "Model error or solver error"
                         1/0
-                except ZeroDivisionError as e:
+                except ZeroDivisionError as e: # ageing cycle fails
                     if Check_Small_Time == True:    
                         print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} ageing cycles within {SmallTimer.time()} due to {str_error_AGE}")
                         SmallTimer.reset()
@@ -1907,8 +2029,8 @@ def Run_P2_Opt_Timeout(
                     Flag_AGE = False
                     str_error_AGE_final = str_error_AGE
                     break
-                else:
-                    Para_0_Dry_old = Paraupdate;       Model_Dry_old = Model_Dry_i;      Sol_Dry_old = Sol_Dry_i;   
+                else:                           # ageing cycle SUCCEED
+                    Para_0_Dry_old = Paraupdate; Model_Dry_old = Model_Dry_i; Sol_Dry_old = Sol_Dry_i;   
                     del Paraupdate,Model_Dry_i,Sol_Dry_i
                     
                     if Check_Small_Time == True:    
@@ -1930,12 +2052,13 @@ def Run_P2_Opt_Timeout(
                     
                     if DryOut == "On":
                         mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
-                    i += 1;   
+                    
                     if Check_Small_Time == True:    
                         print(f"Scan {Scan_i}: Finish post-process for No.{Cyc_Update_Index[-1]} ageing cycles within {SmallTimer.time()}")
                         SmallTimer.reset()
                     else:
                         pass
+                    i += 1;   ##################### Finish small loop and add 1 to i 
 
             # run RPT, and also update parameters (otherwise will have problems)
             if DryOut == "On":
@@ -1943,7 +2066,7 @@ def Run_P2_Opt_Timeout(
             if DryOut == "Off":
                 Paraupdate = Para_0     
             try:
-                Timelimit = int(60*10)
+                Timelimit = int(60*60*2)
                 if Timeout == True:
                     timeout_RPT = TimeoutFunc(
                         Run_Model_Base_On_Last_Solution_RPT, 
@@ -1996,7 +2119,7 @@ def Run_P2_Opt_Timeout(
                 my_dict_RPT["Cycle_RPT"].append(cycle_count)
                 
                 # update 230517 - Get R from C/2 discharge only, discard GITT
-                cap_full = 5; step_0P5C_CD = Sol_Dry_i.cycles[0].steps[step_0p5C_CD_No]
+                cap_full = 5; step_0P5C_CD = Sol_Dry_i.cycles[0].steps[step_0p5C_CD]
                 SOC_0p5C,Res_0p5C,Res_0p5C_50SOC = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
                 my_dict_RPT["SOC_0p5C"].append(SOC_0p5C)
                 my_dict_RPT["Res_0p5C"].append(Res_0p5C)
@@ -2024,7 +2147,7 @@ def Run_P2_Opt_Timeout(
         # sequence: scan no, exp, pass or fail, mpe, dry-out, 
         mpe_all = ["nan","nan",
             "nan","nan", 
-            "nan","nan",]
+            "nan","nan","nan"]
         Pass_Fail = "Die"
         value_Pre = [str(Scan_i),index_exp,Pass_Fail,*mpe_all,DryOut,]
         values_pos =[
@@ -2043,6 +2166,12 @@ def Run_P2_Opt_Timeout(
         write_excel_xlsx(
             BasicPath + Target + "Excel/" +book_name_xlsx_seperate, 
             sheet_name_xlsx, values)
+        my_dict_RPT["Error tot %"] = "nan"
+        my_dict_RPT["Error SOH %"] = "nan"
+        my_dict_RPT["Error LLI %"] = "nan"
+        my_dict_RPT["Error LAM NE %"] = "nan"
+        my_dict_RPT["Error LAM PE %"] = "nan"
+        my_dict_RPT["Error Res %"] = "nan"
         
         midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
 
@@ -2102,7 +2231,7 @@ def Run_P2_Opt_Timeout(
         XY_pack = Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell) # interpolate for exp only
         mpe_all = Compare_Exp_Model( my_dict_RPT, XY_pack, Scan_i,
             index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck=True)
-        [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5] = mpe_all
+        [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish] = mpe_all
         # set pass or fail TODO figure out how much should be appropriate:
         if mpe_tot < 3:
             Pass_Fail = "Pass"
@@ -2114,9 +2243,14 @@ def Run_P2_Opt_Timeout(
         my_dict_RPT["Error LAM NE %"] = mpe_3
         my_dict_RPT["Error LAM PE %"] = mpe_4
         my_dict_RPT["Error Res %"] = mpe_5
+        my_dict_RPT["Error ageT %"] = mpe_6
+        my_dict_RPT["punish"] = punish
 
         ##########################################################
         #########      3-1: Plot cycle,location, Dryout related 
+        # update 23-05-25 there is a bug in Cyc_Update_Index, need to slide a bit:
+        Cyc_Update_Index.insert(0,0); del Cyc_Update_Index[-1]
+
         Plot_Cyc_RPT_4(
             my_dict_RPT, Exp_Any_AllData,Temp_Cell_Exp,
             XY_pack,index_exp, Plot_Exp,  
@@ -2135,12 +2269,17 @@ def Run_P2_Opt_Timeout(
             SmallTimer.reset()
         else:
             pass
+        # update 23-05-26 judge ageing shape: contain 3 index
+        """ [Start_shape,Middle_shape,End_shape] = check_concave_convex(
+        my_dict_RPT['Throughput capacity [kA.h]'], 
+        my_dict_RPT['CDend SOH [%]']) """
         ##########################################################
         ##########################################################
         #########      3-3: Save summary to excel 
         values=Get_Values_Excel(
             index_exp,Pass_Fail,
-            mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,
+            mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish,
+            # Start_shape,Middle_shape,End_shape,
             model_options,my_dict_RPT,mdic_dry,
             DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
             str_exp_RPT_text,str_error_AGE_final,
@@ -2151,17 +2290,662 @@ def Run_P2_Opt_Timeout(
         write_excel_xlsx(
             BasicPath + Target + "Excel/" + book_name_xlsx_seperate, 
             sheet_name_xlsx, values)
-        if Check_Small_Time == True:    
-            print(f"Scan {Scan_i}: Finish saving mat and xlsx within {SmallTimer.time()}")
-            SmallTimer.reset()
-        else:
-            pass
-        
-        #########      3-2: Save data as .mat 
+        # pick only the cyc - most concern
+        Keys_cyc_mat =[
+            'Throughput capacity [kA.h]',
+            'CDend SOH [%]',
+            "CDend LLI [%]",
+            "CDend LAM_ne [%]",
+            "CDend LAM_pe [%]",
+            "Res_0p5C_50SOC",
+        ]
+        my_dict_mat = {}
+        for key in Keys_cyc_mat:
+            my_dict_mat[key]=my_dict_RPT[key]
+        #########      3-2: Save data as .mat or .json
         my_dict_RPT["Cyc_Update_Index"] = Cyc_Update_Index
         my_dict_RPT["SaveTimes"]    = SaveTimes
         midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
-        # savemat(BasicPath + Target+"Mats/" + str(Scan_i)+ '-StructDara_for_Mat.mat',midc_merge)  
+        import json
+        try:
+            with open(
+                # 'data.json', 
+                BasicPath + Target+"Mats/" + str(Scan_i)+ '-StructData.json',
+                'w'
+                ) as json_file:
+                    json.dump(midc_merge, json_file) 
+        except:
+            print(f"Scan {Scan_i}: Encounter problems when saving json file!")
+        else: 
+            print(f"Scan {Scan_i}: Successfully save json file!")
+        try:
+            savemat(
+                BasicPath + Target+"Mats/" 
+                + str(Scan_i)+ '-Ageing_summary_only.mat',
+                my_dict_mat)  
+        except:
+            print(f"Scan {Scan_i}: Encounter problems when saving mat file!")
+        else: 
+            print(f"Scan {Scan_i}: Successfully save mat file!")
+
+        if Check_Small_Time == True:    
+            print(f"Scan {Scan_i}: Try saving within {SmallTimer.time()}")
+            SmallTimer.reset()
+        else:
+            pass
+        print("Succeed doing something in {}".format(ModelTimer.time()))
+        print('This is the end of No.', Scan_i, ' scan')
+        return midc_merge,Sol_RPT,Sol_AGE
+
+# read scan files:
+def load_combinations_from_csv(Para_file):
+    dataframe = pd.read_csv(Para_file)
+    parameter_names = dataframe.columns.tolist()
+    combinations = dataframe.values.tolist()
+    return parameter_names, combinations
+
+def Run_P2_Excel(
+    Para_dict_i,BasicPath, Path_NiallDMA, 
+    purpose,    Exp_pack, keys_all,dpi,fs,
+    Runshort,   Plot_Exp,Timeout,Return_Sol,
+    Check_Small_Time ): # true or false to plot,timeout,return,check small time
+
+    ##########################################################
+    ##############    Part-0: Log of the scripts    ##########
+    ##########################################################
+    # add 221205: if Timeout=='True', use Patrick's version, disable pool
+    #             else, use pool to accelerate 
+    # add Return_Sol, on HPC, always set to False, as it is useless, 
+    # add 230221: do sol_new['Throughput capacity [A.h]'].entries += sol_old['Throughput capacity [A.h]'].entries 
+    #             and for "Throughput energy [W.h]", when use Model.set_initial_conditions_from
+    #             this is done inside the two functions Run_Model_Base_On_Last_Solution(_RPT)
+    # change 230621: add ability to scan one parameter set at different temperature 
+    #                and at Exp-2,3,5
+    ModelTimer = pb.Timer()
+    if Check_Small_Time == True:
+        SmallTimer = pb.Timer()
+    ##########################################################
+    ##############    Part-1: Initialization    ##############
+    ##########################################################
+    font = {'family' : 'DejaVu Sans','size'   : fs}
+    mpl.rc('font', **font)
+
+    # new to define: exp_text_list,  Path_pack
+    # exp_index_pack , 
+    # define here:
+    index_i   = Para_dict_i["Scan No"]  
+    Scan_i = int(index_i)
+    print('Start Now! Scan %d.' % Scan_i)  
+    index_exp = int(Para_dict_i["Exp No."]) # index for experiment set, can now go for 2,3,5
+    Temp_K = Para_dict_i["Ageing temperature"]  
+    Round_No = f"Case_{Scan_i}_Exp_{index_exp}_{Temp_K}oC"  # index to identify different rounds of running 
+    # Load Niall's data
+    [
+        Exp_All_Cell,Temp_Cell_Exp_All,
+        Exp_Path,Exp_head,Exp_Temp_Cell,
+        book_name_xlsx,
+        ]  = Exp_pack
+    Temp_Cell_Exp = Temp_Cell_Exp_All[index_exp-1] 
+    Exp_Any_AllData = Read_Exp(
+        Path_NiallDMA,Exp_All_Cell[index_exp-1],
+        Exp_Path,Exp_head,Exp_Temp_Cell[index_exp-1],
+        index_exp-1)
+    if Runshort == False:
+        if index_exp == 2:
+            tot_cyc = 6192; cyc_age = 516; # should be 6192 but now run shorter to be faster
+        if index_exp == 3:
+            tot_cyc = 6180; cyc_age = 515;
+        if index_exp == 5:
+            tot_cyc = 1170; cyc_age = 78;
+    else:
+        if index_exp == 2:
+            tot_cyc = 2; cyc_age = 1;
+        if index_exp == 3:
+            tot_cyc = 3; cyc_age = 1;
+        if index_exp == 5:
+            tot_cyc = 3; cyc_age = 1;
+    Para_dict_i["Total ageing cycles"]       = int(tot_cyc)
+    Para_dict_i["Ageing cycles between RPT"] = int(cyc_age)
+    Para_dict_i["Update cycles for ageing"]  = int(cyc_age) # keys
+    
+    # set up experiment
+    Target  = f'/{purpose}/'
+    V_max = 4.2;        V_min = 2.5; 
+    if index_exp ==2:
+        discharge_time_mins = 0.15* 60 * 4.86491/5
+        charge_time_mins = 0.5* 60 * 4.86491/5
+        exp_AGE_text = [(
+            f"Discharge at 1C for {discharge_time_mins} minutes or until {V_min}V", 
+            f"Charge at 0.3C for {charge_time_mins} minutes or until {V_max}V",
+            ),  ]  # *  setting on cycler is 516, rather than 514 in wiki
+    elif index_exp ==3:
+        discharge_time_mins = 0.15* 60 * 4.86491/5
+        charge_time_mins = 0.5* 60 * 4.86491/5
+        exp_AGE_text = [(
+            f"Discharge at 1C for {discharge_time_mins} minutes or until {V_min}V", 
+            f"Charge at 0.3C until {V_max}V",
+            f"Hold at {V_max} V until C/100",
+            ),  ]   # *  setting on cycler is 515, rather than 514 in wiki
+    elif index_exp ==5:
+        exp_AGE_text = [(
+            f"Discharge at 1C until {V_min}V", 
+            f"Charge at 0.3C until {V_max}V",
+            f"Hold at {V_max} V until C/100",
+            ),  ]  # *  78
+    else:
+        print("Not yet implemented!")
+    step_AGE_CD =0;   step_AGE_CC =1;   step_AGE_CV =2;
+    exp_RPT_text = [ (
+        # refill
+        f"Hold at {V_max}V until C/100",
+        "Rest for 1 hours (20 minute period)", 
+        # 0.1C cycle 
+        f"Discharge at 0.1C until {V_min} V (30 minute period)",  
+        "Rest for 3 hours (20 minute period)",  
+        f"Charge at 0.1C until {V_max} V (30 minute period)",
+        f"Hold at {V_max}V until C/100",
+        "Rest for 1 hours (20 minute period)",
+        # 0.5C cycle 
+        f"Discharge at 0.5C until {V_min} V (6 minute period)",  
+        "Rest for 3 hours (20 minute period)",
+        f"Charge at 0.5C until {V_max} V (6 minute period)",
+        f"Hold at {V_max}V until C/100",
+        "Rest for 3 hours (20 minute period)",  
+        ) ] * 1
+    # step index for RPT
+    step_0p1C_CD = 2; step_0p1C_CC = 4;   step_0p1C_RE =3;    
+    step_0p5C_CD = 7;  
+    cycle_no = -1; 
+
+
+    Sol_RPT = [];  Sol_AGE = [];
+    # pb.set_logging_level('INFO') # show more information!
+    # set_start_method('fork') # from Patrick
+
+    # Un-pack data:
+    CyclePack,Para_0 = Para_init(Para_dict_i) # initialize the parameter
+    [
+        Total_Cycles,Cycle_bt_RPT,Update_Cycles,
+        RPT_Cycles,Temper_i,Temper_RPT,mesh_list,
+        submesh_strech,model_options] = CyclePack
+    [keys_all_RPT,keys_all_AGE] = keys_all
+    str_exp_AGE_text  = str(exp_AGE_text)
+    str_exp_RPT_text  = str(exp_RPT_text)
+
+    # define experiment
+    Experiment_Long   = pb.Experiment( exp_AGE_text * Update_Cycles  )  
+    # update 24-04-2023: delete GITT
+    Experiment_RPT    = pb.Experiment( exp_RPT_text*1 ) 
+    Experiment_Breakin= Experiment_RPT
+
+    #####  index definition ######################
+    Small_Loop =  int(Cycle_bt_RPT/Update_Cycles);   
+    SaveTimes = int(Total_Cycles/Cycle_bt_RPT);   
+
+    # initialize my_dict for outputs
+    my_dict_RPT = {}
+    for keys in keys_all_RPT:
+        for key in keys:
+            my_dict_RPT[key]=[];
+    my_dict_AGE = {}; 
+    for keys in keys_all_AGE:
+        for key in keys:
+            my_dict_AGE[key]=[]
+    my_dict_RPT["Cycle_RPT"] = []
+    my_dict_RPT["Res_0p5C"] = []
+    my_dict_RPT["Res_0p5C_50SOC"] = []
+    my_dict_RPT["SOC_0p5C"] = []
+    my_dict_AGE["Cycle_AGE"] = []
+    my_dict_RPT["avg_Age_T"] = [] # Update add 230617 
+    Cyc_Update_Index     =[]
+
+    # update 220924: merge DryOut and Int_ElelyExces_Ratio
+    temp_Int_ElelyExces_Ratio =  Para_0["Initial electrolyte excessive amount ratio"] 
+    ce_EC_0 = Para_0['EC initial concentration in electrolyte [mol.m-3]'] # used to calculate ce_EC_All
+    if temp_Int_ElelyExces_Ratio < 1:
+        Int_ElelyExces_Ratio = -1;
+        DryOut = "Off";
+    else:
+        Int_ElelyExces_Ratio = temp_Int_ElelyExces_Ratio;
+        DryOut = "On";
+    print(f"Scan {Scan_i}: DryOut = {DryOut}")
+    if DryOut == "On":  
+        mdic_dry,Para_0 = Initialize_mdic_dry(Para_0,Int_ElelyExces_Ratio)
+    else:
+        mdic_dry ={}
+    if Check_Small_Time == True:
+        print(f'Scan {Scan_i}: Spent {SmallTimer.time()} on Initialization')
+        SmallTimer.reset()
+    ##########################################################
+    ##############    Part-2: Run model         ##############
+    ##########################################################
+    ##########################################################
+    Timeout_text = 'I timed out'
+    ##########    2-1: Define model and run break-in cycle
+    try:  
+        Timelimit = int(3600*3)
+        # the following turns on for HPC only!
+        if Timeout == True:
+            timeout_RPT = TimeoutFunc(
+                Run_Breakin, 
+                timeout=Timelimit, 
+                timeout_val=Timeout_text)
+            Result_list_breakin  = timeout_RPT(
+                model_options, Experiment_Breakin, 
+                Para_0, mesh_list, submesh_strech)
+        else:
+            Result_list_breakin  = Run_Breakin(
+                model_options, Experiment_Breakin, 
+                Para_0, mesh_list, submesh_strech)
+        [Model_0,Sol_0,Call_Breakin] = Result_list_breakin
+        if Return_Sol == True:
+            Sol_RPT.append(Sol_0)
+        if Call_Breakin.success == False:
+            print("Fail due to Experiment error or infeasible")
+            1/0
+        if Sol_0 == Timeout_text: # to do: distinguish different failure cases
+            print("Fail due to Timeout")
+            1/0
+        if Sol_0 == "Model error or solver error":
+            print("Fail due to Model error or solver error")
+            1/0
+    except ZeroDivisionError as e:
+        str_error_Breakin = str(e)
+        if Check_Small_Time == True:
+            print(f"Scan {Scan_i}: Fail break-in cycle within {SmallTimer.time()}, need to exit the whole scan now due to {str_error_Breakin} but do not know how!")
+            SmallTimer.reset()
+        else:
+            print(f"Scan {Scan_i}: Fail break-in cycle, need to exit the whole scan now due to {str_error_Breakin} but do not know how!")
+        Flag_Breakin = False 
+    else:
+        if Check_Small_Time == True:    
+            print(f"Scan {Scan_i}: Finish break-in cycle within {SmallTimer.time()}")
+            SmallTimer.reset()
+        else:
+            print(f"Scan {Scan_i}: Finish break-in cycle")
+        # post-process for break-in cycle - 0.1C only
+        my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_0, 
+            0, step_0p1C_CD, step_0p1C_CC,step_0p1C_RE , step_AGE_CV   )
+        # update 230517 - Get R from C/2 discharge only, discard GITT
+        cap_full = 5; step_0P5C_CD = Sol_0.cycles[0].steps[step_0p5C_CD]
+        SOC_0p5C,Res_0p5C,Res_0p5C_50SOC = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
+        my_dict_RPT["SOC_0p5C"].append(SOC_0p5C)
+        my_dict_RPT["Res_0p5C"].append(Res_0p5C)
+        my_dict_RPT["Res_0p5C_50SOC"].append(Res_0p5C_50SOC)     
+        my_dict_RPT["avg_Age_T"].append(Temper_i-273.15)  # Update add 230617              
+        del SOC_0p5C,Res_0p5C,Res_0p5C_50SOC
+        cycle_count =0
+        my_dict_RPT["Cycle_RPT"].append(cycle_count)
+        Cyc_Update_Index.append(cycle_count)
+        Flag_Breakin = True
+        if Check_Small_Time == True:    
+            print(f"Scan {Scan_i}: Finish post-process for break-in cycle within {SmallTimer.time()}")
+            SmallTimer.reset()
+        else:
+            print(f"Scan {Scan_i}: Finish post-process for break-in cycle")
+        
+    Flag_AGE = True; str_error_AGE_final = "Empty";   str_error_RPT = "Empty";
+    #############################################################
+    #######   2-2: Write a big loop to finish the long experiment    
+    if Flag_Breakin == True: 
+        k=0
+        # Para_All.append(Para_0);Model_All.append(Model_0);Sol_All_i.append(Sol_0); 
+        Para_0_Dry_old = Para_0;     Model_Dry_old = Model_0  ; Sol_Dry_old = Sol_0;   del Model_0,Sol_0
+        while k < SaveTimes:    
+            i=0  
+            avg_Age_T = []  
+            while i < Small_Loop:
+                if DryOut == "On":
+                    Data_Pack,Paraupdate   = Cal_new_con_Update (  Sol_Dry_old,   Para_0_Dry_old )
+                if DryOut == "Off":
+                    Paraupdate = Para_0
+                # Run aging cycle:
+                try:
+                    Timelimit = int(60*60*2)
+                    if Timeout == True:
+                        timeout_AGE = TimeoutFunc(
+                            Run_Model_Base_On_Last_Solution, 
+                            timeout=Timelimit, 
+                            timeout_val=Timeout_text)
+                        Result_list_AGE = timeout_AGE( 
+                            Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
+                            Update_Cycles,Temper_i,mesh_list,submesh_strech )
+                    else:
+                        Result_list_AGE = Run_Model_Base_On_Last_Solution( 
+                            Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
+                            Update_Cycles,Temper_i,mesh_list,submesh_strech )
+                    [Model_Dry_i, Sol_Dry_i , Call_Age ] = Result_list_AGE
+                    if Return_Sol == True:
+                        Sol_AGE.append(Sol_Dry_i)
+                    #print(f"Temperature for ageing is now: {Temper_i}")  
+                    if Call_Age.success == False:
+                        print("Fail due to Experiment error or infeasible")
+                        str_error_AGE = "Experiment error or infeasible"
+                        1/0
+                    if Sol_Dry_i == Timeout_text: # fail due to timeout
+                        print("Fail due to Timeout")
+                        str_error_AGE = "Timeout"
+                        1/0
+                    if Sol_Dry_i == "Model error or solver error":
+                        print("Fail due to Model error or solver error")
+                        str_error_AGE = "Model error or solver error"
+                        1/0
+                except ZeroDivisionError as e: # ageing cycle fails
+                    if Check_Small_Time == True:    
+                        print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} ageing cycles within {SmallTimer.time()} due to {str_error_AGE}")
+                        SmallTimer.reset()
+                    else:
+                        print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} ageing cycles due to {str_error_AGE}")
+                    Flag_AGE = False
+                    str_error_AGE_final = str_error_AGE
+                    break
+                else:                           # ageing cycle SUCCEED
+                    Para_0_Dry_old = Paraupdate; Model_Dry_old = Model_Dry_i; Sol_Dry_old = Sol_Dry_i;   
+                    del Paraupdate,Model_Dry_i,Sol_Dry_i
+                    
+                    if Check_Small_Time == True:    
+                        print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} ageing cycles within {SmallTimer.time()}")
+                        SmallTimer.reset()
+                    else:
+                        print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} ageing cycles")
+
+                    # post-process for first ageing cycle and every -1 ageing cycle
+                    if k==0 and i==0:    
+                        my_dict_AGE = GetSol_dict (my_dict_AGE,keys_all_AGE, Sol_Dry_old, 
+                            0, step_AGE_CD , step_AGE_CC , step_0p1C_RE, step_AGE_CV   )     
+                        my_dict_AGE["Cycle_AGE"].append(1)
+                    my_dict_AGE = GetSol_dict (my_dict_AGE,keys_all_AGE, Sol_Dry_old, 
+                        cycle_no, step_AGE_CD , step_AGE_CC , step_0p1C_RE, step_AGE_CV   )    
+                    cycle_count +=  Update_Cycles; 
+                    avg_Age_T.append(np.mean(
+                        Sol_Dry_old["Volume-averaged cell temperature [C]"].entries))
+                    my_dict_AGE["Cycle_AGE"].append(cycle_count)           
+                    Cyc_Update_Index.append(cycle_count)
+                    
+                    if DryOut == "On":
+                        mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
+                    
+                    if Check_Small_Time == True:    
+                        print(f"Scan {Scan_i}: Finish post-process for No.{Cyc_Update_Index[-1]} ageing cycles within {SmallTimer.time()}")
+                        SmallTimer.reset()
+                    else:
+                        pass
+                    i += 1;   ##################### Finish small loop and add 1 to i 
+            my_dict_RPT["avg_Age_T"].append(np.mean(avg_Age_T)) 
+            # run RPT, and also update parameters (otherwise will have problems)
+            if DryOut == "On":
+                Data_Pack , Paraupdate  = Cal_new_con_Update (  Sol_Dry_old,   Para_0_Dry_old   )
+            if DryOut == "Off":
+                Paraupdate = Para_0     
+            try:
+                Timelimit = int(60*60*2)
+                if Timeout == True:
+                    timeout_RPT = TimeoutFunc(
+                        Run_Model_Base_On_Last_Solution_RPT, 
+                        timeout=Timelimit, 
+                        timeout_val=Timeout_text)
+                    Result_list_RPT = timeout_RPT(
+                        Model_Dry_old  , Sol_Dry_old ,   
+                        Paraupdate,      Experiment_RPT, RPT_Cycles, 
+                        Temper_RPT ,mesh_list ,submesh_strech
+                    )
+                else:
+                    Result_list_RPT = Run_Model_Base_On_Last_Solution_RPT(
+                        Model_Dry_old  , Sol_Dry_old ,   
+                        Paraupdate,      Experiment_RPT, RPT_Cycles, 
+                        Temper_RPT ,mesh_list ,submesh_strech
+                    )
+                [Model_Dry_i, Sol_Dry_i,Call_RPT]  = Result_list_RPT
+                if Return_Sol == True:
+                    Sol_RPT.append(Sol_Dry_i)
+                #print(f"Temperature for RPT is now: {Temper_RPT}")  
+                if Call_RPT.success == False:
+                    print("Fail due to Experiment error or infeasible")
+                    str_error_RPT = "Experiment error or infeasible"
+                    1/0 
+                if Sol_Dry_i == Timeout_text:
+                    #print("Fail due to Timeout")
+                    str_error_RPT = "Timeout"
+                    1/0
+                if Sol_Dry_i == "Model error or solver error":
+                    print("Fail due to Model error or solver error")
+                    str_error_RPT = "Model error or solver error"
+                    1/0
+            except ZeroDivisionError as e:
+                if Check_Small_Time == True:    
+                    print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles within {SmallTimer.time()}, due to {str_error_RPT}")
+                    SmallTimer.reset()
+                else:
+                    print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles, due to {str_error_RPT}")
+                break
+            else:
+                # post-process for RPT
+                Cyc_Update_Index.append(cycle_count)
+                if Check_Small_Time == True:    
+                    print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} RPT cycles within {SmallTimer.time()}")
+                    SmallTimer.reset()
+                else:
+                    print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} RPT cycles")
+                my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_Dry_i, 
+                    0,step_0p1C_CD, step_0p1C_CC,step_0p1C_RE , step_AGE_CV   )
+                my_dict_RPT["Cycle_RPT"].append(cycle_count)
+                
+                # update 230517 - Get R from C/2 discharge only, discard GITT
+                cap_full = 5; step_0P5C_CD = Sol_Dry_i.cycles[0].steps[step_0p5C_CD]
+                SOC_0p5C,Res_0p5C,Res_0p5C_50SOC = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
+                my_dict_RPT["SOC_0p5C"].append(SOC_0p5C)
+                my_dict_RPT["Res_0p5C"].append(Res_0p5C)
+                my_dict_RPT["Res_0p5C_50SOC"].append(Res_0p5C_50SOC)             
+                del SOC_0p5C,Res_0p5C,Res_0p5C_50SOC
+                if DryOut == "On":
+                    mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
+                Para_0_Dry_old = Paraupdate;    Model_Dry_old = Model_Dry_i  ;     Sol_Dry_old = Sol_Dry_i    ;   
+                del Paraupdate,Model_Dry_i,Sol_Dry_i
+                if Check_Small_Time == True:    
+                    print(f"Scan {Scan_i}: Finish post-process for No.{Cyc_Update_Index[-1]} RPT cycles within {SmallTimer.time()}")
+                    SmallTimer.reset()
+                else:
+                    pass
+                if Flag_AGE == False:
+                    break
+            k += 1 
+    ############################################################# 
+    #########   An extremely bad case: cannot even finish breakin
+    if Flag_Breakin == False: 
+        value_list_temp = list(Para_dict_i.values())
+        values_para = []
+        for value_list_temp_i in value_list_temp:
+            values_para.append(str(value_list_temp_i))
+        # sequence: scan no, exp, pass or fail, mpe, dry-out, 
+        mpe_all = ["nan","nan",
+            "nan","nan", 
+            "nan","nan","nan"]
+        Pass_Fail = "Die"
+        value_Pre = [str(Scan_i),index_exp,Pass_Fail,*mpe_all,DryOut,]
+        values_pos =[
+            str_exp_AGE_text,
+            str_exp_RPT_text,
+            "nan","nan",
+            "nan","nan", 
+            "nan","nan",
+            "nan","nan",
+            "nan",str_error_Breakin]
+        values = [*value_Pre,*values_para,*values_pos]
+        print(str_error_Breakin)
+        print("Fail in {}".format(ModelTimer.time())) 
+        # Round_No = f"Case_{Scan_i}_Exp_{index_exp}_{Temp_K}oC"
+        book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
+        sheet_name_xlsx =  str(Scan_i);
+        write_excel_xlsx(
+            BasicPath + Target + "Excel/" +book_name_xlsx_seperate, 
+            sheet_name_xlsx, values)
+        my_dict_RPT["Error tot %"] = "nan"
+        my_dict_RPT["Error SOH %"] = "nan"
+        my_dict_RPT["Error LLI %"] = "nan"
+        my_dict_RPT["Error LAM NE %"] = "nan"
+        my_dict_RPT["Error LAM PE %"] = "nan"
+        my_dict_RPT["Error Res %"] = "nan"
+        
+        midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
+
+        return midc_merge,Sol_RPT,Sol_AGE
+    ##########################################################
+    ##############   Part-3: Post-prosessing    ##############
+    ##########################################################
+    # Newly add (220517): save plots, not just a single line in excel file:     
+    # Newly add (221114): make plotting as functions
+    # Niall_data = loadmat( 'Extracted_all_cell.mat'
+    else:
+        #if not os.path.exists(BasicPath + Target + str(Scan_i)):
+        #os.mkdir(BasicPath + Target + str(Scan_i) );
+        # Update 230221 - Add model LLI, LAM manually 
+        my_dict_RPT['Throughput capacity [kA.h]'] = (
+            np.array(my_dict_RPT['Throughput capacity [A.h]'])/1e3).tolist()
+        my_dict_RPT['CDend SOH [%]'] = ((
+            np.array(my_dict_RPT["Discharge capacity [A.h]"])
+            /my_dict_RPT["Discharge capacity [A.h]"][0])*100).tolist()
+        my_dict_RPT["CDend LAM_ne [%]"] = ((1-
+            np.array(my_dict_RPT['CDend Negative electrode capacity [A.h]'])
+            /my_dict_RPT['CDend Negative electrode capacity [A.h]'][0])*100).tolist()
+        my_dict_RPT["CDend LAM_pe [%]"] = ((1-
+            np.array(my_dict_RPT['CDend Positive electrode capacity [A.h]'])
+            /my_dict_RPT['CDend Positive electrode capacity [A.h]'][0])*100).tolist()
+        my_dict_RPT["CDend LLI [%]"] = ((1-
+            np.array(my_dict_RPT["CDend Total lithium capacity in particles [A.h]"])
+            /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
+        if model_options.__contains__("SEI"):
+            my_dict_RPT["CDend LLI SEI [%]"] = ((
+                np.array(
+                    my_dict_RPT["CDend Loss of capacity to SEI [A.h]"]-
+                    my_dict_RPT["CDend Loss of capacity to SEI [A.h]"][0]
+                    )
+                /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
+        if model_options.__contains__("SEI on cracks"):
+            my_dict_RPT["CDend LLI SEI on cracks [%]"] = ((
+                np.array(
+                    my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"]-
+                    my_dict_RPT["CDend Loss of capacity to SEI on cracks [A.h]"][0]
+                    )
+                /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
+        if model_options.__contains__("lithium plating"):
+            my_dict_RPT["CDend LLI lithium plating [%]"] = ((
+                np.array(
+                    my_dict_RPT["CDend Loss of capacity to lithium plating [A.h]"]-
+                    my_dict_RPT["CDend Loss of capacity to lithium plating [A.h]"][0]
+                    )
+                /my_dict_RPT["CDend Total lithium capacity in particles [A.h]"][0])*100).tolist()
+        if Check_Small_Time == True:    
+            print(f"Scan {Scan_i}: Getting extra variables within {SmallTimer.time()}")
+            SmallTimer.reset()
+        else:
+            pass
+        # Newly add: update 23-05-18: evaluate errors systematically:
+        Exp_temp_i_cell = Temp_Cell_Exp[str(int(Temper_i- 273.15))]
+        XY_pack = Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell) # interpolate for exp only
+        mpe_all = Compare_Exp_Model( my_dict_RPT, XY_pack, Scan_i,
+            index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck=True)
+        [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish] = mpe_all
+        # set pass or fail TODO figure out how much should be appropriate:
+        if mpe_tot < 3:
+            Pass_Fail = "Pass"
+        else:
+            Pass_Fail = "Fail"
+        my_dict_RPT["Error tot %"] = mpe_tot
+        my_dict_RPT["Error SOH %"] = mpe_1
+        my_dict_RPT["Error LLI %"] = mpe_2
+        my_dict_RPT["Error LAM NE %"] = mpe_3
+        my_dict_RPT["Error LAM PE %"] = mpe_4
+        my_dict_RPT["Error Res %"] = mpe_5
+        my_dict_RPT["Error ageT %"] = mpe_6
+        my_dict_RPT["punish"] = punish
+
+        ##########################################################
+        #########      3-1: Plot cycle,location, Dryout related 
+        # update 23-05-25 there is a bug in Cyc_Update_Index, need to slide a bit:
+        Cyc_Update_Index.insert(0,0); del Cyc_Update_Index[-1]
+
+        Plot_Cyc_RPT_4(
+            my_dict_RPT, Exp_Any_AllData,Temp_Cell_Exp,
+            XY_pack,index_exp, Plot_Exp,  
+            Scan_i,Temper_i,model_options,
+            BasicPath, Target,fs,dpi)
+        if len(my_dict_AGE["CDend Porosity"])>1:
+            Plot_Loc_AGE_4(
+                my_dict_AGE,Scan_i,index_exp,Temper_i,
+                model_options,BasicPath, Target,fs,dpi)
+        if DryOut == "On":
+            Plot_Dryout(
+                Cyc_Update_Index,mdic_dry,ce_EC_0,index_exp,Temper_i,
+                Scan_i,BasicPath, Target,fs,dpi)
+        if Check_Small_Time == True:    
+            print(f"Scan {Scan_i}: Finish all plots within {SmallTimer.time()}")
+            SmallTimer.reset()
+        else:
+            pass
+        # update 23-05-26 judge ageing shape: contain 3 index
+        """ [Start_shape,Middle_shape,End_shape] = check_concave_convex(
+        my_dict_RPT['Throughput capacity [kA.h]'], 
+        my_dict_RPT['CDend SOH [%]']) """
+        ##########################################################
+        ##########################################################
+        #########      3-3: Save summary to excel 
+        values=Get_Values_Excel(
+            index_exp,Pass_Fail,
+            mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish,
+            # Start_shape,Middle_shape,End_shape,
+            model_options,my_dict_RPT,mdic_dry,
+            DryOut,Scan_i,Para_dict_i,str_exp_AGE_text,
+            str_exp_RPT_text,str_error_AGE_final,
+            str_error_RPT)
+        values = [values,]
+        book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
+        sheet_name_xlsx =  str(Scan_i);
+        write_excel_xlsx(
+            BasicPath + Target + "Excel/" + book_name_xlsx_seperate, 
+            sheet_name_xlsx, values)
+        # pick only the cyc - most concern
+        Keys_cyc_mat =[
+            'Throughput capacity [kA.h]',
+            'CDend SOH [%]',
+            "CDend LLI [%]",
+            "CDend LAM_ne [%]",
+            "CDend LAM_pe [%]",
+            "Res_0p5C_50SOC",
+        ]
+        my_dict_mat = {}
+        for key in Keys_cyc_mat:
+            my_dict_mat[key]=my_dict_RPT[key]
+        #########      3-2: Save data as .mat or .json
+        my_dict_RPT["Cyc_Update_Index"] = Cyc_Update_Index
+        my_dict_RPT["SaveTimes"]    = SaveTimes
+        midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
+        import json
+        try:
+            with open(
+                # 'data.json', 
+                BasicPath + Target+"Mats/" + str(Scan_i)+ '-StructData.json',
+                'w'
+                ) as json_file:
+                    json.dump(midc_merge, json_file) 
+        except:
+            print(f"Scan {Scan_i}: Encounter problems when saving json file!")
+        else: 
+            print(f"Scan {Scan_i}: Successfully save json file!")
+        try:
+            savemat(
+                BasicPath + Target+"Mats/" 
+                + str(Scan_i)+ '-Ageing_summary_only.mat',
+                my_dict_mat)  
+        except:
+            print(f"Scan {Scan_i}: Encounter problems when saving mat file!")
+        else: 
+            print(f"Scan {Scan_i}: Successfully save mat file!")
+
+        if Check_Small_Time == True:    
+            print(f"Scan {Scan_i}: Try saving within {SmallTimer.time()}")
+            SmallTimer.reset()
+        else:
+            pass
         print("Succeed doing something in {}".format(ModelTimer.time()))
         print('This is the end of No.', Scan_i, ' scan')
         return midc_merge,Sol_RPT,Sol_AGE
