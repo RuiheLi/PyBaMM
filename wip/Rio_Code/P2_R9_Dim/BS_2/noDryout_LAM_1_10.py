@@ -13,8 +13,8 @@ mpl.rc('font', **font)
 
 ########################     Global settings!!!
 On_HPC = False
-Scan_start = 1;    Scan_end = 10; 
-purpose_i = "noDryout_LAM"
+Scan_start = 1;    Scan_end = 1; 
+purpose_i = "Simon_w_cr_h"
 purpose = f"{purpose_i}_Case_{Scan_start}_{Scan_end}"
 # interpetation: Simnon suggested, with cracking activation, heat transfer
 para_csv = f'{purpose_i}.csv'   # name of the random file to get parameters
