@@ -13,12 +13,12 @@ mpl.rc('font', **font)
 
 ########################     Global settings!!!
 On_HPC = False
-Scan_start = 1;    Scan_end = 1; 
-purpose_i = "noDryout_LAM"
+Scan_start = 24;    Scan_end = 24; 
+purpose_i = "Case142_Eact_Neg_kcr_Ds"
 purpose = f"{purpose_i}_Case_{Scan_start}_{Scan_end}"
 # interpetation: Simnon suggested, with cracking activation, heat transfer
 para_csv = f'{purpose_i}.csv'   # name of the random file to get parameters
-Runshort = True                    # a long run or a quick test
+Runshort = False                    # a long run or a quick test
 
 
 if On_HPC:                          # Run on HPC
