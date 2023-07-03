@@ -30,10 +30,8 @@ class ConstantCracks(BaseMechanics):
     def get_fundamental_variables(self):
         domain, Domain = self.domain_Domain
 
-        one = pybamm.FullBroadcast(
-            pybamm.Scalar(1), f"{domain} electrode", "current collector"
-        )
-        variables = self._get_standard_variables(one)
+        l_cr_0 = self.param.l_cr_0
+        variables = self._get_standard_variables(l_cr_0)
         zero = pybamm.FullBroadcast(
             pybamm.Scalar(0), f"{domain} electrode", "current collector"
         )
