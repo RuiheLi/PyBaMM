@@ -327,16 +327,17 @@ def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
     Vol_Pore_tot_old  = PoreVolNeg_0 + PoreVolSep_0 + PoreVolPos_0    # pore volume at start time of the run
     Vol_Pore_tot_new  = PoreVolNeg_1 + PoreVolSep_1 + PoreVolPos_1    # pore volume at end   time of the run, intrinsic variable 
     Vol_Pore_decrease = Vol_Elely_JR_old  - Vol_Pore_tot_new # WHY Vol_Elely_JR_old not Vol_Pore_tot_old here? Because even the last state of the last solution (n-1) and the first state of the next solution (n) can be slightly different! 
-    # EC:lithium:SEI=2:1:1     for SEI=(CH2OCO2Li)2, but because of too many changes are required, change to 2:1:1 for now
+    # EC:lithium:SEI=2:2:1     for SEI=(CH2OCO2Li)2, but because of too many changes are required, change to 2:1:1 for now
+    # update 230703: Simon insist we should do: EC:lithium:SEI  =  2:2:1 and change V_SEI accordingly 
     # Because inner and outer SEI partial molar volume is the same, just set one for whole SEI
     VmolSEI   = Para["Outer SEI partial molar volume [m3.mol-1]"] # 9.8e-5,
     VmolLiP   = Para["Lithium metal partial molar volume [m3.mol-1]"] # 1.3e-05
     VmolEC    = Para["EC partial molar volume [m3.mol-1]"]
     #################   KEY EQUATION FOR DRY-OUT MODEL                   #################
     # UPDATE 230525: assume the formation of dead lithium doesn’t consumed EC
-    Vol_EC_consumed  =  ( LLINegSEI + LLINegSEIcr   ) * 2 * VmolEC    # Mark: either with 2 or not, will decide how fast electrolyte being consumed!
+    Vol_EC_consumed  =  ( LLINegSEI + LLINegSEIcr   ) * 1 * VmolEC    # Mark: either with 2 or not, will decide how fast electrolyte being consumed!
     Vol_Elely_need   = Vol_EC_consumed - Vol_Pore_decrease
-    Vol_SEILiP_increase = 1.0*(
+    Vol_SEILiP_increase = 0.5*(
         (LLINegSEI+LLINegSEIcr) * VmolSEI 
         #+ LLINegLiP * VmolLiP
         )    #  volume increase due to SEI+total LiP 
