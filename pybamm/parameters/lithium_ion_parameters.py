@@ -388,6 +388,9 @@ class ParticleLithiumIonParameters(BaseParameters):
         self.alpha_bv = pybamm.Parameter(
             f"{pref}{Domain} electrode Butler-Volmer transfer coefficient"
         )
+        self.E_D_s = pybamm.Parameter(
+                f"{pref}{Domain} electrode diffusivity activation energy [J.mol-1]"
+            )
 
         if self.domain == "negative":
             # SEI parameters
@@ -437,6 +440,9 @@ class ParticleLithiumIonParameters(BaseParameters):
             self.Eac_cr = pybamm.Parameter(
                 f"{pref}Negative cracking growth activation energy [J.mol-1]"
             )
+            #self.E_D_s_n = pybamm.Parameter(
+            #    f"{pref}Negative electrode diffusivity activation energy [J.mol-1]"
+            #)
             self.alpha_SEI = pybamm.Parameter(f"{pref}SEI growth transfer coefficient")
             self.inner_sei_proportion = pybamm.Parameter(
                 f"{pref}Inner SEI reaction proportion"

@@ -375,7 +375,10 @@ def graphite_LGM50_diffusivity_ORegan2022(sto, T):
         * 3.0321  # correcting factor (see O'Regan et al 2021)
     )
 
-    E_D_s = d * pybamm.constants.R
+    #E_D_s = d * pybamm.constants.R
+    E_D_s = pybamm.Parameter(
+        "Negative electrode diffusivity activation energy [J.mol-1]")
+    #print(E_D_s)
     arrhenius = pybamm.exp(E_D_s / pybamm.constants.R * (1 / 298.15 - 1 / T))
 
     return D_ref * arrhenius
@@ -650,7 +653,9 @@ def nmc_LGM50_diffusivity_ORegan2022(sto, T):
         * 2.7  # correcting factor (see O'Regan et al 2021)
     )
 
-    E_D_s = d * pybamm.constants.R
+    # E_D_s = d * pybamm.constants.R
+    E_D_s = pybamm.Parameter(
+        "Positive electrode diffusivity activation energy [J.mol-1]")
     arrhenius = pybamm.exp(E_D_s / pybamm.constants.R * (1 / 298.15 - 1 / T))
 
     return D_ref * arrhenius
@@ -1463,6 +1468,7 @@ def get_parameter_values():
         "Current function [A]": 5.0,
         "Contact resistance [Ohm]": 0.013,
         # negative electrode
+        "Negative electrode diffusivity activation energy [J.mol-1]":1.7e4,
         "Negative electrode conductivity [S.m-1]": 215.0,
         "Maximum concentration in negative electrode [mol.m-3]": 32544.0,
         "Minimum concentration in negative electrode [mol.m-3]": 0,
@@ -1507,6 +1513,7 @@ def get_parameter_values():
         "Negative electrode LAM constant exponential term": 2.0,
         "Negative electrode critical stress [Pa]": 60000000.0,
         # positive electrode
+        "Positive electrode diffusivity activation energy [J.mol-1]":1.2e4,
         "Positive electrode conductivity [S.m-1]"
         "": nmc_LGM50_electronic_conductivity_ORegan2022,
         "Maximum concentration in positive electrode [mol.m-3]": 52787.0,
