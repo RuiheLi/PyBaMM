@@ -1398,7 +1398,7 @@ def Plot_Cyc_RPT_4(
     plt.close()  # close the figure to save RAM
 
     if model_options.__contains__("SEI on cracks"):
-        Num_subplot = 2;
+        """ Num_subplot = 2;
         fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
         axs[0].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],     '-o', label="Scan=" + str(Scan_i) )
         axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], my_dict_RPT["CDend X-averaged negative electrode roughness ratio"],'-o', label="Scan=" + str(Scan_i) )
@@ -1413,11 +1413,11 @@ def Plot_Cyc_RPT_4(
         axs[1].set_title("X-avg Neg roughness ratio",   fontdict={'family':'DejaVu Sans','size':fs+1})
         plt.savefig(BasicPath + Target+"Plots/" +
             f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC - Cracks related_Scan.png", dpi=dpi)
-        plt.close()  # close the figure to save RAM
+        plt.close()  # close the figure to save RAM """
 
         Num_subplot = 2;
         fig, axs = plt.subplots(1,Num_subplot, figsize=(12,4.8),tight_layout=True)
-        axs[1].plot(my_dict_RPT['Throughput capacity [kA.h]'], 
+        axs[0].plot(my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend Negative electrode capacity [A.h]"][0]
             -
             my_dict_RPT["CDend Negative electrode capacity [A.h]"],'-o',label="Neg Scan=" + str(Scan_i))
@@ -1425,24 +1425,24 @@ def Plot_Cyc_RPT_4(
             my_dict_RPT["CDend Positive electrode capacity [A.h]"][0]
             -
             my_dict_RPT["CDend Positive electrode capacity [A.h]"],'-^',label="Pos Scan=" + str(Scan_i))
-        axs[0].plot(
+        """ axs[0].plot(
             my_dict_RPT['Throughput capacity [kA.h]'], 
             my_dict_RPT["CDend X-averaged total SEI on cracks thickness [m]"],                  
-            '-o',label="Scan="+ str(Scan_i))
-        for i in range(0,1):
+            '-o',label="Scan="+ str(Scan_i)) """
+        for i in range(0,2):
             axs[i].set_xlabel("Charge Throughput (kA.h)",   fontdict={'family':'DejaVu Sans','size':fs})
             labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
             axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
             axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
-        axs[0].set_ylabel("SEI on cracks thickness [m]",   fontdict={'family':'DejaVu Sans','size':fs})
-        axs[0].set_title("CDend X-avg tot SEI on cracks thickness",   fontdict={'family':'DejaVu Sans','size':fs+1})
-        for i in range(1,2):
+        #axs[0].set_ylabel("SEI on cracks thickness [m]",   fontdict={'family':'DejaVu Sans','size':fs})
+        #axs[0].set_title("CDend X-avg tot SEI on cracks thickness",   fontdict={'family':'DejaVu Sans','size':fs+1})
+        for i in range(0,2):
             axs[i].set_xlabel("Charge Throughput (kA.h)",   fontdict={'family':'DejaVu Sans','size':fs})
             axs[i].set_ylabel("Capacity [A.h]",   fontdict={'family':'DejaVu Sans','size':fs})
             labels = axs[i].get_xticklabels() + axs[i].get_yticklabels(); [label.set_fontname('DejaVu Sans') for label in labels]
             axs[i].tick_params(labelcolor='k', labelsize=fs, width=1) ;  del labels;
             axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)
-        axs[1].set_title("LAM of Neg and Pos",   fontdict={'family':'DejaVu Sans','size':fs+1})
+            axs[i].set_title("LAM of Neg and Pos",   fontdict={'family':'DejaVu Sans','size':fs+1})
         plt.savefig(BasicPath + Target+"Plots/" +
             f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC LAM-IR.png", dpi=dpi)
         plt.close()  # close the figure to save RAM
@@ -1509,6 +1509,7 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,index_exp,Temper_i,model_options,BasicPath
         f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Por Neg_S_eta.png", dpi=dpi) 
     plt.close()  # close the figure to save RAM
 
+    """ update: disable cracking related things just because when sei-on-crack is false it will easily give errors; 
     if model_options.__contains__("SEI on cracks"):
         Num_subplot = 2;
         fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
@@ -1528,7 +1529,7 @@ def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,index_exp,Temper_i,model_options,BasicPath
             axs[i].legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)    
         plt.savefig(BasicPath + Target+"Plots/" +
             f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Cracks related spatial.png", dpi=dpi) 
-        plt.close()  # close the figure to save RAM
+        plt.close()  # close the figure to save RAM """
     Num_subplot = 2;
     fig, axs = plt.subplots(1,Num_subplot, figsize=(8,3.2),tight_layout=True)
     axs[0].plot(my_dict_AGE["x [m]"], my_dict_AGE["CDend Electrolyte concentration [mol.m-3]"][0],'-o',label="First")
