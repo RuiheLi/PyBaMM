@@ -1222,6 +1222,19 @@ def Read_Exp(BasicPath,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
             BasicPath+Exp_Path[i]+ "DMA Output/" + f"cell {cell}/" + 
             f"{Exp_head[i]} - RMSE data from OCV-fitting for cell {cell}.csv", 
             index_col=0)
+        # update 230726: read 0.1C voltage curve, discharge only
+        Exp_Any_AllData[cell]["0.1C voltage"] = {}
+        for m in range(16):
+            try:
+                C_10_curve_temp = pd.read_csv(
+                    BasicPath+Exp_Path[i]+ "0.1C Voltage Curves/"+ f"cell {cell}/" +
+                    f"{Exp_head[i]} - cell {cell} - RPT{m} - 0.1C discharge data.csv", )    
+            except:
+                print(f"Exp-{i+1} - Cell {cell} doesn't have RPT {m}")
+            else:
+                C_10_curve_temp["Time (h)"] = (C_10_curve_temp["Time (s)"] - C_10_curve_temp["Time (s)"].iloc[0]) / 3600
+                Exp_Any_AllData[cell]["0.1C voltage"][f"RPT{m}"] = C_10_curve_temp
+                print(f"Read Exp-{i+1} - Cell {cell} RPT {m}")
     print("Finish reading Experiment!")
     return Exp_Any_AllData
 # judge ageing shape: - NOT Ready yet!
@@ -1872,21 +1885,21 @@ def Run_P2_Excel(
         index_exp-1)
     if Runshort == False:
         if index_exp == 2:
-            tot_cyc = 6192; cyc_age = 516; # should be 6192 but now run shorter to be faster
+            tot_cyc = 6192; cyc_age = 516; update = 4; # should be 6192 but now run shorter to be faster
         if index_exp == 3:
-            tot_cyc = 6180; cyc_age = 515;
+            tot_cyc = 6180; cyc_age = 515; update = 5; 
         if index_exp == 5:
-            tot_cyc = 1170; cyc_age = 78;
+            tot_cyc = 1170; cyc_age = 78; update = 6;
     else:
         if index_exp == 2:
-            tot_cyc = 2; cyc_age = 1;
+            tot_cyc = 2; cyc_age = 1; update = 1
         if index_exp == 3:
-            tot_cyc = 3; cyc_age = 1;
+            tot_cyc = 3; cyc_age = 1; update = 1
         if index_exp == 5:
-            tot_cyc = 3; cyc_age = 1;
+            tot_cyc = 3; cyc_age = 1; update = 1
     Para_dict_i["Total ageing cycles"]       = int(tot_cyc)
     Para_dict_i["Ageing cycles between RPT"] = int(cyc_age)
-    Para_dict_i["Update cycles for ageing"]  = int(cyc_age) # keys
+    Para_dict_i["Update cycles for ageing"]  = int(update) # keys
     
     # set up experiment
     Target  = f'/{purpose}/'
