@@ -21,6 +21,7 @@ def electrolyte_conductivity_base_Landesfeind2019_Constant(c_e, T, coeffs):
     B = 1 + p3 * pb.sqrt(c) + p4 * (1 + p5 * pb.exp(1000 / T)) * c
     C = 1 + c ** 4 * (p6 * pb.exp(1000 / T))
     sigma_e = A * c * B / C  # mS.cm-1
+
     return sigma_e / 10
 
 def electrolyte_diffusivity_base_Landesfeind2019_Constant(c_e, T, coeffs):
@@ -777,35 +778,6 @@ def GetSol_dict (my_dict, keys_all, Sol,
                     Sol.cycles[cycle_no].steps[step_no][key[3:]].entries
                     -
                     Sol.cycles[cycle_no].steps[step_no][key[3:]].entries[0]).tolist()  )
-            elif key[3:] == "Anode potential [V]":
-                sol_step = Sol.cycles[cycle_no].steps[step_no]
-                mesh_sep = len(sol_step["Separator electrolyte potential [V]"].entries[:,0])
-                if mesh_sep % 2 ==0:
-                    phi_ref = (
-                        sol_step["Separator electrolyte potential [V]"].entries[mesh_sep//2-1,:]
-                        +
-                        sol_step["Separator electrolyte potential [V]"].entries[mesh_sep//2+1,:]
-                        ) / 2
-                    #print(mesh_sep/2+0.5)
-                else:
-                    phi_ref = sol_step["Separator electrolyte potential [V]"].entries[mesh_sep//2,:]
-                V_n = -phi_ref 
-                my_dict[key].append(  V_n.tolist()  )
-            elif key[3:] == "Cathode potential [V]":
-                sol_step = Sol.cycles[cycle_no].steps[step_no]
-                mesh_sep = len(sol_step["Separator electrolyte potential [V]"].entries[:,0])
-                if mesh_sep % 2 ==0:
-                    phi_ref = (
-                        sol_step["Separator electrolyte potential [V]"].entries[mesh_sep//2-1,:]
-                        +
-                        sol_step["Separator electrolyte potential [V]"].entries[mesh_sep//2+1,:]
-                        ) / 2
-                    #print(mesh_sep/2+0.5)
-                else:
-                    phi_ref = sol_step["Separator electrolyte potential [V]"].entries[mesh_sep//2,:]
-                V =  sol_step["Terminal voltage [V]"].entries
-                V_p = V - phi_ref   
-                my_dict[key].append(  V_p.tolist()  )
             else:
                 my_dict[key].append(  (
                     Sol.cycles[cycle_no].steps[step_no][key[3:]].entries).tolist()  )
@@ -1250,19 +1222,6 @@ def Read_Exp(BasicPath,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
             BasicPath+Exp_Path[i]+ "DMA Output/" + f"cell {cell}/" + 
             f"{Exp_head[i]} - RMSE data from OCV-fitting for cell {cell}.csv", 
             index_col=0)
-        # update 230726: read 0.1C voltage curve, discharge only
-        Exp_Any_AllData[cell]["0.1C voltage"] = {}
-        for m in range(16):
-            try:
-                C_10_curve_temp = pd.read_csv(
-                    BasicPath+Exp_Path[i]+ "0.1C Voltage Curves/"+ f"cell {cell}/" +
-                    f"{Exp_head[i]} - cell {cell} - RPT{m} - 0.1C discharge data.csv", )    
-            except:
-                print(f"Exp-{i+1} - Cell {cell} doesn't have RPT {m}")
-            else:
-                C_10_curve_temp["Time (h)"] = (C_10_curve_temp["Time (s)"] - C_10_curve_temp["Time (s)"].iloc[0]) / 3600
-                Exp_Any_AllData[cell]["0.1C voltage"][f"RPT{m}"] = C_10_curve_temp
-                print(f"Read Exp-{i+1} - Cell {cell} RPT {m}")
     print("Finish reading Experiment!")
     return Exp_Any_AllData
 # judge ageing shape: - NOT Ready yet!
@@ -1522,52 +1481,6 @@ def Plot_Cyc_RPT_4(
     plt.close()  # close the figure to save RAM
 
     return
-
-#
-"""    
-    "CD Time [h]",
-    "CD Terminal voltage [V]",
-    "CD Anode potential [V]",    # self defined
-    "CD Cathode potential [V]",  # self defined
-    "CC Time [h]",
-    "CC Terminal voltage [V]",
-    "CC Anode potential [V]",    # self defined
-    "CC Cathode potential [V]",  # self defined """
-
-def Plot_HalfCell_V(
-        my_dict_RPT,my_dict_AGE,Scan_i,index_exp,colormap,
-        Temper_i,model_options,BasicPath, Target,fs,dpi):
-    #~~~~~~~~~~~~~~~~~ plot RPT 
-    def inFun_Plot(my_dict,str_jj):
-        fig, axs = plt.subplots(3,2, figsize=(12,10),tight_layout=True)
-        Str_Front= ["CD ","CC ",]
-        Str_Back = ["Cathode potential [V]","Terminal voltage [V]","Anode potential [V]",]
-        for j in range(2): 
-            for i in range(3):
-                Time = my_dict[Str_Front[j]+"Time [h]"]
-                Num_Lines = len(Time)
-                cmap = mpl.cm.get_cmap(colormap, Num_Lines) # cmap(i)
-                for k in range(Num_Lines):
-                    Y = my_dict[Str_Front[j]+Str_Back[i]] [k]
-                    axs[i,j].plot( Time[k] , Y, color = cmap(k)   )
-                if j == 0 :
-                    axs[i,j].set_ylabel(
-                        Str_Back[i],   fontdict={'family':'DejaVu Sans','size':fs})
-            axs[2,j].set_xlabel("Time [h]",   fontdict={'family':'DejaVu Sans','size':fs})
-        axs[0,0].set_title("During Discharge",   fontdict={'family':'DejaVu Sans','size':fs+1})
-        axs[0,1].set_title("During Charge",   fontdict={'family':'DejaVu Sans','size':fs+1})
-        fig.suptitle(
-            f"Scan {str(Scan_i)}-Exp-{index_exp}-{str(int(Temper_i-273.15))}"
-            +r"$^\circ$C"+f" - Half cell Potential ({str_jj})", fontsize=fs+2)
-        plt.savefig(BasicPath + Target+"Plots/" +
-            f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC"
-            f" Half cell Potential ({str_jj}).png", dpi=dpi) 
-        plt.close() 
-    inFun_Plot(my_dict_RPT,"RPT")
-    inFun_Plot(my_dict_AGE,"AGE")
-    return 
-
-
 
 def Plot_Loc_AGE_4(my_dict_AGE,Scan_i,index_exp,Temper_i,model_options,BasicPath, Target,fs,dpi):
     Num_subplot = 2;
@@ -1959,11 +1872,11 @@ def Run_P2_Excel(
         index_exp-1)
     if Runshort == False:
         if index_exp == 2:
-            tot_cyc = 6192; cyc_age = 516; update = 4; # should be 6192 but now run shorter to be faster
+            tot_cyc = 6192; cyc_age = 516; update = 129; # should be 6192 but now run shorter to be faster
         if index_exp == 3:
-            tot_cyc = 6180; cyc_age = 515; update = 5; 
+            tot_cyc = 6180; cyc_age = 515; update = 103; 
         if index_exp == 5:
-            tot_cyc = 1170; cyc_age = 78; update = 26;
+            tot_cyc = 1170; cyc_age = 78; update = 6;
     else:
         if index_exp == 2:
             tot_cyc = 2; cyc_age = 1; update = 1
@@ -2007,9 +1920,9 @@ def Run_P2_Excel(
         f"Hold at {V_max}V until C/100",
         "Rest for 1 hours (20 minute period)", 
         # 0.1C cycle 
-        f"Discharge at 0.1C until {V_min} V",  
+        f"Discharge at 0.1C until {V_min} V", #  (30 minute period)  
         "Rest for 3 hours (20 minute period)",  
-        f"Charge at 0.1C until {V_max} V",
+        f"Charge at 0.1C until {V_max} V",    #  (30 minute period)
         f"Hold at {V_max}V until C/100",
         "Rest for 1 hours (20 minute period)",
         # 0.5C cycle 
@@ -2443,10 +2356,6 @@ def Run_P2_Excel(
             Plot_Loc_AGE_4(
                 my_dict_AGE,Scan_i,index_exp,Temper_i,
                 model_options,BasicPath, Target,fs,dpi)
-            colormap = "cool"
-            Plot_HalfCell_V(
-                my_dict_RPT,my_dict_AGE,Scan_i,index_exp,colormap,
-                Temper_i,model_options,BasicPath, Target,fs,dpi)
         if DryOut == "On":
             Plot_Dryout(
                 Cyc_Update_Index,mdic_dry,ce_EC_0,index_exp,Temper_i,

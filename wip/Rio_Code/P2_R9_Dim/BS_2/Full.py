@@ -12,10 +12,11 @@ fs=17; font = {'family' : 'DejaVu Sans','size'   : fs}
 mpl.rc('font', **font)
 
 ########################     Global settings!!!
-On_HPC = True 
-rows_per_file = 3;  Scan_end_end = 6;
-purpose_i = "Full_Exp23_Paper"
-Runshort  = False                    # a long run or a quick test
+rows_per_file = 3;  Scan_end_end = 24;
+purpose_i = "Full_Exp23_Paper_2_mesh"
+
+On_HPC = False 
+Runshort  =   True                    # a long run or a quick test
 
 
 if On_HPC:
@@ -211,7 +212,12 @@ keys_tim_RPT = [
     # default: CD
     "CD Time [h]",
     "CD Terminal voltage [V]",
-    #"RE Terminal voltage [V]",
+    "CD Anode potential [V]",    # self defined
+    "CD Cathode potential [V]",  # self defined
+    "CC Time [h]",
+    "CC Terminal voltage [V]",
+    "CC Anode potential [V]",    # self defined
+    "CC Cathode potential [V]",  # self defined
 ]
 keys_cyc_RPT = [   # default: CDend
     "Discharge capacity [A.h]",
@@ -258,7 +264,18 @@ keys_loc_AGE = [ # MAY WANT TO SELECT AGEING CYCLE later
     "CDend Electrolyte diffusivity [m2.s-1]",
     "CDend Electrolyte conductivity [S.m-1]",
 ]
-keys_tim_AGE = [];
+keys_tim_AGE = [
+    # default: CD
+    "CD Time [h]",
+    "CD Terminal voltage [V]",
+    "CD Anode potential [V]",    # self defined
+    "CD Cathode potential [V]",  # self defined
+    
+    "CC Time [h]",
+    "CC Terminal voltage [V]",
+    "CC Anode potential [V]",    # self defined
+    "CC Cathode potential [V]",  # self defined
+]
 keys_cyc_AGE = [];
 keys_all_RPT = [keys_loc_RPT,keys_tim_RPT,keys_cyc_RPT];
 keys_all_AGE = [keys_loc_AGE,keys_tim_AGE,keys_cyc_AGE];
@@ -306,7 +323,13 @@ fs = 13; dpi = 100;
 midc_merge_all = [];Sol_RPT_all = [];Sol_AGE_all = [];
 Plot_Exp=True;     Timeout=False;  
 Return_Sol=False;   Check_Small_Time=True;
-if __name__ == "__main__":
+midc_merge,Sol_RPT,Sol_AGE=Run_P2_Excel(
+    Para_dict_list[0],BasicPath, Path_NiallDMA, 
+    purpose,    Exp_pack, keys_all,dpi,fs,
+    Runshort,   Plot_Exp,Timeout,Return_Sol,
+    Check_Small_Time
+)
+""" if __name__ == "__main__":
     pool = multiprocessing.Pool(int(pool_no))
     processes = [
     pool.apply_async(
@@ -318,7 +341,7 @@ if __name__ == "__main__":
             Check_Small_Time
         ) )
         for Para_dict_i in Para_dict_list]
-    Result = [p.get() for p in processes]  
+    Result = [p.get() for p in processes]   """
 
 for result in Result:
     midc_merge_all.append(result[0])
