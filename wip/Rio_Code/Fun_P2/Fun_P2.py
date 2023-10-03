@@ -1347,7 +1347,8 @@ def Plot_Cyc_RPT_4(
     if model_options.__contains__("SEI on cracks"):
         axs[0,1].plot(
             my_dict_RPT['Throughput capacity [kA.h]'], 
-            my_dict_RPT["CDend LLI SEI on cracks [%]"] ,'--o', label="SEI-on-cracks")
+            my_dict_RPT["CDend LLI SEI on cracks [%]"] ,
+            '--o', label="SEI-on-cracks")
     axs[0,2].plot(
         my_dict_RPT["Throughput capacity [kA.h]"], 
         my_dict_RPT["CDend LAM_ne [%]"],     '-o', ) 
@@ -1959,7 +1960,7 @@ def Run_P2_Excel(
         index_exp-1)
     if Runshort == False:
         if index_exp == 2:
-            tot_cyc = 6192; cyc_age = 516; update = 4; # should be 6192 but now run shorter to be faster
+            tot_cyc = 6192; cyc_age = 516; update = 516; # should be 6192 but now run shorter to be faster
         if index_exp == 3:
             tot_cyc = 6180; cyc_age = 515; update = 5; 
         if index_exp == 5:
