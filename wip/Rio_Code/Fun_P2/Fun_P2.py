@@ -674,6 +674,42 @@ def recursive_scan(mylist,kvs, key_list, acc):
         # print(v)
         recursive_scan(mylist,kvs, key_list[1:], acc)
 
+# Update 2023-10-04 
+def Overwrite_Initial_L_SEI_0_Neg_Porosity(Para_0,cap_loss):
+    """ 
+    This is to overwrite the initial negative electrode porosity 
+    and initial SEI thickness (inner, outer) to be consistent 
+    with the initial capacity loss 
+    """
+    delta_Q_SEI = cap_loss * 3600
+    V_SEI = Para_0["Outer SEI partial molar volume [m3.mol-1]"] 
+    # do this when finish updating
+    F = 96485.3
+    A = Para_0["Electrode width [m]"] * Para_0["Electrode height [m]"]
+    z_SEI = Para_0["Ratio of lithium moles to SEI moles"] 
+    L_neg = Para_0["Negative electrode thickness [m]"] 
+    eps_act_neg = Para_0["Negative electrode active material volume fraction"]
+    R_neg =   Para_0["Negative particle radius [m]"]
+    l_cr_init = Para_0["Negative electrode initial crack length [m]"]
+    w_cr = Para_0["Negative electrode initial crack width [m]"]
+    rho_cr = Para_0["Negative electrode number of cracks per unit area [m-2]"]
+    a_neg = (3 * eps_act_neg / R_neg)
+    roughness = 1 + 2 * l_cr_init * w_cr * rho_cr
+    L_SEI_init = delta_Q_SEI  * V_SEI / (
+        z_SEI * F * A * L_neg * a_neg * roughness)
+
+    delta_epi = (L_SEI_init ) * roughness * a_neg
+    L_inner_init = L_SEI_init / 2
+    epi = 0.25 - delta_epi
+    # print(L_inner_init,epi)
+    # important: update here!
+    Para_0["Negative electrode porosity"] = epi
+    Para_0["Initial outer SEI thickness [m]"] = L_inner_init
+    Para_0["Initial inner SEI thickness [m]"] = L_inner_init
+    print(f"Has Overwritten Initial outer SEI thickness [m] to be {L_inner_init:.2e} and Negative electrode porosity to be {epi:.3f} to account for initial capacity loss of {cap_loss:.3f} Ah")
+
+    return Para_0
+
 # this function is to initialize the para with a known dict
 def Para_init(Para_dict):
     Para_dict_used = Para_dict.copy();
@@ -760,6 +796,9 @@ def Para_init(Para_dict):
             #Para_dict_used.pop(key)
         else:
             Para_0.update({key: value},check_already_exists=False)
+    # Mark Ruihe - Update 231004
+    cap_loss = 5 - 4.86491
+    Para_0 = Overwrite_Initial_L_SEI_0_Neg_Porosity(Para_0,cap_loss)
 
     return CyclePack,Para_0
 
