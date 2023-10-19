@@ -10,11 +10,12 @@ class CurrentSigmoidOpenCircuitPotential(BaseOpenCircuitPotential):
         domain, Domain = self.domain_Domain
         current = variables["Total current density [A.m-2]"]
         k = 100
+        offset = 0.2  # Mark Simon edit
 
         if Domain == "Positive":
-            lithiation_current = current
+            lithiation_current = current + offset  # Mark Simon edit
         elif Domain == "Negative":
-            lithiation_current = -current
+            lithiation_current = -(current + offset)  # Mark Simon edit
 
         m_lith = pybamm.sigmoid(0, lithiation_current, k)  # lithiation_current > 0
         m_delith = 1 - m_lith  # lithiation_current < 0
