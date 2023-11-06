@@ -1234,21 +1234,14 @@ def Get_Values_Excel(
     values_pos = [
         str_exp_AGE_text,
         str_exp_RPT_text,
-        str(my_dict_RPT["Discharge capacity [A.h]"][0] 
-        - 
-        my_dict_RPT["Discharge capacity [A.h]"][-1]),
+        str(my_dict_RPT['CDend SOH [%]'][-1]),
 
-        str(LossCap_LiP),
-        str(LossCap_SEI),
-        str(LossCap_seioncrack),
+        str(my_dict_RPT["CDend LLI lithium plating [%]"][-1]),
+        str(my_dict_RPT["CDend LLI SEI [%]"][-1]),
+        str(my_dict_RPT["CDend LLI SEI on cracks [%]"][-1]),
 
-        str(my_dict_RPT["CDend Negative electrode capacity [A.h]"][0] 
-        - 
-        my_dict_RPT["CDend Negative electrode capacity [A.h]"][-1]),
-
-        str(my_dict_RPT["CDend Positive electrode capacity [A.h]"][0] 
-        - 
-        my_dict_RPT["CDend Positive electrode capacity [A.h]"][-1]),
+        str(my_dict_RPT["CDend LAM_ne [%]"][-1]),
+        str(my_dict_RPT["CDend LAM_pe [%]"][-1]),
 
         str(Vol_Elely_Tot_All_final), 
         str(Vol_Elely_JR_All_final),
@@ -1362,7 +1355,7 @@ def check_concave_convex(x_values, y_values):
 # plot inside the function:
 def Plot_Cyc_RPT_4(
         my_dict_RPT, Exp_Any_AllData,Temp_Cell_Exp,
-        XY_pack,index_exp, Plot_Exp,  
+        XY_pack,index_exp, Plot_Exp, R_from_GITT,
         Scan_i,Temper_i,model_options,
         BasicPath, Target,fs,dpi):
     
@@ -1396,7 +1389,7 @@ def Plot_Cyc_RPT_4(
         my_dict_RPT["CDend LAM_pe [%]"],     '-o',  ) 
     axs[1,1].plot(
         my_dict_RPT["Throughput capacity [kA.h]"], 
-        np.array(my_dict_RPT["Res_0p5C_50SOC"]),     '-o', ) 
+        np.array(my_dict_RPT["Res_midSOC"]),     '-o', ) 
     axs[1,2].plot(
         my_dict_RPT["Throughput capacity [kA.h]"][1:], 
         np.array(my_dict_RPT["avg_Age_T"][1:]),     '-o', ) 
@@ -1546,19 +1539,25 @@ def Plot_Cyc_RPT_4(
         f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC SOC_RPT_dis.png", dpi=dpi) 
     plt.close()  # close the figure to save RAM
     # update 230518: plot resistance in C/2 discharge:
-    N_RPT = len(my_dict_RPT["Res_0p5C"])
+    N_RPT = len(my_dict_RPT["Res_full"])
     colormap_i = mpl.cm.get_cmap("gray", 14) 
     fig, axs = plt.subplots(figsize=(4,3.2),tight_layout=True)
     for i in range(N_RPT):
         axs.plot(
-            my_dict_RPT["SOC_0p5C"][i], my_dict_RPT["Res_0p5C"][i] ,
+            my_dict_RPT["SOC_Res"][i], my_dict_RPT["Res_full"][i] ,
             color=colormap_i(i),marker="o",  label=f"RPT {i}" )
-    axs.set_xlabel("SOC-C/2 %",   fontdict={'family':'DejaVu Sans','size':fs})
-    axs.set_ylabel(r'Res C/2 (m$\Omega$)',   fontdict={'family':'DejaVu Sans','size':fs})
-    # axs.legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)     
-    axs.set_title("Res during C/2 Dis",   fontdict={'family':'DejaVu Sans','size':fs+1})
+    if R_from_GITT: 
+        axs.set_xlabel("SOC-GITT %",   fontdict={'family':'DejaVu Sans','size':fs})
+        axs.set_ylabel(r'Res GITT (m$\Omega$)',   fontdict={'family':'DejaVu Sans','size':fs})
+        # axs.legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)     
+        axs.set_title("Res during GITT Dis",   fontdict={'family':'DejaVu Sans','size':fs+1})
+    else:
+        axs.set_xlabel("SOC-C/2 %",   fontdict={'family':'DejaVu Sans','size':fs})
+        axs.set_ylabel(r'Res C/2 (m$\Omega$)',   fontdict={'family':'DejaVu Sans','size':fs})
+        # axs.legend(prop={'family':'DejaVu Sans','size':fs-2},loc='best',frameon=False)     
+        axs.set_title("Res during C/2 Dis",   fontdict={'family':'DejaVu Sans','size':fs+1})
     plt.savefig(BasicPath + Target+ "Plots/"+
-        f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Res_0p5C.png", dpi=dpi) 
+        f"Scan_{Scan_i}-Exp-{index_exp}-{str(int(Temper_i- 273.15))}degC Res_full.png", dpi=dpi) 
     plt.close()  # close the figure to save RAM
 
     return
@@ -1747,7 +1746,7 @@ def Get_0p1s_R0(sol_RPT,Index,cap_full):
                 cycle.steps[2]["Discharge capacity [A.h]"].entries[0] 
                 - cycle.steps[2]["Discharge capacity [A.h]"].entries[-1] )
             SOC.append(SOC[-1]-Dis_Cap/cap_full*100)
-    return np.mean(Res_0p1s),Res_0p1s,SOC
+    return Res_0p1s[12],Res_0p1s,SOC
 
 # update 230517 add a function to get R_50%SOC from C/2 discharge
 def Get_R_from_0P5C_CD(step_0P5C_CD,cap_full):
@@ -1769,7 +1768,7 @@ def Get_R_from_0P5C_CD(step_0P5C_CD,cap_full):
     SOC_0p5C = SOC_0p5C.tolist()
     Res_0p5C = Res_0p5C.tolist()
     Res_0p5C_50SOC = Res_0p5C_50SOC.tolist()
-    return SOC_0p5C,Res_0p5C,Res_0p5C_50SOC   #,Rohmic_CD_2
+    return Res_0p5C_50SOC,Res_0p5C,SOC_0p5C  #,Rohmic_CD_2
 
 # Update 23-05-18
 # function to get cell average index from several cells in one T and one Exp
@@ -1890,18 +1889,18 @@ def Compare_Exp_Model(
     if mX_1[-1] > X_5_st[-1]:
         mX_5_st = X_5_st   
         mY_5_st = np.interp(mX_5_st,my_dict_RPT['Throughput capacity [kA.h]'], 
-            my_dict_RPT["Res_0p5C_50SOC"])
+            my_dict_RPT["Res_midSOC"])
         Y_5_st_avgm = Y_5_st_avg
     else:
         mX_5_st = mX_1 #  standard for experiment following modelling
-        mY_5_st = my_dict_RPT["Res_0p5C_50SOC"]
+        mY_5_st = my_dict_RPT["Res_midSOC"]
         Y_5_st_avgm = np.interp(mX_5_st,X_5_st,Y_5_st_avg)
     # Now we can calculate MPE! mean_percentage_error
     mpe_1 = np.sum(abs(np.array(Y_1_st_avgm)-np.array(mY_1_st)))/len(Y_1_st_avgm) # SOH [%]
     mpe_2 = np.sum(abs(np.array(Y_2_st_avgm)-np.array(mY_2_st)))/len(Y_2_st_avgm) # LLI [%]
     mpe_3 = np.sum(abs(np.array(Y_3_st_avgm)-np.array(mY_3_st)))/len(Y_3_st_avgm) # LAM_ne [%]
     mpe_4 = np.sum(abs(np.array(Y_4_st_avgm)-np.array(mY_4_st)))/len(Y_4_st_avgm) # LAM_pe [%]
-    mpe_5 = mean_percentage_error(Y_5_st_avgm, mY_5_st) # Res_0p5C_50SOC
+    mpe_5 = mean_percentage_error(Y_5_st_avgm, mY_5_st) # Res_midSOC
     mpe_6 = mean_percentage_error(Y_6_st_avgm, mY_6_st) # Age set average temperature (degC)
     # total MPE: TODO this is where weighting works
     # SOH and Resistance are directly measured so give more weight; 
@@ -1955,7 +1954,7 @@ def Run_P2_Excel(
     Para_dict_i,BasicPath, Path_NiallDMA, 
     purpose,    Exp_pack, keys_all,dpi,fs,
     Runshort,   Plot_Exp,Timeout,Return_Sol,
-    Check_Small_Time ): # true or false to plot,timeout,return,check small time
+    Check_Small_Time, R_from_GITT): # true or false to plot,timeout,return,check small time
 
     ##########################################################
     ##############    Part-0: Log of the scripts    ##########
@@ -2006,7 +2005,7 @@ def Run_P2_Excel(
             tot_cyc = 1170; cyc_age = 78; update = 26;
     else:
         if index_exp == 2:
-            tot_cyc = 2; cyc_age = 1; update = 1
+            tot_cyc = 2; cyc_age = 1; update =1  # 2 1 1 
         if index_exp == 3:
             tot_cyc = 3; cyc_age = 1; update = 1
         if index_exp == 5:
@@ -2058,7 +2057,19 @@ def Run_P2_Excel(
         f"Charge at 0.5C until {V_max} V (6 minute period)",
         f"Hold at {V_max}V until C/100",
         "Rest for 3 hours (20 minute period)",  
-        ) ] * 1
+        ) ] 
+    exp_RPT_GITT_text = [ (
+        "Rest for 5 minutes (1 minute period)",  
+        "Rest for 1.2 seconds (0.1 second period)",  
+        f"Discharge at C/2 for 4.8 minutes or until {V_min}V (0.1 second period)",
+        "Rest for 1 hour", # (5 minute period)  
+        ) ]
+    exp_refill = [ (
+        # refill
+        f"Charge at 0.3C until {V_max}V",
+        f"Hold at {V_max}V until C/100",
+        "Rest for 1 hours (20 minute period)", 
+        ) ] 
     # step index for RPT
     step_0p1C_CD = 2; step_0p1C_CC = 4;   step_0p1C_RE =3;    
     step_0p5C_CD = 7;  
@@ -2078,11 +2089,17 @@ def Run_P2_Excel(
     [keys_all_RPT,keys_all_AGE] = keys_all
     str_exp_AGE_text  = str(exp_AGE_text)
     str_exp_RPT_text  = str(exp_RPT_text)
+    str_exp_RPT_GITT_text  = str(exp_RPT_GITT_text)
 
     # define experiment
     Experiment_Long   = pb.Experiment( exp_AGE_text * Update_Cycles  )  
     # update 24-04-2023: delete GITT
-    Experiment_RPT    = pb.Experiment( exp_RPT_text*1 ) 
+    # Update 01-11-2023 add GITT back but with an option 
+    if R_from_GITT: 
+        Experiment_RPT    = pb.Experiment( exp_RPT_text*1 + exp_RPT_GITT_text*24 + exp_refill*1) 
+        Cyc_Index_Res = np.arange(1,25,1) 
+    else:   # then get resistance from C/2
+        Experiment_RPT    = pb.Experiment( exp_RPT_text*1 ) 
     Experiment_Breakin= Experiment_RPT
 
     #####  index definition ######################
@@ -2099,9 +2116,9 @@ def Run_P2_Excel(
         for key in keys:
             my_dict_AGE[key]=[]
     my_dict_RPT["Cycle_RPT"] = []
-    my_dict_RPT["Res_0p5C"] = []
-    my_dict_RPT["Res_0p5C_50SOC"] = []
-    my_dict_RPT["SOC_0p5C"] = []
+    my_dict_RPT["Res_full"] = []
+    my_dict_RPT["Res_midSOC"] = []
+    my_dict_RPT["SOC_Res"] = []
     my_dict_AGE["Cycle_AGE"] = []
     my_dict_RPT["avg_Age_T"] = [] # Update add 230617 
     Cyc_Update_Index     =[]
@@ -2174,13 +2191,18 @@ def Run_P2_Excel(
         my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_0, 
             0, step_0p1C_CD, step_0p1C_CC,step_0p1C_RE , step_AGE_CV   )
         # update 230517 - Get R from C/2 discharge only, discard GITT
-        cap_full = 5; step_0P5C_CD = Sol_0.cycles[0].steps[step_0p5C_CD]
-        SOC_0p5C,Res_0p5C,Res_0p5C_50SOC = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
-        my_dict_RPT["SOC_0p5C"].append(SOC_0p5C)
-        my_dict_RPT["Res_0p5C"].append(Res_0p5C)
-        my_dict_RPT["Res_0p5C_50SOC"].append(Res_0p5C_50SOC)     
+        cap_full = 5; 
+        if R_from_GITT: 
+            Res_midSOC,Res_full,SOC_Res = Get_0p1s_R0(Sol_0,Cyc_Index_Res,cap_full)
+        else: 
+            step_0P5C_CD = Sol_0.cycles[0].steps[step_0p5C_CD]
+            Res_midSOC,Res_full,SOC_Res = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
+        my_dict_RPT["SOC_Res"].append(SOC_Res)
+        my_dict_RPT["Res_full"].append(Res_full)
+        my_dict_RPT["Res_midSOC"].append(Res_midSOC)    
+
         my_dict_RPT["avg_Age_T"].append(Temper_i-273.15)  # Update add 230617              
-        del SOC_0p5C,Res_0p5C,Res_0p5C_50SOC
+        del SOC_Res,Res_full,Res_midSOC
         cycle_count =0
         my_dict_RPT["Cycle_RPT"].append(cycle_count)
         Cyc_Update_Index.append(cycle_count)
@@ -2339,12 +2361,16 @@ def Run_P2_Excel(
                 my_dict_RPT["avg_Age_T"].append(np.mean(avg_Age_T))  # Make sure avg_Age_T and 
                 
                 # update 230517 - Get R from C/2 discharge only, discard GITT
-                cap_full = 5; step_0P5C_CD = Sol_Dry_i.cycles[0].steps[step_0p5C_CD]
-                SOC_0p5C,Res_0p5C,Res_0p5C_50SOC = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
-                my_dict_RPT["SOC_0p5C"].append(SOC_0p5C)
-                my_dict_RPT["Res_0p5C"].append(Res_0p5C)
-                my_dict_RPT["Res_0p5C_50SOC"].append(Res_0p5C_50SOC)             
-                del SOC_0p5C,Res_0p5C,Res_0p5C_50SOC
+                cap_full = 5; 
+                if R_from_GITT: 
+                    Res_midSOC,Res_full,SOC_Res = Get_0p1s_R0(Sol_Dry_i,Cyc_Index_Res,cap_full)
+                else: 
+                    step_0P5C_CD = Sol_Dry_i.cycles[0].steps[step_0p5C_CD]
+                    Res_midSOC,Res_full,SOC_Res = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
+                my_dict_RPT["SOC_Res"].append(SOC_Res)
+                my_dict_RPT["Res_full"].append(Res_full)
+                my_dict_RPT["Res_midSOC"].append(Res_midSOC)             
+                del SOC_Res,Res_full,Res_midSOC
                 if DryOut == "On":
                     mdic_dry = Update_mdic_dry(Data_Pack,mdic_dry)
                 Para_0_Dry_old = Paraupdate;    Model_Dry_old = Model_Dry_i  ;     Sol_Dry_old = Sol_Dry_i    ;   
@@ -2476,7 +2502,7 @@ def Run_P2_Excel(
 
         Plot_Cyc_RPT_4(
             my_dict_RPT, Exp_Any_AllData,Temp_Cell_Exp,
-            XY_pack,index_exp, Plot_Exp,  
+            XY_pack,index_exp, Plot_Exp,   R_from_GITT,
             Scan_i,Temper_i,model_options,
             BasicPath, Target,fs,dpi)
         if len(my_dict_AGE["CDend Porosity"])>1:
@@ -2524,7 +2550,7 @@ def Run_P2_Excel(
             "CDend LLI [%]",
             "CDend LAM_ne [%]",
             "CDend LAM_pe [%]",
-            "Res_0p5C_50SOC",
+            "Res_midSOC",
         ]
         my_dict_mat = {}
         for key in Keys_cyc_mat:

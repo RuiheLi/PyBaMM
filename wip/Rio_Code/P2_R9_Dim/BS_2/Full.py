@@ -12,11 +12,11 @@ fs=17; font = {'family' : 'DejaVu Sans','size'   : fs}
 mpl.rc('font', **font)
 
 ########################     Global settings!!!
-rows_per_file = 3;  Scan_end_end = 24;
-purpose_i = "Full_Exp23_Paper_2_mesh"
+rows_per_file = 3;  Scan_end_end = 144;
+purpose_i = "SEI_Exp23_Paper_5"
 
 On_HPC = False 
-Runshort  =   True                    # a long run or a quick test
+Runshort  =   False                    # a long run or a quick test
 
 
 if On_HPC:
@@ -46,7 +46,7 @@ else:
         "~/EnvPBGEM_Linux/SimSave/InputData/") # for Linux
     BasicPath =  os.path.expanduser(
         "~/EnvPBGEM_Linux/SimSave/P2_R9_Dim")
-    Para_file = BasicPath+f'/Get_Random_sets/{purpose_i}/'+para_csv
+    Para_file = BasicPath+f'/Get_Random_sets2/{purpose_i}/'+para_csv
     
 if not os.path.exists(BasicPath +"/"+ purpose):
     os.mkdir(BasicPath +"/"+ purpose);
@@ -250,6 +250,8 @@ keys_loc_AGE = [ # MAY WANT TO SELECT AGEING CYCLE later
     "CCend Electrolyte concentration [mol.m-3]",
     "CCend Negative electrode reaction overpotential [V]",
     "CCend Negative particle surface concentration [mol.m-3]",
+    "CCend Negative electrode surface potential difference [V]",
+    "CCend SEI film overpotential [V]",
     #"CCend Negative electrode roughness ratio",
     #"CCend Total SEI on cracks thickness [m]",
 
@@ -261,6 +263,8 @@ keys_loc_AGE = [ # MAY WANT TO SELECT AGEING CYCLE later
     "CDend Negative particle surface concentration [mol.m-3]",
     #"CDend Negative electrode roughness ratio",
     #"CDend Total SEI on cracks thickness [m]",
+    "CDend Negative electrode surface potential difference [V]",
+    "CDend SEI film overpotential [V]",
     "CDend Electrolyte diffusivity [m2.s-1]",
     "CDend Electrolyte conductivity [S.m-1]",
 ]
@@ -295,9 +299,9 @@ head_pos = [
     "Total ageing cycles","Ageing cycles between RPT",
     "Update cycles for ageing",
     "exp_AGE_text", "exp_RPT_text",
-   "Cap Loss","LLI to LiP",
-   "LLI to SEI","LLI to sei-on-cracks",
-   "LAM to Neg","LAM to Pos",
+   "SOH","LLI to LiP %",
+   "LLI to SEI %","LLI to sei-on-cracks %",
+   "LAM to Neg %","LAM to Pos %",
    "Vol_Elely_Tot Final", "Vol_Elely_JR Final","Width Final","Error"]
 Values_1 .append([*head_pre,*head_keys,*head_pos])
 book_name_xlsx = f'Summary_{purpose}.xlsx';
@@ -322,14 +326,13 @@ if not os.path.exists(BasicPath +Target+"Excel"):
 fs = 13; dpi = 100;
 midc_merge_all = [];Sol_RPT_all = [];Sol_AGE_all = [];
 Plot_Exp=True;     Timeout=False;  
-Return_Sol=False;   Check_Small_Time=True;
-midc_merge,Sol_RPT,Sol_AGE=Run_P2_Excel(
+Return_Sol=False;   Check_Small_Time=True;  R_from_GITT = True
+""" midc_merge,Sol_RPT,Sol_AGE=Run_P2_Excel(
     Para_dict_list[0],BasicPath, Path_NiallDMA, 
     purpose,    Exp_pack, keys_all,dpi,fs,
     Runshort,   Plot_Exp,Timeout,Return_Sol,
-    Check_Small_Time
-)
-""" if __name__ == "__main__":
+    Check_Small_Time,R_from_GITT)  """
+if __name__ == "__main__":
     pool = multiprocessing.Pool(int(pool_no))
     processes = [
     pool.apply_async(
@@ -338,10 +341,10 @@ midc_merge,Sol_RPT,Sol_AGE=Run_P2_Excel(
             Para_dict_i,BasicPath, Path_NiallDMA, 
             purpose,    Exp_pack, keys_all,dpi,fs,
             Runshort,   Plot_Exp,Timeout,Return_Sol,
-            Check_Small_Time
+            Check_Small_Time,R_from_GITT
         ) )
         for Para_dict_i in Para_dict_list]
-    Result = [p.get() for p in processes]   """
+    Result = [p.get() for p in processes]  
 
 for result in Result:
     midc_merge_all.append(result[0])
