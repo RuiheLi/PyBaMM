@@ -1998,7 +1998,7 @@ def Run_P2_Excel(
         index_exp-1)
     if Runshort == False:
         if index_exp == 2:
-            tot_cyc = 6192; cyc_age = 516; update = 516; # should be 6192 but now run shorter to be faster
+            tot_cyc = 1032; cyc_age = 516; update = 516; # should be 6192 but now run shorter to be faster
         if index_exp == 3:
             tot_cyc = 6180; cyc_age = 515; update = 5; 
         if index_exp == 5:
@@ -2558,7 +2558,12 @@ def Run_P2_Excel(
         #########      3-2: Save data as .mat or .json
         my_dict_RPT["Cyc_Update_Index"] = Cyc_Update_Index
         my_dict_RPT["SaveTimes"]    = SaveTimes
-        midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
+        new_dict = {}
+        # add "age" after age keys to avoid overwritten
+        for key in my_dict_AGE: 
+            new_key = key + " Age"
+            new_dict[new_key] = my_dict_AGE[key]
+        midc_merge = {**my_dict_RPT, **new_dict,**mdic_dry}
         import json
         try:
             with open(
