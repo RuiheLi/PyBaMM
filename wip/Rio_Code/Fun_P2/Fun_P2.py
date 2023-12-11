@@ -244,10 +244,12 @@ class TimeoutFunc(object):
             #      pb.expression_tree.exceptions.SolverError
             p.terminate()
             Call_ref = RioCallback() 
-            Result_List = [
+            # careful! the length of Result_List should be same as what you get from main function!
+            Result_List = [         
                 self.timeout_val,
                 self.timeout_val,
-                Call_ref]
+                Call_ref,
+                self.timeout_val]
         return Result_List  
 ###################################################################
 #############    New functions from P3 - 221113        ############
@@ -270,6 +272,11 @@ class RioCallback(pb.callbacks.Callback):
         self.success  = False
     def on_experiment_infeasible(self, logs):
         self.success  = False
+
+class Experiment_error_infeasible(ValueError):
+    pass
+
+
 # define to kill too long runs - Jianbo Huang kindly writes this
 class TimeoutError(Exception):
 	pass
@@ -342,7 +349,7 @@ def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
         )    #  volume increase due to SEI+total LiP 
     #################   KEY EQUATION FOR DRY-OUT MODEL                   #################
 
-    Test_V = (Vol_SEILiP_increase - Vol_Pore_decrease)/Vol_Pore_decrease*100  #  This value should always be zero, but now not, which becomes the source of error!
+    Test_V = Vol_SEILiP_increase - Vol_Pore_decrease  #  This value should always be zero, but now not, which becomes the source of error!
     Test_V2= (Vol_Pore_tot_old - Vol_Elely_JR_old) / Vol_Elely_JR_old * 100; # Porosity errors due to first time step
     
     # Start from here, there are serveral variables to be determined:
@@ -499,7 +506,7 @@ def Run_Model_Base_On_Last_Solution(
         }
     submesh_types = Model.default_submesh_types
     if submesh_strech == "nan":
-            pass
+        pass
     else:
         particle_mesh = pb.MeshGenerator(
             pb.Exponential1DSubMesh, 
@@ -515,40 +522,92 @@ def Run_Model_Base_On_Last_Solution(
         var_pts = var_pts,
         submesh_types=submesh_types
     )
-    try:
-        Sol_new = Simnew.solve(
-            calc_esoh=False,
-            save_at_cycles = Update_Cycles,
-            callbacks=Call_Age)
-    except (
-        pb.expression_tree.exceptions.ModelError,
-        pb.expression_tree.exceptions.SolverError
-        ) as e:
-        Sol_new = "Model error or solver error"
-    else:
-        # add 230221 - update 230317 try to access Throughput capacity more than once
-        i_try = 0
-        while i_try<3:
-            try:
-                getSth2 = Sol_new['Throughput capacity [A.h]'].entries[-1]
-            except:
-                i_try += 1
-                print(f"Fail to read Throughput capacity for the {i_try}th time")
+    # update 231208 - try 3 times until give up 
+    i_run_try = 0
+    while i_run_try<3:
+        try:
+            Sol_new = Simnew.solve(
+                calc_esoh=False,
+                save_at_cycles = Update_Cycles,
+                callbacks=Call_Age)
+            if Call_Age.success == False:
+                raise Experiment_error_infeasible("Self detect")
+        except (
+            pb.expression_tree.exceptions.ModelError,
+            pb.expression_tree.exceptions.SolverError
+            ) as e:
+            i_run_try += 1
+            Sol_new = "Model error or solver error"
+            str_err = f"Fail to run the ageing set due to {Sol_new} for the {i_run_try}th time"
+            print(str_err)
+            DeBug_List = [ Para_update, Update_Cycles, dict_short, str_err ]
+        except Experiment_error_infeasible as custom_error:
+            i_run_try += 1
+            Sol_new = "Experiment error or infeasible"
+            DeBug_List = [
+                Model, Model_new, Call_Age, Simnew,  Sol , Sol_new, Para_update, ModelExperiment, 
+                Update_Cycles,Temper_i ,mesh_list,submesh_strech, var_pts,
+                submesh_types,  list_short, dict_short, 
+            ]
+            str_err= f"{Sol_new}: {custom_error} for ageing set for the {i_run_try}th time"
+            print(str_err)
+            DeBug_List = [ Para_update, Update_Cycles, dict_short, str_err ]
+        else:
+            # add 230221 - update 230317 try to access Throughput capacity more than once
+            i_try = 0
+            while i_try<3:
+                try:
+                    getSth2 = Sol_new['Throughput capacity [A.h]'].entries[-1]
+                except:
+                    i_try += 1
+                    print(f"Fail to read Throughput capacity for the {i_try}th time")
+                else:
+                    break
+            i_try = 0
+            while i_try<3:
+                try:
+                    getSth = Sol['Throughput capacity [A.h]'].entries[-1]
+                except:
+                    i_try += 1
+                    print(f"Fail to read Throughput capacity for the {i_try}th time")
+                else:
+                    break
+            # update 23-11-16 change method to get throughput capacity:
+            # # (1) add old ones, as before; (2): change values of the last one
+            Sol_new['Throughput capacity [A.h]'].entries += getSth
+            if not Update_Cycles == 1: # the solution is imcomplete in this case
+                cyc_number = len(Sol_new.cycles)
+                thr_1st = np.trapz(
+                    abs(Sol_new.cycles[0]["Current [A]"].entries), 
+                    Sol_new.cycles[0]["Time [h]"].entries) # in A.h
+                thr_end = np.trapz(
+                    abs(Sol_new.cycles[-1]["Current [A]"].entries), 
+                    Sol_new.cycles[-1]["Time [h]"].entries) # in A.h
+                thr_tot = (thr_1st+thr_end) / 2 * cyc_number
             else:
-                break
-        i_try = 0
-        while i_try<3:
-            try:
-                getSth = Sol['Throughput capacity [A.h]'].entries[-1]
-            except:
-                i_try += 1
-                print(f"Fail to read Throughput capacity for the {i_try}th time")
-            else:
-                break
-        Sol_new['Throughput capacity [A.h]'].entries += getSth
+                thr_tot = abs(
+                    Sol_new['Throughput capacity [A.h]'].entries[-1] - 
+                    Sol_new['Throughput capacity [A.h]'].entries[0]  )
+            Sol_new['Throughput capacity [A.h]'].entries[-1] = getSth + thr_tot # only the last one is true
+            DeBug_List = "Empty"
+            print(f"Succeed to run the ageing set for the {i_run_try}th time")
+            break # terminate the loop of trying to solve if you can get here. 
     # print("Solved this model in {}".format(ModelTimer.time()))
-    Result_list = [Model_new, Sol_new,Call_Age]
+    Result_list = [Model_new, Sol_new,Call_Age,DeBug_List]
     return Result_list
+
+# Update 231117 new method to get throughput capacity to avoid problems of empty solution
+def Get_ThrCap(sol_PRT): 
+    thr_tot = 0
+    for cycle in sol_PRT.cycles:
+        for step in cycle.steps:
+            # print(type(step))
+            if not isinstance(step,pb.solvers.solution.EmptySolution):
+                thr_i = np.trapz(
+                    abs(step["Current [A]"].entries), 
+                    step["Time [h]"].entries)
+                thr_tot += thr_i
+    return thr_tot
 
 def Run_Model_Base_On_Last_Solution_RPT( 
     Model  , Sol,  Para_update, 
@@ -612,39 +671,65 @@ def Run_Model_Base_On_Last_Solution_RPT(
         submesh_types=submesh_types
     )
     Call_RPT = RioCallback()  # define callback
-    try:
-        Sol_new = Simnew.solve(
-            calc_esoh=False,
-            save_at_cycles = Update_Cycles,
-            callbacks=Call_RPT) 
-    except (
-        pb.expression_tree.exceptions.ModelError,
-        pb.expression_tree.exceptions.SolverError
-        ) as e:
-        Sol_new = "Model error or solver error"
-    else:
-        # add 230221 - update 230317 try to access Throughput capacity more than once
-        i_try = 0
-        while i_try<3:
-            try:
-                getSth2 = Sol_new['Throughput capacity [A.h]'].entries[-1]
-            except:
-                i_try += 1
-                print(f"Fail to read Throughput capacity for the {i_try}th time")
-            else:
-                break
-        i_try = 0
-        while i_try<3:
-            try:
-                getSth = Sol['Throughput capacity [A.h]'].entries[-1]
-            except:
-                i_try += 1
-                print(f"Fail to read Throughput capacity for the {i_try}th time")
-            else:
-                break
-        Sol_new['Throughput capacity [A.h]'].entries += getSth
+    # update 231208 - try 3 times until give up 
+    i_run_try = 0
+    while i_run_try<3:
+        try:
+            Sol_new = Simnew.solve(
+                calc_esoh=False,
+                # save_at_cycles = Update_Cycles,
+                callbacks=Call_RPT) 
+            if Call_RPT.success == False:
+                raise Experiment_error_infeasible("Self detect")        
+        except (
+            pb.expression_tree.exceptions.ModelError,
+            pb.expression_tree.exceptions.SolverError
+            ) as e:
+            i_run_try += 1
+            Sol_new = "Model error or solver error"
+            str_err = f"Fail to run RPT due to {Sol_new} for the {i_run_try}th time"
+            print(str_err)
+            DeBug_List = [ Para_update, Update_Cycles, dict_short, str_err ]
+        except Experiment_error_infeasible as custom_error:
+            i_run_try += 1
+            Sol_new = "Experiment error or infeasible"
+            DeBug_List = [
+                Model, Model_new, Call_RPT, Simnew,   Sol , Sol_new, Para_update, ModelExperiment, 
+                Update_Cycles,Temper_i ,mesh_list,submesh_strech, var_pts,
+                submesh_types,  list_short, dict_short, 
+            ]
+            str_err = f"{Sol_new}: {custom_error} for RPT for the {i_run_try}th time"
+            print(str_err)
+            DeBug_List = [ Para_update, Update_Cycles, dict_short, str_err ]
+        else:
+            # add 230221 - update 230317 try to access Throughput capacity more than once
+            i_try = 0
+            while i_try<3:
+                try:
+                    getSth2 = Sol_new['Throughput capacity [A.h]'].entries[-1]
+                except:
+                    i_try += 1
+                    print(f"Fail to read Throughput capacity for the {i_try}th time")
+                else:
+                    break
+            i_try = 0
+            while i_try<3:
+                try:
+                    getSth = Sol['Throughput capacity [A.h]'].entries[-1]
+                except:
+                    i_try += 1
+                    print(f"Fail to read Throughput capacity for the {i_try}th time")
+                else:
+                    break
+            Sol_new['Throughput capacity [A.h]'].entries += getSth
+            # update 23-11-17 change method to get throughput capacity to avioid problems of empty solution:
+            thr_tot = Get_ThrCap(Sol_new)
+            Sol_new['Throughput capacity [A.h]'].entries[-1] = getSth + thr_tot # only the last one is true
+            DeBug_List = "Empty"
+            print(f"Succeed to run RPT for the {i_run_try}th time")
+            break # terminate the loop of trying to solve if you can get here. 
     # print("Solved this model in {}".format(ModelTimer.time()))
-    Result_List_RPT = [Model_new, Sol_new,Call_RPT]
+    Result_List_RPT = [Model_new, Sol_new,Call_RPT,DeBug_List]
     return Result_List_RPT
 
 def write_excel_xlsx(path, sheet_name, value):
@@ -797,7 +882,7 @@ def Para_init(Para_dict):
         else:
             Para_0.update({key: value},check_already_exists=False)
     # Mark Ruihe - Update 231004
-    cap_loss = 5 - 4.86491
+    cap_loss =   1.5       #   5 - 4.86491   # change for debug
     Para_0 = Overwrite_Initial_L_SEI_0_Neg_Porosity(Para_0,cap_loss)
 
     return CyclePack,Para_0
@@ -1396,7 +1481,12 @@ def Plot_Cyc_RPT_4(
     # Plot Charge Throughput (A.h) vs SOH
     color_exp     = [0, 0, 0, 0.3]; marker_exp     = "v";
     color_exp_Avg = [0, 0, 0, 0.7]; marker_exp_Avg = "s";
-    Exp_temp_i_cell = Temp_Cell_Exp[str(int(Temper_i- 273.15))]
+    if index_exp in list(np.arange(1,6)):
+        Exp_temp_i_cell = Temp_Cell_Exp[str(int(Temper_i- 273.15))]
+    else:
+        Exp_temp_i_cell = "nan"
+        Plot_Exp = False
+
     if Plot_Exp == True:
         for cell in Exp_temp_i_cell:
             df = Exp_Any_AllData[cell]["Extract Data"]
@@ -1950,11 +2040,212 @@ def load_combinations_from_csv(Para_file):
     combinations = dataframe.values.tolist()
     return parameter_names, combinations
 
+def Initialize_exp_text( index_exp, V_max, V_min, Add_Rest):
+    if index_exp ==2:
+        discharge_time_mins = 0.15* 60 * 4.86491/5
+        charge_time_mins = 0.5* 60 * 4.86491/5
+        exp_AGE_text = [(
+            f"Discharge at 1C for {discharge_time_mins} minutes or until {V_min}V", 
+            f"Charge at 0.3C for {charge_time_mins} minutes or until {V_max}V",
+            ),  ]  # *  setting on cycler is 516, rather than 514 in wiki
+        step_AGE_CD =0;   step_AGE_CC =1;   step_AGE_CV =2;
+    elif index_exp ==3:
+        discharge_time_mins = 0.15* 60 * 4.86491/5
+        charge_time_mins = 0.5* 60 * 4.86491/5
+        exp_AGE_text = [(
+            f"Discharge at 1C for {discharge_time_mins} minutes or until {V_min}V", 
+            f"Charge at 0.3C until {V_max}V",
+            f"Hold at {V_max} V until C/100",
+            ),  ]   # *  setting on cycler is 515, rather than 514 in wiki
+        step_AGE_CD =0;   step_AGE_CC =1;   step_AGE_CV =2;
+    elif index_exp ==5:
+        if Add_Rest:
+            exp_AGE_text = [(
+                f"Discharge at 1C until {V_min}V", 
+                "Rest for 1 second", 
+                f"Charge at 0.3C until {V_max}V",
+                f"Hold at {V_max} V until C/100",
+                ),  ]  # *  78
+            step_AGE_CD =0;   step_AGE_CC =2;   step_AGE_CV =3;
+        else:
+            exp_AGE_text = [(
+                f"Discharge at 1C until {V_min}V", 
+                f"Charge at 0.3C until {V_max}V",
+                f"Hold at {V_max} V until C/100",
+                ),  ]  # *  78
+            step_AGE_CD =0;   step_AGE_CC =1;   step_AGE_CV =2;
+    elif index_exp ==6:
+        if Add_Rest:
+            exp_AGE_text = [(
+                f"Discharge at 1C until {V_min}V", 
+                "Rest for 1 second", 
+                f"Charge at 1.2C until {V_max}V",
+                f"Hold at {V_max} V until C/100",
+                ),  ] 
+            step_AGE_CD =0;   step_AGE_CC =2;   step_AGE_CV =3;
+        else:
+            exp_AGE_text = [(
+                f"Discharge at 1C until {V_min}V", 
+                f"Charge at 1.2C until {V_max}V",
+                f"Hold at {V_max} V until C/100",
+                ),  ] 
+            step_AGE_CD =0;   step_AGE_CC =1;   step_AGE_CV =2;
+
+    elif index_exp ==7:
+        if Add_Rest:
+            exp_AGE_text = [(
+                f"Discharge at 0.5C until {V_min}V", 
+                "Rest for 1 second", 
+                f"Charge at 0.3C until {V_max}V",
+                f"Hold at {V_max} V until C/100",
+                ),  ] 
+            step_AGE_CD =0;   step_AGE_CC =2;   step_AGE_CV =3
+        else:
+            exp_AGE_text = [(
+                f"Discharge at 0.5C until {V_min}V",  
+                f"Charge at 0.3C until {V_max}V",
+                f"Hold at {V_max} V until C/100",
+                ),  ] 
+            step_AGE_CD =0;   step_AGE_CC =1;   step_AGE_CV =2
+    elif index_exp ==8:
+        if Add_Rest:
+            exp_AGE_text = [(
+                f"Discharge at 2C until {V_min}V", 
+                "Rest for 1 second", 
+                f"Charge at 0.3C until {V_max}V",
+                f"Hold at {V_max} V until C/100",
+                ),  ]
+            step_AGE_CD =0;   step_AGE_CC =2;   step_AGE_CV =3
+        else:
+            exp_AGE_text = [(
+                f"Discharge at 2C until {V_min}V", 
+                f"Charge at 0.3C until {V_max}V",
+                f"Hold at {V_max} V until C/100",
+                ),  ]
+            step_AGE_CD =0;   step_AGE_CC =1;   step_AGE_CV =2
+    elif index_exp ==9:
+        if Add_Rest:
+            exp_AGE_text = [(
+                f"Discharge at 1C until {V_min}V", 
+                "Rest for 1 second", 
+                f"Charge at 0.3C until {V_max}V",
+                f"Hold at {V_max} V until C/100",
+                ),  ] 
+            step_AGE_CD =0;   step_AGE_CC =2;   step_AGE_CV =3
+        else:
+            exp_AGE_text = [(
+                f"Discharge at 1C until {V_min}V", 
+                f"Charge at 0.3C until {V_max}V",
+                f"Hold at {V_max} V until C/100",
+                ),  ] 
+            step_AGE_CD =0;   step_AGE_CC =1;   step_AGE_CV =2
+    else:
+        print("Not yet implemented!")
+
+    # now for RPT: 
+    exp_RPT_text = [ (
+        "Rest for 10 s",   # add here to correct values of step_0p1C_CD
+        "Rest for 1 hours (20 minute period)", 
+        # 0.1C cycle 
+        f"Discharge at 0.1C until {V_min} V",  
+        "Rest for 3 hours (20 minute period)",  
+        f"Charge at 0.1C until {V_max} V",
+        f"Hold at {V_max}V until C/100",
+        "Rest for 1 hours (20 minute period)",
+        # 0.5C cycle 
+        f"Discharge at 0.5C until {V_min} V (6 minute period)",  
+        "Rest for 3 hours (20 minute period)",
+        f"Charge at 0.5C until {V_max} V (6 minute period)",
+        f"Hold at {V_max}V until C/100",
+        # Update 23-11-17: add one more 0.5C cycle to increase throughput capacity
+        f"Discharge at 0.5C until {V_min} V (6 minute period)",  
+        "Rest for 3 hours (20 minute period)",
+        f"Charge at 0.5C until {V_max} V (6 minute period)",
+        f"Hold at {V_max}V until C/100",   
+        "Rest for 3 hours (20 minute period)",  
+        ) ] 
+    exp_breakin_text = [ (
+        # refill
+        f"Hold at {V_max}V until C/100",
+        "Rest for 1 hours (20 minute period)", 
+        # 0.1C cycle 
+        f"Discharge at 0.1C until {V_min} V",  
+        "Rest for 3 hours (20 minute period)",  
+        f"Charge at 0.1C until {V_max} V",
+        f"Hold at {V_max}V until C/100",
+        "Rest for 1 hours (20 minute period)",
+        # 0.5C cycle 
+        f"Discharge at 0.5C until {V_min} V (6 minute period)",  
+        "Rest for 3 hours (20 minute period)",
+        f"Charge at 0.5C until {V_max} V (6 minute period)",
+        f"Hold at {V_max}V until C/100",
+        # Update 23-11-17: add one more 0.5C cycle to increase throughput capacity
+        f"Discharge at 0.5C until {V_min} V (6 minute period)",  
+        "Rest for 3 hours (20 minute period)",
+        f"Charge at 0.5C until {V_max} V (6 minute period)",
+        f"Hold at {V_max}V until C/100",   
+        "Rest for 3 hours (20 minute period)",  
+        ) ] 
+    exp_RPT_GITT_text = [ (
+        "Rest for 5 minutes (1 minute period)",  
+        "Rest for 1.2 seconds (0.1 second period)",  
+        f"Discharge at C/2 for 4.8 minutes or until {V_min}V (0.1 second period)",
+        "Rest for 1 hour", # (5 minute period)  
+        ) ]
+    exp_refill = [ (
+        f"Charge at 0.3C until {V_max}V",
+        f"Hold at {V_max}V until C/100",
+        "Rest for 1 hours (20 minute period)", 
+        ) ] 
+    if index_exp ==2:
+        exp_adjust_before_age = [ (
+            # adjust to target SOC, SOC before this step must be 100%
+            f"Discharge at 1C for {discharge_time_mins} minutes or until {V_min}V", # discharge for 15%SOC
+            "Rest for 3 hours (20 minute period)", 
+            ) ] 
+    else:
+        exp_adjust_before_age = [ (
+            # just a place holder for now TODO 
+            "Rest for 1 hours (20 minute period)", 
+            ) ] 
+    # step index for RPT
+    step_0p1C_CD = 2; step_0p1C_CC = 4;   step_0p1C_RE =3;    
+    step_0p5C_CD = 7;  
+    Pack_return = [
+        exp_AGE_text, step_AGE_CD, step_AGE_CC, step_AGE_CV,
+        exp_breakin_text, exp_RPT_text, exp_RPT_GITT_text, 
+        exp_refill,exp_adjust_before_age,
+        step_0p1C_CD, step_0p1C_CC, step_0p1C_RE, step_0p5C_CD
+        ] 
+    return Pack_return
+
+# update 231205: write a function to get tot_cyc,cyc_age,update
+def Get_tot_cyc(Runshort,index_exp):
+    if Runshort == False:
+        if index_exp == 2:
+            tot_cyc = 6192; cyc_age = 516; update = 516; # should be 6192 but now run shorter to be faster
+        if index_exp == 3:
+            tot_cyc = 6180; cyc_age = 515; update = 5; 
+        if index_exp == 5:
+            tot_cyc = 1170; cyc_age = 78; update = 78;
+        if index_exp == 6:
+            tot_cyc = 1170*10; cyc_age = 78; update = 78;
+        if index_exp == 7:
+            tot_cyc = 1170*10; cyc_age = 78; update = 78;
+        if index_exp == 8:
+            tot_cyc = 1170*10; cyc_age = 78; update = 78;
+        if index_exp == 9:
+            tot_cyc = 1170*10; cyc_age = 78; update = 78;
+    else:
+        if index_exp in list(np.arange(1,10)):
+            tot_cyc = 2; cyc_age = 1; update =1           # 2 1 1 
+    return tot_cyc,cyc_age,update
+
 def Run_P2_Excel(
     Para_dict_i,BasicPath, Path_NiallDMA, 
     purpose,    Exp_pack, keys_all,dpi,fs,
-    Runshort,   Plot_Exp,Timeout,Return_Sol,
-    Check_Small_Time, R_from_GITT): # true or false to plot,timeout,return,check small time
+    Runshort,   Plot_Exp,Timeout,Timelimit,   # add time limit
+    Return_Sol, Check_Small_Time, R_from_GITT,Add_Rest): # true or false to plot,timeout,return,check small time
 
     ##########################################################
     ##############    Part-0: Log of the scripts    ##########
@@ -1991,88 +2282,33 @@ def Run_P2_Excel(
         Exp_Path,Exp_head,Exp_Temp_Cell,
         book_name_xlsx,
         ]  = Exp_pack
-    Temp_Cell_Exp = Temp_Cell_Exp_All[index_exp-1] 
-    Exp_Any_AllData = Read_Exp(
-        Path_NiallDMA,Exp_All_Cell[index_exp-1],
-        Exp_Path,Exp_head,Exp_Temp_Cell[index_exp-1],
-        index_exp-1)
-    if Runshort == False:
-        if index_exp == 2:
-            tot_cyc = 1032; cyc_age = 516; update = 516; # should be 6192 but now run shorter to be faster
-        if index_exp == 3:
-            tot_cyc = 6180; cyc_age = 515; update = 5; 
-        if index_exp == 5:
-            tot_cyc = 1170; cyc_age = 78; update = 26;
+    # index_exp should be 1~5 to really have experimental data
+    if index_exp in list(np.arange(1,6)):
+        Temp_Cell_Exp = Temp_Cell_Exp_All[index_exp-1] 
+        Exp_Any_AllData = Read_Exp(
+            Path_NiallDMA,Exp_All_Cell[index_exp-1],
+            Exp_Path,Exp_head,Exp_Temp_Cell[index_exp-1],
+            index_exp-1)
     else:
-        if index_exp == 2:
-            tot_cyc = 2; cyc_age = 1; update =1  # 2 1 1 
-        if index_exp == 3:
-            tot_cyc = 3; cyc_age = 1; update = 1
-        if index_exp == 5:
-            tot_cyc = 3; cyc_age = 1; update = 1
+        Temp_Cell_Exp = "nan"
+        Exp_Any_AllData = "nan"
+    # update 231205: write a function to get tot_cyc,cyc_age,update
+    tot_cyc,cyc_age,update = Get_tot_cyc(Runshort,index_exp)
     Para_dict_i["Total ageing cycles"]       = int(tot_cyc)
     Para_dict_i["Ageing cycles between RPT"] = int(cyc_age)
     Para_dict_i["Update cycles for ageing"]  = int(update) # keys
     
     # set up experiment
     Target  = f'/{purpose}/'
+    # update 231205: get a new function to initialize exp_AGE_text and exp_RPT_text
     V_max = 4.2;        V_min = 2.5; 
-    if index_exp ==2:
-        discharge_time_mins = 0.15* 60 * 4.86491/5
-        charge_time_mins = 0.5* 60 * 4.86491/5
-        exp_AGE_text = [(
-            f"Discharge at 1C for {discharge_time_mins} minutes or until {V_min}V", 
-            f"Charge at 0.3C for {charge_time_mins} minutes or until {V_max}V",
-            ),  ]  # *  setting on cycler is 516, rather than 514 in wiki
-    elif index_exp ==3:
-        discharge_time_mins = 0.15* 60 * 4.86491/5
-        charge_time_mins = 0.5* 60 * 4.86491/5
-        exp_AGE_text = [(
-            f"Discharge at 1C for {discharge_time_mins} minutes or until {V_min}V", 
-            f"Charge at 0.3C until {V_max}V",
-            f"Hold at {V_max} V until C/100",
-            ),  ]   # *  setting on cycler is 515, rather than 514 in wiki
-    elif index_exp ==5:
-        exp_AGE_text = [(
-            f"Discharge at 1C until {V_min}V", 
-            f"Charge at 0.3C until {V_max}V",
-            f"Hold at {V_max} V until C/100",
-            ),  ]  # *  78
-    else:
-        print("Not yet implemented!")
-    step_AGE_CD =0;   step_AGE_CC =1;   step_AGE_CV =2;
-    exp_RPT_text = [ (
-        # refill
-        f"Hold at {V_max}V until C/100",
-        "Rest for 1 hours (20 minute period)", 
-        # 0.1C cycle 
-        f"Discharge at 0.1C until {V_min} V",  
-        "Rest for 3 hours (20 minute period)",  
-        f"Charge at 0.1C until {V_max} V",
-        f"Hold at {V_max}V until C/100",
-        "Rest for 1 hours (20 minute period)",
-        # 0.5C cycle 
-        f"Discharge at 0.5C until {V_min} V (6 minute period)",  
-        "Rest for 3 hours (20 minute period)",
-        f"Charge at 0.5C until {V_max} V (6 minute period)",
-        f"Hold at {V_max}V until C/100",
-        "Rest for 3 hours (20 minute period)",  
-        ) ] 
-    exp_RPT_GITT_text = [ (
-        "Rest for 5 minutes (1 minute period)",  
-        "Rest for 1.2 seconds (0.1 second period)",  
-        f"Discharge at C/2 for 4.8 minutes or until {V_min}V (0.1 second period)",
-        "Rest for 1 hour", # (5 minute period)  
-        ) ]
-    exp_refill = [ (
-        # refill
-        f"Charge at 0.3C until {V_max}V",
-        f"Hold at {V_max}V until C/100",
-        "Rest for 1 hours (20 minute period)", 
-        ) ] 
-    # step index for RPT
-    step_0p1C_CD = 2; step_0p1C_CC = 4;   step_0p1C_RE =3;    
-    step_0p5C_CD = 7;  
+    [
+        exp_AGE_text, step_AGE_CD, step_AGE_CC, step_AGE_CV,
+        exp_breakin_text, exp_RPT_text, exp_RPT_GITT_text, 
+        exp_refill,exp_adjust_before_age,
+        step_0p1C_CD, step_0p1C_CC, step_0p1C_RE, step_0p5C_CD
+        ] = Initialize_exp_text(
+        index_exp, V_max, V_min, Add_Rest)
     cycle_no = -1; 
 
 
@@ -2095,12 +2331,25 @@ def Run_P2_Excel(
     Experiment_Long   = pb.Experiment( exp_AGE_text * Update_Cycles  )  
     # update 24-04-2023: delete GITT
     # Update 01-11-2023 add GITT back but with an option 
+    # update 231210: refine experiment to avoid charge or hold at 4.2V
     if R_from_GITT: 
-        Experiment_RPT    = pb.Experiment( exp_RPT_text*1 + exp_RPT_GITT_text*24 + exp_refill*1) 
+        Experiment_Breakin= pb.Experiment( 
+            exp_breakin_text * 1
+            + exp_RPT_GITT_text*24  + exp_refill * 1    # only do refil if have GITT
+            + exp_adjust_before_age*1) 
+        Experiment_RPT    = pb.Experiment( 
+            exp_RPT_text * 1
+            + exp_RPT_GITT_text*24  + exp_refill * 1    # only do refil if have GITT
+            + exp_adjust_before_age*1) 
         Cyc_Index_Res = np.arange(1,25,1) 
     else:   # then get resistance from C/2
-        Experiment_RPT    = pb.Experiment( exp_RPT_text*1 ) 
-    Experiment_Breakin= Experiment_RPT
+        Experiment_Breakin= pb.Experiment( 
+            exp_breakin_text * 1
+            + exp_adjust_before_age*1) 
+        Experiment_RPT    = pb.Experiment( 
+            exp_RPT_text * 1
+            + exp_adjust_before_age*1) 
+    
 
     #####  index definition ######################
     Small_Loop =  int(Cycle_bt_RPT/Update_Cycles);   
@@ -2147,7 +2396,7 @@ def Run_P2_Excel(
     Timeout_text = 'I timed out'
     ##########    2-1: Define model and run break-in cycle
     try:  
-        Timelimit = int(3600*3)
+        # Timelimit = int(3600*2)
         # the following turns on for HPC only!
         if Timeout == True:
             timeout_RPT = TimeoutFunc(
@@ -2176,10 +2425,12 @@ def Run_P2_Excel(
     except ZeroDivisionError as e:
         str_error_Breakin = str(e)
         if Check_Small_Time == True:
-            print(f"Scan {Scan_i}: Fail break-in cycle within {SmallTimer.time()}, need to exit the whole scan now due to {str_error_Breakin} but do not know how!")
+            str_error_Breakin = f"Scan {Scan_i}: Fail break-in cycle within {SmallTimer.time()}, need to exit the whole scan now due to {str_error_Breakin} but do not know how!"
+            print(str_error_Breakin)
             SmallTimer.reset()
         else:
-            print(f"Scan {Scan_i}: Fail break-in cycle, need to exit the whole scan now due to {str_error_Breakin} but do not know how!")
+            str_error_Breakin = f"Scan {Scan_i}: Fail break-in cycle, need to exit the whole scan now due to {str_error_Breakin} but do not know how!"
+            print(str_error_Breakin)
         Flag_Breakin = False 
     else:
         if Check_Small_Time == True:    
@@ -2213,7 +2464,8 @@ def Run_P2_Excel(
         else:
             print(f"Scan {Scan_i}: Finish post-process for break-in cycle")
         
-    Flag_AGE = True; str_error_AGE_final = "Empty";   str_error_RPT = "Empty";
+    Flag_AGE = True; str_error_AGE_final = "Empty";   str_error_RPT = "Empty"; 
+    DeBug_List_RPT = "Break in fail"; DeBug_List_AGE = "Break in fail"
     #############################################################
     #######   2-2: Write a big loop to finish the long experiment    
     if Flag_Breakin == True: 
@@ -2230,7 +2482,7 @@ def Run_P2_Excel(
                     Paraupdate = Para_0
                 # Run aging cycle:
                 try:
-                    Timelimit = int(60*60*2)
+                    #Timelimit = int(60*60*2)
                     if Timeout == True:
                         timeout_AGE = TimeoutFunc(
                             Run_Model_Base_On_Last_Solution, 
@@ -2243,7 +2495,7 @@ def Run_P2_Excel(
                         Result_list_AGE = Run_Model_Base_On_Last_Solution( 
                             Model_Dry_old  , Sol_Dry_old , Paraupdate ,Experiment_Long, 
                             Update_Cycles,Temper_i,mesh_list,submesh_strech )
-                    [Model_Dry_i, Sol_Dry_i , Call_Age ] = Result_list_AGE
+                    [Model_Dry_i, Sol_Dry_i , Call_Age,DeBug_List_AGE ] = Result_list_AGE
                     if Return_Sol == True:
                         Sol_AGE.append(Sol_Dry_i)
                     #print(f"Temperature for ageing is now: {Temper_i}")  
@@ -2261,12 +2513,13 @@ def Run_P2_Excel(
                         1/0
                 except ZeroDivisionError as e: # ageing cycle fails
                     if Check_Small_Time == True:    
-                        print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} ageing cycles within {SmallTimer.time()} due to {str_error_AGE}")
+                        str_error_AGE_final = f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} ageing cycles within {SmallTimer.time()} due to {str_error_AGE}"
+                        print(str_error_AGE_final)
                         SmallTimer.reset()
                     else:
-                        print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} ageing cycles due to {str_error_AGE}")
+                        str_error_AGE_final = f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} ageing cycles due to {str_error_AGE}"
+                        print(str_error_AGE_final)
                     Flag_AGE = False
-                    str_error_AGE_final = str_error_AGE
                     break
                 else:                           # ageing cycle SUCCEED
                     Para_0_Dry_old = Paraupdate; Model_Dry_old = Model_Dry_i; Sol_Dry_old = Sol_Dry_i;   
@@ -2307,7 +2560,7 @@ def Run_P2_Excel(
             if DryOut == "Off":
                 Paraupdate = Para_0     
             try:
-                Timelimit = int(60*60*2)
+                # Timelimit = int(60*60*2)
                 if Timeout == True:
                     timeout_RPT = TimeoutFunc(
                         Run_Model_Base_On_Last_Solution_RPT, 
@@ -2324,7 +2577,7 @@ def Run_P2_Excel(
                         Paraupdate,      Experiment_RPT, RPT_Cycles, 
                         Temper_RPT ,mesh_list ,submesh_strech
                     )
-                [Model_Dry_i, Sol_Dry_i,Call_RPT]  = Result_list_RPT
+                [Model_Dry_i, Sol_Dry_i,Call_RPT,DeBug_List_RPT]  = Result_list_RPT
                 if Return_Sol == True:
                     Sol_RPT.append(Sol_Dry_i)
                 #print(f"Temperature for RPT is now: {Temper_RPT}")  
@@ -2342,10 +2595,12 @@ def Run_P2_Excel(
                     1/0
             except ZeroDivisionError as e:
                 if Check_Small_Time == True:    
-                    print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles within {SmallTimer.time()}, due to {str_error_RPT}")
+                    str_error_RPT = f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles within {SmallTimer.time()}, due to {str_error_RPT}"
+                    print(str_error_RPT)
                     SmallTimer.reset()
                 else:
-                    print(f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles, due to {str_error_RPT}")
+                    str_error_RPT = f"Scan {Scan_i}: Fail during No.{Cyc_Update_Index[-1]} RPT cycles, due to {str_error_RPT}"
+                    print(str_error_RPT)
                 break
             else:
                 # post-process for RPT
@@ -2355,8 +2610,9 @@ def Run_P2_Excel(
                     SmallTimer.reset()
                 else:
                     print(f"Scan {Scan_i}: Finish for No.{Cyc_Update_Index[-1]} RPT cycles")
+                # update 231210: delete the first hold at 4.2V for later RPT
                 my_dict_RPT = GetSol_dict (my_dict_RPT,keys_all_RPT, Sol_Dry_i, 
-                    0,step_0p1C_CD, step_0p1C_CC,step_0p1C_RE , step_AGE_CV   )
+                    0,step_0p1C_CD, step_0p1C_CC,step_0p1C_RE , step_AGE_CV   ) 
                 my_dict_RPT["Cycle_RPT"].append(cycle_count)
                 my_dict_RPT["avg_Age_T"].append(np.mean(avg_Age_T))  # Make sure avg_Age_T and 
                 
@@ -2383,6 +2639,7 @@ def Run_P2_Excel(
                 if Flag_AGE == False:
                     break
             k += 1 
+    DeBug_Lists = [DeBug_List_RPT,DeBug_List_AGE]
     ############################################################# 
     #########   An extremely bad case: cannot even finish breakin
     if Flag_Breakin == False: 
@@ -2408,6 +2665,7 @@ def Run_P2_Excel(
         print(str_error_Breakin)
         print("Fail in {}".format(ModelTimer.time())) 
         # Round_No = f"Case_{Scan_i}_Exp_{index_exp}_{Temp_K}oC"
+        values = [values,]   # need to add this so that even when it fails during break in cycle it still doesn't sparse
         book_name_xlsx_seperate =   str(Scan_i)+ '_' + book_name_xlsx;
         sheet_name_xlsx =  str(Scan_i);
         write_excel_xlsx(
@@ -2423,8 +2681,13 @@ def Run_P2_Excel(
         my_dict_RPT["punish"] = "nan"
         
         midc_merge = {**my_dict_RPT, **my_dict_AGE,**mdic_dry}
+        import pickle
+        with open(
+            BasicPath + Target+"Mats/" 
+            + str(Scan_i)+ '-DeBug_Lists.pkl', 'wb') as file:
+            pickle.dump(DeBug_Lists, file)
 
-        return midc_merge,Sol_RPT,Sol_AGE
+        return midc_merge,Sol_RPT,Sol_AGE,DeBug_Lists
     ##########################################################
     ##############   Part-3: Post-prosessing    ##############
     ##########################################################
@@ -2476,16 +2739,24 @@ def Run_P2_Excel(
         else:
             pass
         # Newly add: update 23-05-18: evaluate errors systematically:
-        Exp_temp_i_cell = Temp_Cell_Exp[str(int(Temper_i- 273.15))]
-        XY_pack = Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell) # interpolate for exp only
-        mpe_all = Compare_Exp_Model( my_dict_RPT, XY_pack, Scan_i,
-            index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck=True)
+        if index_exp in list(np.arange(1,6)):
+            Exp_temp_i_cell = Temp_Cell_Exp[str(int(Temper_i- 273.15))]
+            XY_pack = Get_Cell_Mean_1T_1Exp(Exp_Any_AllData,Exp_temp_i_cell) # interpolate for exp only
+            mpe_all = Compare_Exp_Model( my_dict_RPT, XY_pack, Scan_i,
+                index_exp, Temper_i,BasicPath, Target,fs,dpi, PlotCheck=True)
+        else:
+            Exp_temp_i_cell = "nan"
+            XY_pack         = "nan"
+            mpe_all         = ["nan"]*8
         [mpe_tot,mpe_1,mpe_2,mpe_3,mpe_4,mpe_5,mpe_6,punish] = mpe_all
         # set pass or fail TODO figure out how much should be appropriate:
-        if mpe_tot < 3:
-            Pass_Fail = "Pass"
+        if isinstance(mpe_tot,float):
+            if mpe_tot < 3:
+                Pass_Fail = "Pass"
+            else:
+                Pass_Fail = "Fail"
         else:
-            Pass_Fail = "Fail"
+            Pass_Fail = f"Not Exp"
         my_dict_RPT["Error tot %"] = mpe_tot
         my_dict_RPT["Error SOH %"] = mpe_1
         my_dict_RPT["Error LLI %"] = mpe_2
@@ -2591,9 +2862,17 @@ def Run_P2_Excel(
             SmallTimer.reset()
         else:
             pass
+
+        import pickle
+        with open(
+            BasicPath + Target+"Mats/" 
+            + str(Scan_i)+ '-DeBug_Lists.pkl', 'wb') as file:
+            pickle.dump(DeBug_Lists, file)
+
+
         print("Succeed doing something in {}".format(ModelTimer.time()))
         print('This is the end of No.', Scan_i, ' scan')
-        return midc_merge,Sol_RPT,Sol_AGE
+        return midc_merge,Sol_RPT,Sol_AGE,DeBug_Lists
 
 
 
