@@ -119,6 +119,11 @@ class BasePlating(BaseInterface):
             "Loss of capacity to lithium plating [A.h]": (Q_plated_Li + Q_dead_Li)
             * param.F
             / 3600,
+            # Mark Ruihe add:
+            "Loss of lithium to dead lithium plating [mol]":  Q_dead_Li ,
+            "Loss of capacity to dead lithium plating [A.h]": (Q_dead_Li
+            * param.F
+            / 3600),
         }
 
         return variables

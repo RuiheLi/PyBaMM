@@ -93,6 +93,119 @@ def SEI_limited_dead_lithium_OKane2022(L_sei):
     return gamma
 
 
+def nmc_LGM50_diffusivity_ORegan2022(sto, T):
+    """
+    NMC diffusivity as a function of stoichiometry, in this case the
+    diffusivity is taken to be a constant. The value is taken from [1].
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+       Electrode stochiometry
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Solid diffusivity
+    """
+
+    a1 = -0.9231
+    a2 = -0.4066
+    a3 = -0.993
+    b1 = 0.3216
+    b2 = 0.4532
+    b3 = 0.8098
+    c0 = -13.96
+    c1 = 0.002534
+    c2 = 0.003926
+    c3 = 0.09924
+    d = 1449
+
+    D_ref = (
+        10
+        ** (
+            c0
+            + a1 * pybamm.exp(-((sto - b1) ** 2) / c1)
+            + a2 * pybamm.exp(-((sto - b2) ** 2) / c2)
+            + a3 * pybamm.exp(-((sto - b3) ** 2) / c3)
+        )
+        * 2.7  # correcting factor (see O'Regan et al 2021)
+    )
+
+    E_D_s = d * pybamm.constants.R
+    # E_D_s = pybamm.Parameter("Positive electrode diffusivity activation energy [J.mol-1]")
+    arrhenius = pybamm.exp(E_D_s / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    return D_ref * arrhenius
+
+def graphite_LGM50_diffusivity_ORegan2022(sto, T):
+    """
+    LG M50 Graphite diffusivity as a function of stochiometry, in this case the
+    diffusivity is taken to be a constant. The value is taken from [1].
+
+    References
+    ----------
+    .. [1] Kieran O’Regan, Ferran Brosa Planella, W. Dhammika Widanage, and Emma
+    Kendrick. "Thermal-electrochemical parameters of a high energy lithium-ion
+    cylindrical battery." Electrochimica Acta 425 (2022): 140700
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+       Electrode stochiometry
+    T: :class:`pybamm.Symbol`
+       Dimensional temperature
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+       Solid diffusivity
+    """
+
+    a0 = 11.17
+    a1 = -1.553
+    a2 = -6.136
+    a3 = -9.725
+    a4 = 1.85
+    b1 = 0.2031
+    b2 = 0.5375
+    b3 = 0.9144
+    b4 = 0.5953
+    c0 = -15.11
+    c1 = 0.0006091
+    c2 = 0.06438
+    c3 = 0.0578
+    c4 = 0.001356
+    d = 2092
+
+    D_ref = (
+        10
+        ** (
+            a0 * sto
+            + c0
+            + a1 * pybamm.exp(-((sto - b1) ** 2) / c1)
+            + a2 * pybamm.exp(-((sto - b2) ** 2) / c2)
+            + a3 * pybamm.exp(-((sto - b3) ** 2) / c3)
+            + a4 * pybamm.exp(-((sto - b4) ** 2) / c4)
+        )
+        * 3.0321  # correcting factor (see O'Regan et al 2021)
+    )
+
+    E_D_s = d * pybamm.constants.R
+    #E_D_s =  3.03e4
+    #print(E_D_s)
+    arrhenius = pybamm.exp(E_D_s / pybamm.constants.R * (1 / 298.15 - 1 / T))
+
+    return D_ref * arrhenius
+
 def graphite_LGM50_diffusivity_Chen2020(sto, T):
     """
     LG M50 Graphite diffusivity as a function of stochiometry, in this case the
@@ -164,6 +277,8 @@ def graphite_LGM50_electrolyte_exchange_current_density_Chen2020(
     return (
         m_ref * arrhenius * c_e**0.5 * c_s_surf**0.5 * (c_s_max - c_s_surf) ** 0.5
     )
+
+
 
 
 def graphite_volume_change_Ai2020(sto, c_s_max):
@@ -484,6 +599,113 @@ def electrolyte_conductivity_Nyman2008_arrhenius(c_e, T):
 
     return sigma_e * arrhenius
 
+def graphite_LGM50_delithiation_ocp_OKane2023(sto):
+    """
+    LG M50 Graphite delithiation open-circuit potential as a function of stochiometry.
+    Fitted to unpublished measurements taken by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open circuit potential
+    """
+
+    u_eq = (
+        1.051 * pybamm.exp(-26.76 * sto)
+        + 0.1916
+        - 0.05598 * pybamm.tanh(35.62 * (sto - 0.1356))
+        - 0.04483 * pybamm.tanh(14.64 * (sto - 0.2861))
+        - 0.02097 * pybamm.tanh(26.28 * (sto - 0.6183))
+        - 0.02398 * pybamm.tanh(38.1 * (sto - 1))
+    )
+
+    return u_eq
+
+
+def graphite_LGM50_lithiation_ocp_OKane2023(sto):
+    """
+    LG M50 Graphite lithiation open-circuit potential as a function of stochiometry.
+    Fitted to unpublished measurements taken by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open circuit potential
+    """
+
+    u_eq = (
+        0.5476 * pybamm.exp(-422.4 * sto)
+        + 0.5705 * pybamm.exp(-36.89 * sto)
+        + 0.1336
+        - 0.04758 * pybamm.tanh(13.88 * (sto - 0.2101))
+        - 0.01761 * pybamm.tanh(36.2 * (sto - 0.5639))
+        - 0.0169 * pybamm.tanh(11.42 * (sto - 1))
+    )
+
+    return u_eq
+
+
+def nmc_LGM50_lithiation_ocp_OKane2023(sto):
+    """
+    LG M50 NMC lithiation open-circuit potential as a function of stoichiometry.
+    Fitted to unpublished measurements by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open-circuit potential
+    """
+
+    U = (
+        -0.7983 * sto
+        + 4.513
+        - 0.03269 * pybamm.tanh(19.83 * (sto - 0.5424))
+        - 18.23 * pybamm.tanh(14.33 * (sto - 0.2771))
+        + 18.05 * pybamm.tanh(14.46 * (sto - 0.2776))
+    )
+
+    return U
+
+
+def nmc_LGM50_delithiation_ocp_OKane2023(sto):
+    """
+    LG M50 NMC delithiation open-circuit potential as a function of stoichiometry.
+    Fitted to unpublished measurements by Kieran O'Regan.
+
+    Parameters
+    ----------
+    sto: :class:`pybamm.Symbol`
+        Electrode stochiometry
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Open-circuit potential
+    """
+
+    U = (
+        -0.7836 * sto
+        + 4.513
+        - 0.03432 * pybamm.tanh(19.83 * (sto - 0.5424))
+        - 19.35 * pybamm.tanh(14.33 * (sto - 0.2771))
+        + 19.17 * pybamm.tanh(14.45 * (sto - 0.2776))
+    )
+
+    return U
+
 
 # Load data in the appropriate format
 path, _ = os.path.split(os.path.abspath(__file__))
@@ -524,14 +746,14 @@ def get_parameter_values():
         "Dead lithium decay constant [s-1]": 1e-06,
         "Dead lithium decay rate [s-1]": SEI_limited_dead_lithium_OKane2022,
         # sei
-        "Ratio of lithium moles to SEI moles": 1.0,
-        "Inner SEI reaction proportion": 0.0,
+        "Ratio of lithium moles to SEI moles": 1.0, # mark 1
+        "Inner SEI reaction proportion": 0.0,       # mark 0
         "Inner SEI partial molar volume [m3.mol-1]": 9.585e-05,
         "Outer SEI partial molar volume [m3.mol-1]": 9.585e-05,
         "SEI reaction exchange current density [A.m-2]": 1.5e-07,
         "SEI resistivity [Ohm.m]": 200000.0,
         "Outer SEI solvent diffusivity [m2.s-1]": 2.5000000000000002e-22,
-        "Bulk solvent concentration [mol.m-3]": 2636.0,
+        "Bulk solvent concentration [mol.m-3]": 2326.0, # mark 2326
         "Inner SEI open-circuit potential [V]": 0.1,
         "Outer SEI open-circuit potential [V]": 0.8,
         "Inner SEI electron conductivity [S.m-1]": 8.95e-14,
@@ -567,12 +789,17 @@ def get_parameter_values():
         "Positive current collector thermal conductivity [W.m-1.K-1]": 237.0,
         "Nominal cell capacity [A.h]": 5.0,
         "Current function [A]": 5.0,
-        "Contact resistance [Ohm]": 0,
+        "Contact resistance [Ohm]": 0.013, # mark 0
         # negative electrode
         "Negative electrode conductivity [S.m-1]": 215.0,
-        "Maximum concentration in negative electrode [mol.m-3]": 33133.0,
-        "Negative electrode diffusivity [m2.s-1]": graphite_LGM50_diffusivity_Chen2020,
-        "Negative electrode OCP [V]": graphite_LGM50_ocp_Chen2020,
+        "Maximum concentration in negative electrode [mol.m-3]": 32544, # 33133.0,
+        "Negative electrode diffusivity [m2.s-1]"
+        "": graphite_LGM50_diffusivity_Chen2020,
+        "Negative electrode OCP [V]": graphite_LGM50_delithiation_ocp_OKane2023,
+        "Negative electrode delithiation OCP [V]"
+        "": graphite_LGM50_delithiation_ocp_OKane2023,
+        "Negative electrode lithiation OCP [V]"
+        "": graphite_LGM50_lithiation_ocp_OKane2023,
         "Negative electrode porosity": 0.25,
         "Negative electrode active material volume fraction": 0.75,
         "Negative particle radius [m]": 5.86e-06,
@@ -603,9 +830,11 @@ def get_parameter_values():
         "Negative electrode critical stress [Pa]": 60000000.0,
         # positive electrode
         "Positive electrode conductivity [S.m-1]": 0.18,
-        "Maximum concentration in positive electrode [mol.m-3]": 63104.0,
+        "Maximum concentration in positive electrode [mol.m-3]": 52787, # 63104.0,
         "Positive electrode diffusivity [m2.s-1]": nmc_LGM50_diffusivity_Chen2020,
-        "Positive electrode OCP [V]": nmc_LGM50_ocp_Chen2020,
+        "Positive electrode OCP [V]": nmc_LGM50_lithiation_ocp_OKane2023,
+        "Positive electrode delithiation OCP [V]": nmc_LGM50_delithiation_ocp_OKane2023,
+        "Positive electrode lithiation OCP [V]": nmc_LGM50_lithiation_ocp_OKane2023,
         "Positive electrode porosity": 0.335,
         "Positive electrode active material volume fraction": 0.665,
         "Positive particle radius [m]": 5.22e-06,
@@ -648,6 +877,7 @@ def get_parameter_values():
         "": electrolyte_diffusivity_Nyman2008_arrhenius,
         "Electrolyte conductivity [S.m-1]"
         "": electrolyte_conductivity_Nyman2008_arrhenius,
+        "EC partial molar volume [m3.mol-1]": 6.667e-05,
         # experiment
         "Reference temperature [K]": 298.15,
         "Total heat transfer coefficient [W.m-2.K-1]": 10.0,
@@ -658,8 +888,8 @@ def get_parameter_values():
         "Upper voltage cut-off [V]": 4.2,
         "Open-circuit voltage at 0% SOC [V]": 2.5,
         "Open-circuit voltage at 100% SOC [V]": 4.2,
-        "Initial concentration in negative electrode [mol.m-3]": 29866.0,
-        "Initial concentration in positive electrode [mol.m-3]": 17038.0,
+        "Initial concentration in negative electrode [mol.m-3]": 28543, # 29866.0,
+        "Initial concentration in positive electrode [mol.m-3]": 12727, # 17038.0,
         "Initial temperature [K]": 298.15,
         # citations
         "citations": ["OKane2022", "OKane2020", "Chen2020"],

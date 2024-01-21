@@ -98,6 +98,7 @@ class LithiumIonParameters(BaseParameters):
                 for domain in self.options.whole_cell_domains
             ]
         )
+        self.V_bar_EC = pybamm.Parameter("EC partial molar volume [m3.mol-1]")
 
         # Lithium plating parameters
         self.V_bar_plated_Li = pybamm.Parameter(
