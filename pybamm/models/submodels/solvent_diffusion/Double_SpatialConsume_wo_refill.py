@@ -76,15 +76,13 @@ class Double_SpatialConsume_wo_refill(BaseSolventDiffusion):
         param = self.param
 
         N_EC_diffusion = -tor * param.D_ec (c_e, c_EC,T)* pybamm.grad(c_EC)
-        N_cross_diffusion = -(
-            param.tau_ec_Rio  * param.EC_ratio_Rio / 
-            param.tau_cross_Rio /param.gamma_e_ec_Rio* 
+        N_cross_diffusion = -  (
+            param.tau_ec / param.tau_cross / param.gamma_e_ec * 
             tor * param.D_ec_Li_cross(c_e, c_EC,T) * pybamm.grad(c_e) )
-        # Mark Ruihe: most important correction that change again everything... update 221021
-        #there should be a minus here!
-        # update 221208: change from minus to 2* based on Charles's advice
-        N_EC_migration = + 2 * param.C_e* param.Xi(c_e,c_EC, T) * i_e / param.gamma_e *(
-            param.tau_ec_Rio / param.gamma_e_ec_Rio / param.tau_diffusion_e)
+        # Mark Ruihe: update 240126 include Jung 2023 paper
+        N_EC_migration = (
+            param.C_RA_typ * c_EC / param.c_tot(c_e,c_EC,T)  
+            * param.Xi(c_e,c_EC,T)   * i_e  )
 
         N_EC = N_EC_diffusion + N_cross_diffusion + N_EC_migration
 
@@ -104,7 +102,7 @@ class Double_SpatialConsume_wo_refill(BaseSolventDiffusion):
 
         source_terms_ec = (
             a * j_sign_SEI / param.gamma_e 
-            / param.gamma_e_ec_Rio * ratio_ec_li)
+            / param.gamma_e_ec * ratio_ec_li)
         # Mark Ruihe update 221021 - ignore Li+ (de-)intercalation to 
         # avoid differences between w and wo refill when there are no SEI 
         source_terms_refill = sign_2
@@ -133,7 +131,7 @@ class Double_SpatialConsume_wo_refill(BaseSolventDiffusion):
 
         #print('using double spatial consume wo refill for EC')
         self.rhs = {
-            eps_c_EC: - pybamm.div(N_EC) * param.tau_discharge / param.tau_ec_Rio  
+            eps_c_EC: - pybamm.div(N_EC) * param.tau_discharge / param.tau_ec  
             # source term due to SEI
             + source_terms_ec
         } 

@@ -1,4 +1,4 @@
-def electrolyte_conductivity_Nyman2008_rio(c_e,c_EC,  T):
+def electrolyte_conductivity_Nyman2008(c_e,c_EC,  T):
     """
     Conductivity of LiPF6 in EC:EMC (3:7) as a function of ion concentration. The data
     comes from [1].

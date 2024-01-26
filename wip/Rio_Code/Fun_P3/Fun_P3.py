@@ -157,6 +157,7 @@ def EC_transference_number(c_e,c_EC, T):# Mark Ruihe add update 221212
         #(c_EC > c_EC_0 ) * Xi_0
     )
     return Xi
+
 def EC_diffusivity_5E_5(c_e, c_EC , T):
     D_ec_dim = (
         (c_EC >= 0 ) * 5e-5 
@@ -169,6 +170,14 @@ def EC_diffusivity_5E_10(c_e, c_EC , T):
         +  (c_EC < 0 ) * 0 
     )
     return D_ec_dim
+
+def EC_diffusivity_1E_10(c_e, c_EC , T):
+    D_ec_dim = (
+        (c_EC >= 0 ) * 1e-10
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_dim
+
 def EC_diffusivity_3E_10(c_e, c_EC , T):
     D_ec_dim = (
         (c_EC >= 0 ) * 3e-10
@@ -450,7 +459,7 @@ def electrolyte_conductivity_EC_DMC_1_1_Landesfeind2019_Con(c_e,c_EC, T):
     sigma = (
         (c_e <= c_e_constant) * electrolyte_conductivity_base_Landesfeind2019(c_e,c_EC, T, coeffs)
         +
-        (c_e > c_e_constant) * electrolyte_conductivity_base_Landesfeind2019(c_e_constant,c_EC, T, coeffs)
+        (c_e >  c_e_constant) * electrolyte_conductivity_base_Landesfeind2019(c_e_constant,c_EC, T, coeffs)
     )
     return sigma
 

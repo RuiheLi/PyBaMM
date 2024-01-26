@@ -1,6 +1,31 @@
 import pybamm
 from pybamm import exp,sqrt,tanh
 # Mark Ruihe Li add for ECdrag2 branch and double diffusion model, mostly based on Chen2020
+""" 
+# available diffusivity:
+electrolyte_diffusivity_Nyman2008
+electrolyte_diffusivity_Nyman2008Constant
+electrolyte_diffusivity_Nyman2008Exp
+
+electrolyte_diffusivity_Valoen2005
+electrolyte_diffusivity_Valoen2005Constant
+
+# available conductivity:
+electrolyte_conductivity_Nyman2008
+electrolyte_conductivity_Nyman2008Constant
+electrolyte_conductivity_Nyman2008Exp
+
+electrolyte_conductivity_Valoen2005
+electrolyte_conductivity_Valoen2005Constant
+electrolyte_conductivity_Valoen2005Constant_wEC_Haya
+electrolyte_conductivity_Valoen2005Constant_ECtanh100_1
+electrolyte_conductivity_Valoen2005Constant_ECtanh500_1
+electrolyte_conductivity_Valoen2005Constant_ECtanh700_1
+electrolyte_conductivity_Ding2001 
+
+"""
+
+
 
 def graphite_LGM50_ocp_Chen2020(sto):
     """
@@ -225,7 +250,36 @@ def electrolyte_diffusivity_Nyman2008Constant(c_e,c_EC, T):
         8.794e-11 * (2000 / 1000) ** 2 - 3.972e-10 * (2000 / 1000) + 4.862e-10)
     )
     return D_c_e
+def electrolyte_conductivity_Nyman2008Exp(c_e,c_EC, T):
+    sigma_e = (
+        0.1 * 0.06248 * (1+298.15-0.05559) * 
+        (c_e/1e3) * (1 - 3.084 *sqrt(c_e/1e3) 
+        + 1.33 *(1+ 0.03633 *(exp(1000/298.15))*c_e/1e3)   ) 
+        / (1+(c_e/1e3)**4*( 0.00795 *exp(1000/298.15))) 
+    )
+    return sigma_e
+def electrolyte_diffusivity_Nyman2008Exp(c_e,c_EC, T):
+    D_c_e = (
+        6 * exp( -1 *(c_e/1000)) 
+        * exp(-5/298.15) 
+        * exp(-95/298.15*(c_e/1000)) * 1e-10 
+    )
+    return D_c_e
 
+def electrolyte_conductivity_Valoen2005(c_e,c_EC, T):
+    # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    # mS/cm to S/m
+    return (1e-3 / 1e-2) * (
+        c_e
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    )
 def EC_diffusivity_5E_10(c_e, c_EC , T):
     # Ruihe add: set Heaviside(c_EC) * 5e-10 
     D_ec_dim = (
@@ -240,57 +294,110 @@ def EC_diffusivity_3E_10(c_e, c_EC , T):
         +  (c_EC < 0 ) * 0 
     )
     return D_ec_dim
-
-# Update 240125 Main change of this round
-def Fun_rho(c_e, c_EC,T):
-    rho_0 = 1006.1 
-    rho_1 = 0.02235185918895445 
-    rho_2 = 0.10065156540490541
-    return rho_0  + rho_1 * c_EC + rho_2 * c_e
-def Fun_c_T(c_e, c_EC,T):
-    m_bar_EC = 88.062*1e-3 #   kg/mol
-    m_bar_0  = 104.105*1e-3 #   kg/mol
-    m_bar_e  = 151.905*1e-3 #   kg/mol
-    b = (
-        (m_bar_EC-m_bar_0) * c_EC 
-        + (m_bar_e-2*m_bar_0)*c_e  ) 
-    c_T= (Fun_rho(c_e, c_EC,T) - b) / m_bar_0
-    return c_T
-
-def Fun_D_0_EC_e(c_e, c_EC , D_0_e_EC,T):   # Eq. (41)
-    # Pre-condition
-    D_0_EC_EC  = 5E-10
-    D_0_e_e = 3e-10
-    c_T = Fun_c_T(c_e, c_EC,T)
-    c_0 = c_T - 2*c_e - c_EC 
-    V_bar_EC = 6.5312e-05
-    V_bar_0  = 1.0347e-04
-    V_bar_e  = 5.0943e-05
-    C_11 = 1 + c_e/c_0 + (V_bar_EC*c_EC)/(V_bar_0*c_0)
-    C_12 = (V_bar_e-2*V_bar_0)*c_EC / (V_bar_0*c_0)
-    C_21 = (V_bar_EC- V_bar_0)*c_e  / (V_bar_0*c_0)
-    C_22 = 1 + c_EC/c_0 + (V_bar_e*c_e)/(V_bar_0*c_0)
-    D_0_EC_e = (
-        D_0_EC_EC*C_12/C_11          + 
-        2 * c_EC/c_e * (C_22/C_11 - C_12*C_21/(C_11*C_11)  ) * (
-            D_0_e_EC -  (D_0_e_EC*C_12 - D_0_e_e*C_11)*C_21 / (C_21*C_12-C_22*C_11)     
-        )
-    )
-    return D_0_EC_e
-
-
 def Dimensional_EC_Lithium_ion_cross_diffusivity(c_e, c_EC , T):
-    D_0_e_EC = pybamm.Parameter("Lithium ion EC cross diffusivity [m2.s-1]") 
-    return Fun_D_0_EC_e(c_e, c_EC , D_0_e_EC,T)
+    # Ruihe add: set Heaviside(c_EC) * 1.5e-12
+    D_ec_Li_cross_dim = (
+        (c_EC >= 0 ) *  1.5e-12
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_Li_cross_dim
 
 
+def electrolyte_diffusivity_Valoen2005(c_e,c_EC, T):
+    # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
 
-def EC_transference_number_3(c_e,c_EC, T):# Mark Ruihe add update 221212
-    Xi_0 =   3.0     # pybamm.Parameter("EC transference number zero") 
+    T_g = 229 + 5 * c_e
+    D_0 = -4.43 - 54 / (T - T_g)
+    D_1 = -0.22
+
+    # cm2/s to m2/s
+    # note, in the Valoen paper, ln means log10, so its inverse is 10^x
+    return (10 ** (D_0 + D_1 * c_e)) * 1e-4
+def electrolyte_conductivity_Valoen2005Constant(c_e,c_EC, T):# Mark Ruihe change
+    # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    c_e_constant = 4500/1000
+    sigma = (c_e <= c_e_constant ) * (c_e > 0 ) * (
+        (1e-3 / 1e-2) * (
+        c_e
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    )) + (c_e > c_e_constant ) *  (
+        (1e-3 / 1e-2) * (
+        c_e_constant
+        * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + c_e_constant * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e_constant ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    )) + (c_e <= 0 ) * 0 
+    # mS/cm to S/m
+    return sigma
+def electrolyte_diffusivity_Valoen2005Constant(c_e,c_EC, T): 
+    # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    c_e_constant = 4500/1000
+
+    T_g = 229 + 5 * c_e
+    T_g_constant = 229 + 5 * c_e_constant
+    D_0 = -4.43 - 54 / (T - T_g)
+    D_0_constant = -4.43 - 54 / (T - T_g_constant)
+    D_1 = -0.22
+
+    D_final = (c_e <= c_e_constant) * (
+        (10 ** (D_0 + D_1 * c_e)) * 1e-4
+    ) + (c_e > c_e_constant) *  (
+        (10 ** (D_0_constant + D_1 * c_e_constant)) * 1e-4
+    )
+
+    # cm2/s to m2/s
+    # note, in the Valoen paper, ln means log10, so its inverse is 10^x
+    return D_final
+
+def electrolyte_conductivity_Valoen2005Constant_wEC_Haya(c_e,c_EC, T):
+    # T = T + 273.15
+    # mol/m3 to molar
+    c_e = c_e / 1000
+    c_EC_1 = c_EC / pybamm.Parameter("Typical EC concentration [mol.m-3]") 
+    sigma = (c_EC_1 <= 1) * (
+        (1e-3 / 1e-2) * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + c_e * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + c_e ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    ) + (c_EC_1 > 1 ) *  (
+        (1e-3 / 1e-2) * (
+            (-10.5 + 0.0740 * T - 6.96e-5 * T ** 2)
+            + 1 * (0.668 - 0.0178 * T + 2.80e-5 * T ** 2)
+            + 1 ** 2 * (0.494 - 8.86e-4 * T)
+        )
+        ** 2
+    )
+    a=1.092; b=-6.497e-6; c=-0.7877; d=-0.0004808
+    ratio= (
+        a*exp(b*c_EC)+c*exp(d*c_EC) )
+    return sigma*ratio
+
+def EC_transference_number(c_e,c_EC, T):# Mark Ruihe add update 221212
+    c_EC_0 = pybamm.Parameter("Typical EC concentration [mol.m-3]")
+    Xi_0 =   pybamm.Parameter("EC transference number zero")
+    
     Xi = ( 
-        (c_EC < 0 ) * Xi_0
+        (c_EC < 0 ) * 0 
         + 
-        (c_EC >= 0) * Xi_0
+        (c_EC >= 0) * (Xi_0 * c_EC / c_EC_0 )
+        #+
+        #(c_EC > c_EC_0 ) * Xi_0
     )
     return Xi
 
@@ -332,12 +439,35 @@ def cond_0p5(c_e, c_EC , T):
     )
     return cond
 
+
+def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
+    p00 =     -0.2524;
+    p10 =    0.001402;
+    p01 =   0.0001142 ;
+    p20 =  -5.379e-07  ;
+    p11 =  -1.399e-08 ;
+    p02 =  -8.137e-09  ;
+    kai  = (
+        (x > 0 )  *(
+        (p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y)
+        + (x <= 0 ) * 0 )
+    )
+    kai_final = (kai>0) * kai + (kai<0) * 0
+    return kai_final
+
 def t_0plus_0p24(c_e, c_EC , T):
     t_0plus = (
         (c_EC >= 0 ) * 0.24
         +  (c_EC < 0 ) * 0.24 
     )
     return t_0plus
+# add TDF 
+def fun_TDF_EC5(c_e, c_EC , T):
+    TDF_EC = (
+        (c_EC >= 0 ) * 5
+        +  (c_EC < 0 ) * 5
+    )
+    return TDF_EC
 
 #### Use measured LJP
 # add Ruihe Li update 230201
@@ -358,6 +488,36 @@ def dLJP_1_Specie_dc_e_np(c_e,c_EC,T):
 
 
 import numpy as np
+def electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs):
+    c = c_e / 1000  # mol.m-3 -> mol.l
+    p1, p2, p3, p4, p5, p6, p7, p8, p9 = coeffs
+    tdf = (
+        p1
+        + p2 * c
+        + p3 * T
+        + p4 * c**2
+        + p5 * c * T
+        + p6 * T**2
+        + p7 * c**3
+        + p8 * c**2 * T
+        + p9 * c * T**2
+    )
+    return tdf
+def electrolyte_TDF_EC_DMC_1_1_Landesfeind2019(c_e, c_EC , T):
+    coeffs = np.array(
+        [-5.58, 7.17, 3.80e-2, 1.91, -6.65e-2, -5.08e-5, 1.1e-1, -6.10e-3, 1.51e-4]
+    )
+    return electrolyte_TDF_base_Landesfeind2019(c_e,  c_EC ,T, coeffs)
+def electrolyte_TDF_EC_EMC_3_7_Landesfeind2019(c_e, c_EC , T):
+    coeffs = np.array(
+        [2.57e1, -4.51e1, -1.77e-1, 1.94, 2.95e-1, 3.08e-4, 2.59e-1, -9.46e-3, -4.54e-4]
+    )
+    return electrolyte_TDF_base_Landesfeind2019(c_e, c_EC , T, coeffs)
+def electrolyte_TDF_EMC_FEC_19_1_Landesfeind2019(c_e, c_EC , T):
+    coeffs = np.array(
+        [3.22, -1.01e1, -1.58e-2, 6.12, 2.96e-2, 2.42e-5, -2.22e-1, -1.57e-2, 6.30e-6]
+    )
+    return electrolyte_TDF_base_Landesfeind2019(c_e,  c_EC ,T, coeffs)
 
 def nmc_LGM50_entropic_change_ORegan2022(sto, c_s_max):
     """
@@ -1032,7 +1192,7 @@ def get_parameter_values():
         "": graphite_LGM50_diffusivity_ORegan2022,
         # Mark Ruihe change "Negative electrode OCP [V]": graphite_LGM50_ocp_Chen2020,
         "Negative electrode OCP [V]": graphite_LGM50_delithiation_ocp_OKane2023,
-        "Negative electrode porosity": 0.240507,
+        "Negative electrode porosity": 0.25,
         "Negative electrode active material volume fraction": 0.75,
         "Negative particle radius [m]": 5.86e-06,
         "Negative electrode Bruggeman coefficient (electrolyte)": 1.5,
@@ -1087,30 +1247,29 @@ def get_parameter_values():
         "Cation transference number": t_0plus_0p24 ,   # from Andrew 
         "1 + dlnf/dlnc": 1.0,
         "TDF of EC": 5.0, 
-        "Measured dLJP_dcEC": dLJP_2_Species_dc_e_np,
-        "Measured dLJP_dce": dLJP_2_Species_dc_EC_np,
+        "Measured dLJP_dcEC": dLJP_Two_Species_dco_Jung2023,
+        "Measured dLJP_dce": dLJP_Two_Species_dce_Jung2023,
         "Electrolyte diffusivity [m2.s-1]": diff_3E_10,
         "Electrolyte conductivity [S.m-1]": cond_0p5,
+        # or: electrolyte_conductivity_Valoen2005Constant_wEC_Haya 
+        # or: electrolyte_conductivity_Andrew2022
 
         # Mark Ruihe block start
-        # Typical electrolyte: 1M LiPF6 in EMC:EC=1:1, c_e=1000, c_EMC=c_EC=5622.86, c_T=13245.72
-        "EC transference number": EC_transference_number_3,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
+        # 3500 and 7000 (EC:EMC=3:7); 5622.86 and 5622.86 (EC:EMC=1:1); 9300 and 3250 (EC:EMC=7:3)
+        "EC transference number": EC_transference_number,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
         "EC transference number zero": 0.7  , # from Andrew": 
         "EC initial concentration in electrolyte [mol.m-3]": 5622.86,
         "Typical EC concentration [mol.m-3]": 5622.86, 
         #"Background solvent concentration [mol.m-3]": Fun_c_EMC,  # should from Andrew, add temperoaliy
-        "Typical total concentration [mol.m-3]":13245.72,
-        "Total concentration [mol.m-3]":Fun_c_T,
-        # Update 240125: Distinguish EC,e cross diffusivity and e,EC cross diffusivity
-        "EC Lithium ion cross diffusivity [m2.s-1]": Dimensional_EC_Lithium_ion_cross_diffusivity,  # D_(EC,e)^0
-        "Lithium ion EC cross diffusivity [m2.s-1]": 2.5e-11,                                       # D_(e,EC)^0
+        "Typical total concentration [mol.m-3]":12482.2,
+        "EC Lithium ion cross diffusivity [m2.s-1]": Dimensional_EC_Lithium_ion_cross_diffusivity,      # from Andrew
         "Typical EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-12,
         "EC diffusivity in electrolyte [m2.s-1]": EC_diffusivity_5E_10,     #from Andrew
         "Typical EC diffusivity in electrolyte [m2.s-1]": 5E-10, #from Andrew
         "EC diffusivity in SEI [m2.s-1]": 2E-18               ,  #from Yang2017": 
         "Typical EC diffusivity in SEI [m2.s-1]": 2E-18,
 
-        "EC partial molar volume [m3.mol-1]": 6.5312e-5     ,     # Mark Ruihe Li add
+        "EC partial molar volume [m3.mol-1]": 6.667e-5     ,     # Mark Ruihe Li add
         "Li partial molar volume [m3.mol-1]": 1.3e-5   ,         #Mark Ruihe Li add
         "CH2OCO2Li2 partial molar volume [m3.mol-1]": 9.585e-5 , # Mark Ruihe Li add
         # Mark Ruihe block end

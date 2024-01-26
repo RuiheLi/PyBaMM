@@ -92,16 +92,16 @@ class Single_SpatialConsume_wo_refill(BaseSolventDiffusion):
 
         source_terms_ec =(
             a * j_sign_SEI / param.gamma_e 
-            / param.gamma_e_ec_Rio * ratio_ec_li)
+            / param.gamma_e_ec * ratio_ec_li)
         # Mark Ruihe update 221021 - ignore Li+ (de-)intercalation to 
         # avoid differences between w and wo refill when there are no SEI 
         source_terms_refill = sign_2
         """ source_terms_refill = (
-            a * j_sign_SEI / param.gamma_e / param.gamma_e_ec_Rio 
+            a * j_sign_SEI / param.gamma_e / param.gamma_e_ec 
             * 4541 * (
                 ratio_ec_li * param.Vmolar_ec 
                 +ratio_sei_li * param.Vmolar_CH2OCO2Li2)
-            + a * j_sign_SEI / param.gamma_e  / param.gamma_e_ec_Rio 
+            + a * j_sign_SEI / param.gamma_e  / param.gamma_e_ec 
             * 4541 * param.Vmolar_Li ) """
         
         variables.update(self._get_standard_EC_flux_variables(
@@ -125,7 +125,7 @@ class Single_SpatialConsume_wo_refill(BaseSolventDiffusion):
 
         #print('using double spatial consume w refill for EC')
         self.rhs = {
-            eps_c_EC: - pybamm.div(N_EC) * param.tau_discharge / param.tau_ec_Rio 
+            eps_c_EC: - pybamm.div(N_EC) * param.tau_discharge / param.tau_ec 
             # source term due to SEI
             + source_terms_ec
             # source term due to replenishment 

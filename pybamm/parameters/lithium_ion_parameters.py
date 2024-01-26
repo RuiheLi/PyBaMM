@@ -155,8 +155,7 @@ class LithiumIonParameters(BaseParameters):
         self.Xi_0 = pybamm.Parameter(
             "EC transference number zero")    
         self.c_ec_typ = pybamm.Parameter("Typical EC concentration [mol.m-3]") 
-        #self.D_ec_Li_cross_dim = pybamm.Parameter(
-        #    "EC Lithium ion cross diffusivity [m2.s-1]")
+
         self.D_ec_Li_cross_typ = pybamm.Parameter(
             "Typical EC Lithium ion cross diffusivity [m2.s-1]") 
         #self.D_ec_dim = pybamm.Parameter(
@@ -172,7 +171,7 @@ class LithiumIonParameters(BaseParameters):
             "Li partial molar volume [m3.mol-1]")
         self.Vmolar_CH2OCO2Li2 = pybamm.Parameter(
             "CH2OCO2Li2 partial molar volume [m3.mol-1]")
-        self.ce_tot_typ = pybamm.Parameter("Typical total concentration [mol.m-3]") 
+        self.c_tot_typ = pybamm.Parameter("Typical total concentration [mol.m-3]") 
         # Total electrolyte concentration [mol.m-3] - just for double diffusion
         # update 221208: Add background solvent concentration now!
         #self.c_0_back = pybamm.Parameter("Background solvent concentration [mol.m-3]") 
@@ -200,6 +199,20 @@ class LithiumIonParameters(BaseParameters):
             "EC concentration [mol.m-3]": c_EC, 
             "Temperature [K]": T}
         return pybamm.FunctionParameter("EC Lithium ion cross diffusivity [m2.s-1]", inputs)
+    def D_Li_ec_cross_dim(self, c_e, c_EC , T):
+        """Dimensional Lithium ion EC cross diffusivity [m2.s-1]"""
+        inputs = {
+            "Electrolyte concentration [mol.m-3]": c_e, 
+            "EC concentration [mol.m-3]": c_EC, 
+            "Temperature [K]": T}
+        return pybamm.FunctionParameter("Lithium ion EC cross diffusivity [m2.s-1]", inputs)
+    def c_tot_dim(self, c_e, c_EC , T):
+        """Total concentration [mol.m-3]"""
+        inputs = {
+            "Electrolyte concentration [mol.m-3]": c_e, 
+            "EC concentration [mol.m-3]": c_EC, 
+            "Temperature [K]": T}
+        return pybamm.FunctionParameter("Total concentration [mol.m-3]", inputs)
     # Mark Ruihe block end
 
     def D_e_dimensional(self, c_e, c_EC , T):
@@ -318,11 +331,11 @@ class LithiumIonParameters(BaseParameters):
         self.beta_surf = pybamm.Scalar(0)
         
         # Mark Ruihe block start
-        self.gamma_e_ec_Rio = self.c_ec_typ / self.c_e_typ
-        self.tau_cross_Rio = self.L_x *  self.L_x / self.D_ec_Li_cross_typ
-        self.tau_ec_Rio = self.L_x *  self.L_x / self.D_ec_typ
-        self.EC_ratio_Rio = self.c_ec_typ / self.ce_tot_typ
-        self.e_ratio_Rio = self.c_e_typ / self.ce_tot_typ  
+        self.gamma_e_ec = self.c_ec_typ / self.c_e_typ
+        self.tau_cross  = self.L_x *  self.L_x / self.D_ec_Li_cross_typ
+        self.tau_ec     = self.L_x *  self.L_x / self.D_ec_typ
+        self.C_RA_typ   = self.L_x * self.i_typ / (
+            self.F * self.D_ec_typ * self.c_tot_typ) # added 240126
         # Move from ParticleLithiumIonParameters 
         self.c_ec_init = self.c_ec_0_dim / self.c_ec_typ   # Mark Ruihe Li add 
         # Mark Ruihe block end
@@ -379,12 +392,28 @@ class LithiumIonParameters(BaseParameters):
         return self.D_ec_dim(
             c_e_dimensional, c_EC_dimensional,T_dim) / self.D_ec_typ
     def D_ec_Li_cross(self, c_e,c_EC, T):
-        """Dimensionless EC Lithium ion cross diffusivity [m2.s-1]"""
+        """Dimensionless EC Lithium ion cross diffusivity"""
         c_e_dimensional = c_e * self.c_e_typ
         c_EC_dimensional = c_EC * self.c_ec_typ
         T_dim = self.Delta_T * T + self.T_ref
         return self.D_ec_Li_cross_dim(
             c_e_dimensional, c_EC_dimensional,T_dim) / self.D_ec_Li_cross_typ
+    # Use the same typical cross diffusivity (D_ec_Li_cross_typ) to 
+    #     non-dimensionalize both dimensional cross diffusivities
+    def D_Li_ec_cross(self, c_e,c_EC, T):
+        """Dimensionless Lithium ion EC cross diffusivity"""
+        c_e_dimensional = c_e * self.c_e_typ
+        c_EC_dimensional = c_EC * self.c_ec_typ
+        T_dim = self.Delta_T * T + self.T_ref
+        return self.D_Li_ec_cross_dim(
+            c_e_dimensional, c_EC_dimensional,T_dim) / self.D_ec_Li_cross_typ
+    def c_tot(self, c_e, c_EC , T):
+        """Dimensionless total concentration"""
+        c_e_dimensional = c_e * self.c_e_typ
+        c_EC_dimensional = c_EC * self.c_ec_typ
+        T_dim = self.Delta_T * T + self.T_ref
+        return self.c_tot_dim(
+            c_e_dimensional, c_EC_dimensional,T_dim) / self.c_tot_typ 
     # Mark Ruihe block end
     def chi(self, c_e, c_EC, T):
         """
@@ -416,7 +445,6 @@ class LithiumIonParameters(BaseParameters):
     def Xi(self, c_e, c_EC, T): 
         """EC transference number (dimensionless)
         # Mark Ruihe add, should be positive now, 
-        equals to 0.85*c_EC/ c_EC_tpy
         """
         inputs = {
             "Electrolyte concentration [mol.m-3]": c_e * self.c_e_typ,

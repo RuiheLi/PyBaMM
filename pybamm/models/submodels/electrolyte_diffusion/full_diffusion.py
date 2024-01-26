@@ -66,7 +66,7 @@ class Full(BaseElectrolyteDiffusion):
         param = self.param
 
         N_e_diffusion =   -   tor * param.D_e(c_e, c_EC,T) * pybamm.grad(c_e)
-        N_e_migration = param.C_e * param.t_plus(c_e,c_EC, T) * i_e / param.gamma_e
+        N_e_migration = param.C_e / param.gamma_e * param.t_plus(c_e,c_EC, T) * i_e 
         N_e_convection = param.C_e * c_e * v_box
 
         if self.options["solvent diffusion"] in ["single no consume wo refill", 
@@ -78,9 +78,8 @@ class Full(BaseElectrolyteDiffusion):
         elif self.options["solvent diffusion"] in ["double spatial consume w refill",
             "double spatial consume wo refill","double no consume wo refill"]:
             N_cross_diffusion =  -   (
-                param.e_ratio_Rio * param.gamma_e_ec_Rio * 
-                param.tau_diffusion_e / param.tau_cross_Rio * 
-                tor * param.D_ec_Li_cross(c_e, c_EC,T) * pybamm.grad(c_EC) )
+                param.gamma_e_ec * param.tau_diffusion_e / param.tau_cross * 
+                tor * param.D_Li_ec_cross(c_e,c_EC,T) * pybamm.grad(c_EC) )
         
         N_e = N_e_diffusion + N_cross_diffusion + N_e_migration + N_e_convection
 
@@ -124,9 +123,9 @@ class Full(BaseElectrolyteDiffusion):
         elif self.options["solvent diffusion"] in ["double spatial consume w refill",
             "single spatial consume w refill"]:
             source_terms_refill = - (
-                    a * j_sign_SEI / param.gamma_e * param.Vmolar_Li * param.c_e_init_dimensional  +
-                    a * j_sign_SEI / param.gamma_e * param.c_e_init_dimensional * (
-                        param.Vmolar_ec*ratio_ec_li +param.Vmolar_CH2OCO2Li2*ratio_sei_li
+                a * j_sign_SEI / param.gamma_e * param.Vmolar_Li * param.c_e_init_dimensional  +
+                a * j_sign_SEI / param.gamma_e * param.c_e_init_dimensional * (
+                    param.Vmolar_ec*ratio_ec_li +param.Vmolar_CH2OCO2Li2*ratio_sei_li
             ))
         
         variables.update(self._get_standard_flux_variables(
