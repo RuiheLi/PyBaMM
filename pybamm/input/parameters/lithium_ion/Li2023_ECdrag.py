@@ -229,6 +229,14 @@ def electrolyte_conductivity_EC_DMC_1_1_Landesfeind2019_Con(c_e,c_EC, T):
     )
     return sigma
 
+def electrolyte_conductivity_Wang2021(c_e,c_EC,T): # ACS Energy Letter
+    c_T = Fun_c_T(c_e, c_EC,T)
+    y_e = c_e / c_T
+    sigma =  (
+        48.93*y_e**1.5 - 
+        284.8*y_e**2.5 + 
+        817.7*y_e**4) **2
+    return sigma
 
 # Mark Ruihe block start   - add my revised electrolyte properties
 def electrolyte_conductivity_Nyman2008Constant(c_e,c_EC, T):
@@ -314,6 +322,37 @@ def EC_transference_number_3(c_e,c_EC, T):# Mark Ruihe add update 221212
     )
     return Xi
 
+def Fun_y_e_u_e(y_e, y_EC): # Eq. (12) in Jung 2023 paper
+    T  = 298.15
+    R = 8.31446261815324; F = 96485.3321
+    d_deltaU_dye = 2.30205508980545*y_EC*(-2*y_e - y_EC + 1) - 0.0513851582545859*y_EC*(89.6*y_e + 6.81*y_EC - 12.6) + y_EC*(24.5569671298666*y_e - 2.26403007269705 + 0.0776943592809339/y_e)/(1 - 2*y_e) + 2*y_EC*(12.2784835649333*y_e**2 - 2.26403007269705*y_e + 0.0776943592809339*pybamm.log(y_e) + 0.211527003955003)/(1 - 2*y_e)**2 - 2*y_EC*(-1.10889171513396*y_e**0.5 - 10.4851415418483*y_e**3 + 6.0865719952557*y_e**2 + 4.76340417020011*y_e - 10.3386938408227*y_e**1.5 + 6.51820732459422*y_e**2.5 + 64.462681030378*y_e**3.5 - 74.1487833613674*y_e**4.5 + 0.0301630878954419*pybamm.log(y_e) + 0.184138714605309)/(1 - 2*y_e)**2 + (-y_EC/(1 - 2*y_e) + 1)*(-0.554445857566982/y_e**0.5 - 15.508040761234*y_e**0.5 - 31.4554246255448*y_e**2 + 12.1731439905114*y_e + 16.2955183114856*y_e**1.5 + 225.619383606323*y_e**2.5 - 333.669525126154*y_e**3.5 + 4.76340417020011 + 0.0301630878954419/y_e)
+
+    u_e = F/(R*T) * d_deltaU_dye 
+    return u_e * y_e
+def Fun_t_0plus_Wang2021_yBased(y_e,y_EC):
+    return 0.4107-1.487*y_e+2.547*y_e**2
+def Fun_X_e_e_yBased(y_e,y_EC):
+    u_e_y_e = Fun_y_e_u_e(y_e, y_EC)
+    t_0plus = Fun_t_0plus_Wang2021_yBased(y_e,y_EC)
+    return u_e_y_e / (1-t_0plus) - 2
+def Fun_X_EC_EC_yBased(y_e,y_EC):
+    return 0.5* Fun_X_e_e_yBased(y_e,y_EC)
+def Fun_u_EC(y_e, y_EC): # Eq. (12) in Jung 2023 paper
+    T  = 298.15
+    R = 8.31446261815324; F = 96485.3321
+    d_deltaU_dyEC = 0.174966463856865*y_EC*(-2*y_e - y_EC + 1) - 0.0256925791272929*y_EC*(89.6*y_e + 6.81*y_EC - 12.6) + 0.0256925791272929*(-2*y_e - y_EC + 1)*(89.6*y_e + 6.81*y_EC - 12.6) + (12.2784835649333*y_e**2 - 2.26403007269705*y_e + 0.0776943592809339*pybamm.log(y_e) + 0.211527003955003)/(1 - 2*y_e) - (-1.10889171513396*y_e**0.5 - 10.4851415418483*y_e**3 + 6.0865719952557*y_e**2 + 4.76340417020011*y_e - 10.3386938408227*y_e**1.5 + 6.51820732459422*y_e**2.5 + 64.462681030378*y_e**3.5 - 74.1487833613674*y_e**4.5 + 0.0301630878954419*pybamm.log(y_e) + 0.184138714605309)/(1 - 2*y_e)
+    u_EC = F/(R*T) * d_deltaU_dyEC   # .subs({x:y_e,  y:y_EC })
+    return u_EC
+def Fun_Xi_tidle(c_e,c_EC,T):
+    T = 298.15
+    c_T = Fun_c_T(c_e, c_EC,T)
+    y_e = c_e / c_T
+    y_EC =c_EC/ c_T
+    u_EC = Fun_u_EC(y_e, y_EC)
+    X_oo = Fun_X_EC_EC_yBased(y_e,y_EC)
+    Xi_tilde = - u_EC / (1+X_oo)
+    return Xi_tilde
+
 def t_0plus_linkEC(c_e,c_EC, T):# Mark Ruihe add update 221214
     c_EC_0 = pybamm.Parameter("Typical EC concentration [mol.m-3]")
     t_0plus = ( 
@@ -358,6 +397,10 @@ def t_0plus_0p24(c_e, c_EC , T):
         +  (c_EC < 0 ) * 0.24 
     )
     return t_0plus
+def Fun_t_0plus_Wang2021(c_e,c_EC, T):
+    c_T = Fun_c_T(c_e, c_EC,T)
+    y_e = c_e / c_T
+    return 0.4107-1.487*y_e+2.547*y_e**2
 
 #### Use measured LJP
 # add Ruihe Li update 230201
@@ -1106,18 +1149,18 @@ def get_parameter_values():
         # electrolyte
         "Typical electrolyte concentration [mol.m-3]": 1000.0,
         "Initial concentration in electrolyte [mol.m-3]": 1000.0,
-        "Cation transference number": t_0plus_0p24 ,   # from Andrew 
+        "Cation transference number": Fun_t_0plus_Wang2021,   # from Andrew 
         "1 + dlnf/dlnc": 1.0,
         "TDF of EC": 5.0, 
         "Measured dLJP_dcEC": dLJP_2_Species_dc_EC_np,
         "Measured dLJP_dce": dLJP_2_Species_dc_e_np,
         "Electrolyte diffusivity [m2.s-1]": diff_3E_10,
-        "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_EC_DMC_1_1_Landesfeind2019_Con,
+        "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Wang2021,
 
         # Mark Ruihe block start
         # Typical electrolyte: 1M LiPF6 in EMC:EC=1:1 wt%, 
         #           c_e=1000, c_EMC=5252.58, c_EC=6209.49, c_T=13462.07
-        "EC transference number": EC_transference_number_3,# Update 221208 - becomes a function and positive, based on Charle's advice Andrew": 
+        "EC transference number": Fun_Xi_tidle,# Update 240313 - becomes a function
         "EC transference number zero": 0.7  , # from Andrew": 
         "EC initial concentration in electrolyte [mol.m-3]": 6209.49,
         "Typical EC concentration [mol.m-3]": 6209.49, 
@@ -1126,7 +1169,7 @@ def get_parameter_values():
         "Total concentration [mol.m-3]":Fun_c_T,
         # Update 240125: Distinguish EC,e cross diffusivity and e,EC cross diffusivity
         "EC Lithium ion cross diffusivity [m2.s-1]": Dimensional_EC_Lithium_ion_cross_diffusivity,  # D_(EC,e)^0
-        "Lithium ion EC cross diffusivity [m2.s-1]": 2.5e-11,                                       # D_(e,EC)^0
+        "Lithium ion EC cross diffusivity [m2.s-1]": 1.5e-11,  # Free parameter - D_(e,EC)^0
         "Typical EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-12,
         "EC diffusivity in electrolyte [m2.s-1]": EC_diffusivity_5E_10,     #from Andrew
         "Typical EC diffusivity in electrolyte [m2.s-1]": 5E-10, #from Andrew
