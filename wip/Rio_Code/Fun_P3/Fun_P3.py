@@ -165,6 +165,107 @@ def t_0plus_Andrew_ACS(c_e,c_EC, T):
     t_0plus = 0.4107 - 1.487*y + 2.547* np.power(y,2)
     return t_0plus
 
+# Update 240125 Main change of this round
+def Fun_rho(c_e, c_EC,T):
+    rho_0 = 1006.1 
+    rho_1 = 0.02235185918895445 
+    rho_2 = 0.10065156540490541
+    return rho_0  + rho_1 * c_EC + rho_2 * c_e
+def Fun_c_T(c_e, c_EC,T):
+    m_bar_EC = 88.062*1e-3 #   kg/mol
+    m_bar_0  = 104.105*1e-3 #   kg/mol
+    m_bar_e  = 151.905*1e-3 #   kg/mol
+    b = (
+        (m_bar_EC-m_bar_0) * c_EC 
+        + (m_bar_e-2*m_bar_0)*c_e  ) 
+    c_T= (Fun_rho(c_e, c_EC,T) - b) / m_bar_0
+    return c_T
+
+def Fun_D_0_EC_e(c_e, c_EC , D_0_e_EC,T):   # Eq. (41)
+    # Pre-condition
+    D_0_EC_EC  = 5E-10
+    D_0_e_e = 3e-10
+    c_T = Fun_c_T(c_e, c_EC,T)
+    c_0 = c_T - 2*c_e - c_EC 
+    V_bar_EC = 6.5312e-05
+    V_bar_0  = 1.0347e-04
+    V_bar_e  = 5.0943e-05
+    C_11 = 1 + c_e/c_0 + (V_bar_EC*c_EC)/(V_bar_0*c_0)
+    C_12 = (V_bar_e-2*V_bar_0)*c_EC / (V_bar_0*c_0)
+    C_21 = (V_bar_EC- V_bar_0)*c_e  / (V_bar_0*c_0)
+    C_22 = 1 + c_EC/c_0 + (V_bar_e*c_e)/(V_bar_0*c_0)
+    D_0_EC_e = (
+        D_0_EC_EC*C_12/C_11          + 
+        2 * c_EC/c_e * (C_22/C_11 - C_12*C_21/(C_11*C_11)  ) * (
+            D_0_e_EC -  (D_0_e_EC*C_12 - D_0_e_e*C_11)*C_21 / (C_21*C_12-C_22*C_11)     
+        )
+    )
+    return D_0_EC_e
+
+
+def Dimensional_EC_Lithium_ion_cross_diffusivity(c_e, c_EC , T):
+    D_0_e_EC = pybamm.Parameter("Lithium ion EC cross diffusivity [m2.s-1]") 
+    return Fun_D_0_EC_e(c_e, c_EC , D_0_e_EC,T)
+
+def EC_Lithium_ion_cross_diffusivity_1e_11(c_e, c_EC , T):
+    D_0_EC_e = (
+        (c_EC >= 0 ) * (1e-11 )
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_0_EC_e
+
+
+def EC_transference_number_3(c_e,c_EC, T):# Mark Ruihe add update 221212
+    Xi_0 =   3.0     # pybamm.Parameter("EC transference number zero") 
+    Xi = ( 
+        (c_EC < 0 ) * Xi_0
+        + 
+        (c_EC >= 0) * Xi_0
+    )
+    return Xi
+
+def Fun_y_e_u_e(y_e, y_EC): # Eq. (12) in Jung 2023 paper
+    T  = 298.15
+    R = 8.31446261815324; F = 96485.3321
+    d_deltaU_dye = 2.30205508980545*y_EC*(-2*y_e - y_EC + 1) - 0.0513851582545859*y_EC*(89.6*y_e + 6.81*y_EC - 12.6) + y_EC*(24.5569671298666*y_e - 2.26403007269705 + 0.0776943592809339/y_e)/(1 - 2*y_e) + 2*y_EC*(12.2784835649333*y_e**2 - 2.26403007269705*y_e + 0.0776943592809339*pybamm.log(y_e) + 0.211527003955003)/(1 - 2*y_e)**2 - 2*y_EC*(-1.10889171513396*y_e**0.5 - 10.4851415418483*y_e**3 + 6.0865719952557*y_e**2 + 4.76340417020011*y_e - 10.3386938408227*y_e**1.5 + 6.51820732459422*y_e**2.5 + 64.462681030378*y_e**3.5 - 74.1487833613674*y_e**4.5 + 0.0301630878954419*pybamm.log(y_e) + 0.184138714605309)/(1 - 2*y_e)**2 + (-y_EC/(1 - 2*y_e) + 1)*(-0.554445857566982/y_e**0.5 - 15.508040761234*y_e**0.5 - 31.4554246255448*y_e**2 + 12.1731439905114*y_e + 16.2955183114856*y_e**1.5 + 225.619383606323*y_e**2.5 - 333.669525126154*y_e**3.5 + 4.76340417020011 + 0.0301630878954419/y_e)
+
+    u_e = F/(R*T) * d_deltaU_dye 
+    return u_e * y_e
+def Fun_t_0plus_Wang2021_yBased(y_e,y_EC):
+    return 0.4107-1.487*y_e+2.547*y_e**2
+def Fun_X_e_e_yBased(y_e,y_EC):
+    u_e_y_e = Fun_y_e_u_e(y_e, y_EC)
+    t_0plus = Fun_t_0plus_Wang2021_yBased(y_e,y_EC)
+    return u_e_y_e / (1-t_0plus) - 2
+def Fun_X_EC_EC_yBased(y_e,y_EC):
+    return 0.5* Fun_X_e_e_yBased(y_e,y_EC)
+def Fun_u_EC(y_e, y_EC): # Eq. (12) in Jung 2023 paper
+    T  = 298.15
+    R = 8.31446261815324; F = 96485.3321
+    d_deltaU_dyEC = 0.174966463856865*y_EC*(-2*y_e - y_EC + 1) - 0.0256925791272929*y_EC*(89.6*y_e + 6.81*y_EC - 12.6) + 0.0256925791272929*(-2*y_e - y_EC + 1)*(89.6*y_e + 6.81*y_EC - 12.6) + (12.2784835649333*y_e**2 - 2.26403007269705*y_e + 0.0776943592809339*pybamm.log(y_e) + 0.211527003955003)/(1 - 2*y_e) - (-1.10889171513396*y_e**0.5 - 10.4851415418483*y_e**3 + 6.0865719952557*y_e**2 + 4.76340417020011*y_e - 10.3386938408227*y_e**1.5 + 6.51820732459422*y_e**2.5 + 64.462681030378*y_e**3.5 - 74.1487833613674*y_e**4.5 + 0.0301630878954419*pybamm.log(y_e) + 0.184138714605309)/(1 - 2*y_e)
+    u_EC = F/(R*T) * d_deltaU_dyEC   # .subs({x:y_e,  y:y_EC })
+    return u_EC
+def Fun_Xi_tidle(c_e,c_EC,T):
+    T = 298.15
+    c_T = Fun_c_T(c_e, c_EC,T)
+    y_e = c_e / c_T
+    y_EC =c_EC/ c_T
+    u_EC = Fun_u_EC(y_e, y_EC)
+    X_oo = Fun_X_EC_EC_yBased(y_e,y_EC)
+    Xi_tilde = - u_EC / (1+X_oo)
+    return Xi_tilde
+
+def t_0plus_linkEC(c_e,c_EC, T):# Mark Ruihe add update 221214
+    c_EC_0 = pybamm.Parameter("Typical EC concentration [mol.m-3]")
+    t_0plus = ( 
+        (c_EC < 0 ) * 0 
+        + 
+        (c_EC <= c_EC_0) * (c_e >= 0) * (0.34 * c_EC / c_EC_0 )
+        +
+        (c_EC > c_EC_0 ) * 0.34  
+    )
+    return t_0plus
+
 
 def EC_transference_number(c_e,c_EC, T):# Mark Ruihe add update 221212
     c_EC_0 = pybamm.Parameter("Typical EC concentration [mol.m-3]")
@@ -1799,22 +1900,24 @@ def Add_var(para_used,model):
     dLJP_dcEC = para_used["Measured dLJP_dcEC"] # dLJP_Two_Species_dco_Jung2023(x,y,T): # # ~~~~# x: ce; y: co 
     dLJP_dce  = para_used["Measured dLJP_dce"]
     Xi = para_used["EC transference number"]
+    c_T = para_used["Total concentration [mol.m-3]"]
     model.variables["Electrolyte diffusivity [m2.s-1]"] = D_e(c_e,c_EC, T)
     model.variables["EC diffusivity in electrolyte [m2.s-1]"] = D_EC(c_e,c_EC, T)
     model.variables["EC Lithium ion cross diffusivity [m2.s-1]"] = D_EC_e_cross(c_e,c_EC, T)
     model.variables["Electrolyte conductivity [S.m-1]"] = sigma_e(c_e,c_EC, T)
     model.variables["EC transference number"] = Xi(c_e,c_EC, T)
+    model.variables["Total concentration [mol.m-3]"] = c_T(c_e,c_EC, T)
     model.variables["c(EC) over c(Li+)"] = c_EC / c_e
     model.variables["dLJP_dcEC"] =  dLJP_dcEC(c_e,c_EC, T)
     model.variables["dLJP_dce"] =  dLJP_dce(c_e,c_EC, T)
     # molar mass in Taeho's paper: 
     M_EMC = 104.105*1e-3; M_EC = 88.062*1e-3; M_e = 151.905*1e-3; #   kg/mol
-    c_EMC = -0.631191*c_EC-0.49232*c_e+9664.2812
+    c_EMC = model.variables["Total concentration [mol.m-3]"] - 2*c_e- c_EC
     model.variables["c(EMC) [mol.m-3]"] =  c_EMC
-    c_T = c_EC+c_EMC+2*c_e
-    model.variables["Total electrolyte concentration [mol.m-3]"] = c_T
-    model.variables["y_e"] = c_e / c_T
-    model.variables["y_EC"] = c_EC / c_T
+    
+    model.variables["Total electrolyte concentration [mol.m-3]"] = model.variables["Total concentration [mol.m-3]"] 
+    model.variables["y_e"] = c_e / model.variables["Total concentration [mol.m-3]"] 
+    model.variables["y_EC"] = c_EC / model.variables["Total concentration [mol.m-3]"] 
     model.variables["EC:EMC wt%"] =  (c_EC*M_EC) / (c_EMC*M_EMC) 
     model.variables["EC:EMC %"] =  c_EC / c_EMC 
     t_0plus = para_used["Cation transference number"]
@@ -1828,8 +1931,10 @@ def Run_P3_OneCycle_Dict(
     Timer = pybamm.Timer()
     count_i = int(index_i);
     print(f'Start Now! C rate: {Rate_Dis}')  
-    # [BasicPath,Target,Path_Exp_Crate,book_name_xlsx,sheet_name_xlsx,] = Path_pack
-    [BasicPath,Target,] = Path_pack
+    if len(Path_pack)>2:
+        [BasicPath,Target,Path_Exp_Crate,book_name_xlsx,sheet_name_xlsx,] = Path_pack
+    else:
+        [BasicPath,Target,] = Path_pack
     ##### Initialise Para_0 and model 
     CyclePack,para_used = Para_init_Dict(Para_dd_i)
     [Mesh_list,model_options] = CyclePack
@@ -1843,7 +1948,7 @@ def Run_P3_OneCycle_Dict(
     Exp_1  = pybamm.Experiment(
     [ (
         f"Hold at {V_max} V until C/100",
-        f"Discharge at {Rate_Dis} C until {V_min} V ({ts_dis} second period)", 
+        f"Discharge at {Rate_Dis} C until {V_min} V", #  ({ts_dis} second period)
         #"Rest for 1 hour",
         #f"Charge at 1 C until {V_max} V (2 second period)", 
         #f"Hold at {V_max} V until C/100"
@@ -1879,7 +1984,7 @@ def Run_P3_OneCycle_Dict(
     print(f'Finish {str_pickle}_Rate={Rate_Dis}C with Spent {Timer.time()}')
     Timer.reset()
     
-    """ # Get temperature rise and discharge capacity as well
+    # Get temperature rise and discharge capacity as well
     step_i = sol.cycles[0].steps[1]
     cap = (
         step_i["Discharge capacity [A.h]"].entries[-1]
@@ -1890,14 +1995,15 @@ def Run_P3_OneCycle_Dict(
     t_dis =( 
         step_i["Time [h]"].entries - step_i["Time [h]"].entries[0] 
         ) 
-    vol_dis = step_i["Terminal voltage [V]"].entries """
+    vol_dis = step_i["Terminal voltage [V]"].entries 
     
-    return sol_return
+    return sol_return,cap,Trise,t_dis,vol_dis
 
 
 def Scan_Crate_Paper(
         index_i, Para_dd_i, Path_pack ,  str_model,
-        Rate_Dis_All, Return_sol):   
+        Rate_Dis_All, str_pickle,
+        Return_sol,Save_sol):   
     Case_Dict = {}
     print('Start Now! Scan %d.' % index_i)  
     Sol_All =[]; Cap_Dis_All = [];  Trise_All = []; 
@@ -1906,7 +2012,8 @@ def Scan_Crate_Paper(
         for Rate_Dis in Rate_Dis_All:
             sol,cap,Trise,t_dis,vol_dis = Run_P3_OneCycle_Dict(
                 index_i, Para_dd_i, Path_pack,Rate_Dis,
-                Return_sol)
+                str_pickle,Return_sol,Save_sol) 
+            # (index_i, Para_dd_i, Path_pack,Rate_Dis,str_pickle,Return_sol,Save_sol):
             Sol_All.append(sol)
             Cap_Dis_All.append(cap)
             Trise_All.append(Trise)
@@ -2233,16 +2340,18 @@ def Run_P3_model(
     dLJP_dcEC = Para_0["Measured dLJP_dcEC"] # dLJP_Two_Species_dco_Jung2023(x,y,T): # # ~~~~# x: ce; y: co 
     dLJP_dce  = Para_0["Measured dLJP_dce"]
     Xi = Para_0["EC transference number"]
+    c_T = Para_0["Total concentration [mol.m-3]"]
     model.variables["Electrolyte diffusivity [m2.s-1]"] = D_e(c_e,c_EC, T)
     model.variables["EC diffusivity in electrolyte [m2.s-1]"] = D_EC(c_e,c_EC, T)
     model.variables["Electrolyte conductivity [S.m-1]"] = sigma_e(c_e,c_EC, T)
     model.variables["EC transference number"] = Xi(c_e,c_EC, T)
+    model.variables["Total concentration [mol.m-3]"] = c_T(c_e,c_EC, T)
     model.variables["c(EC) over c(Li+)"] = c_EC / c_e
     model.variables["dLJP_dcEC"] =  dLJP_dcEC(c_e,c_EC, T)
     model.variables["dLJP_dce"] =  dLJP_dce(c_e,c_EC, T)
     # molar mass in Taeho's paper: unit: g/mol
     M_EMC = 104.105; M_EC = 88.062; M_e = 151.905;
-    c_EMC = 9778-0.5369*c_e-0.6411*c_EC
+    c_EMC = model.variables["Total concentration [mol.m-3]"] - c_EC - 2*c_e
     model.variables["c(EMC) [mol.m-3]"] =  c_EMC
     model.variables["EC:EMC wt%"] =  (c_EC*M_EC) / (c_EMC*M_EMC) 
     t_0plus = Para_0["Cation transference number"]

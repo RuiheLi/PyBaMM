@@ -271,6 +271,15 @@ def EC_diffusivity_3E_10(c_e, c_EC , T):
     )
     return D_ec_dim
 
+def EC_diffusivity_5E_5(c_e, c_EC , T):
+    # Ruihe add: set Heaviside(c_EC) * 3e-10 
+    D_ec_dim = (
+        (c_EC >= 0 ) * 5e-5 
+        +  (c_EC < 0 ) * 0 
+    )
+    return D_ec_dim
+
+
 # Update 240125 Main change of this round
 def Fun_rho(c_e, c_EC,T):
     rho_0 = 1006.1 
@@ -363,6 +372,21 @@ def t_0plus_linkEC(c_e,c_EC, T):# Mark Ruihe add update 221214
         (c_EC > c_EC_0 ) * 0.34  
     )
     return t_0plus
+
+def electrolyte_conductivity_Andrew2022(x,y, T):# x:Li+,y:ec
+    p00 =     -0.2524;
+    p10 =    0.001402;
+    p01 =   0.0001142 ;
+    p20 =  -5.379e-07  ;
+    p11 =  -1.399e-08 ;
+    p02 =  -8.137e-09  ;
+    kai  = (
+        (x > 0 )  *(
+        (p00 + p10*x + p01*y + p20*x*x + p11*x*y + p02*y*y)
+        + (x <= 0 ) * 0 )
+    )
+    kai_final = (kai>0) * kai + (kai<0) * 0
+    return kai_final
 
 def electrolyte_conductivity_Ding2001(c_e, c_EC,  T):
     # c_e is lithium ion concentration in electrolyte in mol/m3, need to change to mol/kg
@@ -1155,12 +1179,12 @@ def get_parameter_values():
         "Measured dLJP_dcEC": dLJP_2_Species_dc_EC_np,
         "Measured dLJP_dce": dLJP_2_Species_dc_e_np,
         "Electrolyte diffusivity [m2.s-1]": diff_3E_10,
-        "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Wang2021,
+        "Electrolyte conductivity [S.m-1]": electrolyte_conductivity_Andrew2022,# electrolyte_conductivity_Wang2021,
 
         # Mark Ruihe block start
         # Typical electrolyte: 1M LiPF6 in EMC:EC=1:1 wt%, 
         #           c_e=1000, c_EMC=5252.58, c_EC=6209.49, c_T=13462.07
-        "EC transference number": Fun_Xi_tidle,# Update 240313 - becomes a function
+        "EC transference number": EC_transference_number_3,#Fun_Xi_tidle,# , # Update 240313 - becomes a function
         "EC transference number zero": 0.7  , # from Andrew": 
         "EC initial concentration in electrolyte [mol.m-3]": 6209.49,
         "Typical EC concentration [mol.m-3]": 6209.49, 
@@ -1169,7 +1193,7 @@ def get_parameter_values():
         "Total concentration [mol.m-3]":Fun_c_T,
         # Update 240125: Distinguish EC,e cross diffusivity and e,EC cross diffusivity
         "EC Lithium ion cross diffusivity [m2.s-1]": Dimensional_EC_Lithium_ion_cross_diffusivity,  # D_(EC,e)^0
-        "Lithium ion EC cross diffusivity [m2.s-1]": 1.5e-11,  # Free parameter - D_(e,EC)^0
+        "Lithium ion EC cross diffusivity [m2.s-1]": 0,  # Free parameter - D_(e,EC)^0
         "Typical EC Lithium ion cross diffusivity [m2.s-1]": 1.5e-12,
         "EC diffusivity in electrolyte [m2.s-1]": EC_diffusivity_5E_10,     #from Andrew
         "Typical EC diffusivity in electrolyte [m2.s-1]": 5E-10, #from Andrew
@@ -1187,7 +1211,7 @@ def get_parameter_values():
         "Ambient temperature [K]": 298.15,
         "Number of electrodes connected in parallel to make a cell": 1.0,
         "Number of cells connected in series to make a battery": 1.0,
-        "Lower voltage cut-off [V]": 2.5,
+        "Lower voltage cut-off [V]": 2.49,
         "Upper voltage cut-off [V]": 4.4,
         "Initial concentration in negative electrode [mol.m-3]": 28543.0,
         "Initial concentration in positive electrode [mol.m-3]": 12727.0,
