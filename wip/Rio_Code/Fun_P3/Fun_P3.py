@@ -2706,8 +2706,16 @@ def Run_P3_model(
             mdic_cycles = {
                 "Full_cycle": Full_cycle,
             }
-            midc_merge = {**my_dict_AGE, **mdic_cycles}
-            savemat(BasicPath + Target+f"{count_i}th Scan/" +f"{count_i}th Scan" + '-for_AGE_only.mat',midc_merge)  
+            #midc_merge = {**my_dict_AGE, **mdic_cycles}
+            midc_merge = [my_dict_AGE, mdic_cycles]
+            import pickle,json
+            with open(
+                BasicPath + Target+f"{count_i}th Scan/" 
+                +f"{count_i}th Scan" + '-for_AGE_only.pkl', 'wb') as file:
+                pickle.dump(midc_merge, file)
+            """ savemat(
+                BasicPath + Target+f"{count_i}th Scan/" 
+                +f"{count_i}th Scan" + '-for_AGE_only.mat',midc_merge)   """
         except:
             print(f"Something went wrong during saving .mat for scan {count_i}")
             midc_merge = {}

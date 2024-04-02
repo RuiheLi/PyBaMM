@@ -7,10 +7,21 @@ import traceback
 import multiprocessing
 font = {'family' : 'DejaVu Sans','size'   : fs}
 mpl.rc('font', **font)
-# For local PC
-str_path_0 = os.path.abspath(os.path.join(pybamm.__path__[0],'..'))
-str_path_1 = os.path.abspath(os.path.join(str_path_0,"wip/Rio_Code/Fun_P3"))
-sys.path.append(str_path_1) 
+
+On_HPC = False
+Target  = '/Long_int=3e_19_8cyc2/' # wip\Rio_Code\P3R10\.ipynb
+
+if On_HPC:
+    BasicPath=os.getcwd() # for HPC
+else:
+    BasicPath = os.path.expanduser("~/EnvPBGEM_ECDrag2/Double_SimSave/Double_Trans/")
+    str_path_0 = os.path.abspath(os.path.join(pybamm.__path__[0],'..'))
+    str_path_1 = os.path.abspath(os.path.join(str_path_0,"wip/Rio_Code/Fun_P3"))
+    sys.path.append(str_path_1) 
+
+
+if not os.path.exists(BasicPath + Target):
+   os.mkdir(BasicPath + Target);
 
 from Fun_P3 import *
 
@@ -21,7 +32,7 @@ Para_dict_Same = {
    "SaveAsList":[  [4,2,1,1,1,1],  ],
    "Ageing temperature":[25,],
 
-   "Mesh list":[ [20,10,20,100,20], ],   # Simon uses 30
+   "Mesh list":[ [10,5,10,100,20], ], 
    "Para_Set":[ "Li2023_ECdrag",],
    "Contact resistance [Ohm]":[6e-3],
    "Initial Neg SOC":[0.8841301667966484,],
@@ -171,13 +182,7 @@ exp_index_pack = [
    step_AGE_CC,step_AGE_CV,]
 
 # Path and save to excel
-#BasicPath=os.getcwd() # for HPC
-BasicPath = os.path.expanduser("~/EnvPBGEM_ECDrag2/Double_SimSave/Double_Trans/")
 
-Target  = '/Long_int=3e_19_8cyc/' # wip\Rio_Code\P3R10\.ipynb
-
-if not os.path.exists(BasicPath + Target):
-   os.mkdir(BasicPath + Target);
 book_name_xlsx = 'Long_int.xlsx';sheet_name_xlsx = 'Results';
 Path_pack = [BasicPath,Target,book_name_xlsx,sheet_name_xlsx,];
 # Write the head for excel file:
@@ -201,7 +206,7 @@ write_excel_xlsx(
     sheet_name_xlsx, Values_1)   
 
 Index = np.arange(1,len(Para_dict_list)+1).tolist()  
-if __name__ == "__main__":
+""" if __name__ == "__main__":
     pool = multiprocessing.Pool(3)
     processes = [pool.apply_async(
         Run_P3_model, 
@@ -210,7 +215,15 @@ if __name__ == "__main__":
             keys_all_AGE,   Exp_AGE_List, exp_index_pack 
          )   ) 
          for Para_dict_i,index_i in zip(Para_dict_list,Index)]
-    result = [p.get() for p in processes] 
+    result = [p.get() for p in processes]  """
+
+result = []
+for Para_dict_i,index_i in zip(Para_dict_list,Index):
+    result_i = Run_P3_model(
+            index_i, Para_dict_i,   Path_pack , 
+            keys_all_AGE,   Exp_AGE_List, exp_index_pack 
+         ) 
+    result.append(result_i)
 
 # Write all seperate excel files into a big file:
 for i in Index:
