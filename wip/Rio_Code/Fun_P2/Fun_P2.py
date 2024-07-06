@@ -882,7 +882,7 @@ def Para_init(Para_dict):
         else:
             Para_0.update({key: value},check_already_exists=False)
     # Mark Ruihe - Update 231004
-    cap_loss =   1.5       #   5 - 4.86491   # change for debug
+    cap_loss =   5 - 4.86491      #   5 - 4.86491   # change for debug
     Para_0 = Overwrite_Initial_L_SEI_0_Neg_Porosity(Para_0,cap_loss)
 
     return CyclePack,Para_0
@@ -2041,6 +2041,12 @@ def load_combinations_from_csv(Para_file):
     return parameter_names, combinations
 
 def Initialize_exp_text( index_exp, V_max, V_min, Add_Rest):
+    """ TODO: if at the end of ageing cycles the cell SOC is NOT 100%SOC, then
+    need to top it up before RPT or at the start of RPT! That should involve 
+    "0.3C charge to 4.2V" if the SOC after ageing cycles is far away from 100%
+    like Exp-1 and 2. Doing a CV hold at 4.2V at 85%SOC can sometimes work but 
+    prone to fail
+    This applied to Exp-1 and 2, but Exps 3,5-9 are fine!  """
     if index_exp ==2:
         discharge_time_mins = 0.15* 60 * 4.86491/5
         charge_time_mins = 0.5* 60 * 4.86491/5
@@ -2143,48 +2149,78 @@ def Initialize_exp_text( index_exp, V_max, V_min, Add_Rest):
         print("Not yet implemented!")
 
     # now for RPT: 
-    exp_RPT_text = [ (
-        "Rest for 10 s",   # add here to correct values of step_0p1C_CD
-        "Rest for 1 hours (20 minute period)", 
+    exp_RPT_for_Partial_DOD_Age_text = [ (
+        f"Charge at 0.3C until {V_max}V",
+        f"Hold at {V_max}V until C/100",
+        "Rest for 1 hours",
+        "Rest for 10 s",   # add here to correct values of step_0p1C_CD 
         # 0.1C cycle 
         f"Discharge at 0.1C until {V_min} V",  
-        "Rest for 3 hours (20 minute period)",  
+        "Rest for 3 hours",  
         f"Charge at 0.1C until {V_max} V",
         f"Hold at {V_max}V until C/100",
-        "Rest for 1 hours (20 minute period)",
+        "Rest for 1 hours",
         # 0.5C cycle 
-        f"Discharge at 0.5C until {V_min} V (6 minute period)",  
-        "Rest for 3 hours (20 minute period)",
-        f"Charge at 0.5C until {V_max} V (6 minute period)",
+        f"Discharge at 0.5C until {V_min} V",  
+        "Rest for 3 hours",
+        f"Charge at 0.5C until {V_max} V",
         f"Hold at {V_max}V until C/100",
         # Update 23-11-17: add one more 0.5C cycle to increase throughput capacity
-        f"Discharge at 0.5C until {V_min} V (6 minute period)",  
-        "Rest for 3 hours (20 minute period)",
-        f"Charge at 0.5C until {V_max} V (6 minute period)",
+        f"Discharge at 0.5C until {V_min} V",  
+        "Rest for 3 hours",
+        f"Charge at 0.5C until {V_max} V",
         f"Hold at {V_max}V until C/100",   
-        "Rest for 3 hours (20 minute period)",  
+        "Rest for 3 hours",  
+        ) ] 
+    exp_RPT_for_Full_DOD_Age_text = [ (
+        "Rest for 10 s",   # add here to correct values of step_0p1C_CD
+        "Rest for 10 s",   # add here to correct values of step_0p1C_CD
+        "Rest for 1 hours", 
+        "Rest for 10 s",   # add here to correct values of step_0p1C_CD
+        # 0.1C cycle 
+        f"Discharge at 0.1C until {V_min} V",  
+        "Rest for 3 hours",  
+        f"Charge at 0.1C until {V_max} V",
+        f"Hold at {V_max}V until C/100",
+        "Rest for 1 hours",
+        # 0.5C cycle 
+        f"Discharge at 0.5C until {V_min} V",  
+        "Rest for 3 hours",
+        f"Charge at 0.5C until {V_max} V",
+        f"Hold at {V_max}V until C/100",
+        # Update 23-11-17: add one more 0.5C cycle to increase throughput capacity
+        f"Discharge at 0.5C until {V_min} V",  
+        "Rest for 3 hours",
+        f"Charge at 0.5C until {V_max} V",
+        f"Hold at {V_max}V until C/100",   
+        "Rest for 3 hours",  
         ) ] 
     exp_breakin_text = [ (
         # refill
+        #"Rest for 10 s",   # add here to correct values of step_0p1C_CD
+        #f"Hold at {V_max}V until C/100",
+        #"Rest for 10 s", # Mark Ruihe change ad hoc setting for LFP 
+        f"Discharge at 0.5C until {V_max-0.2}V", # start from discharge as it is easier for unbalanced cells
+        f"Charge at 0.3C until {V_max}V",
         f"Hold at {V_max}V until C/100",
-        "Rest for 1 hours (20 minute period)", 
+        "Rest for 1 hours", 
         # 0.1C cycle 
         f"Discharge at 0.1C until {V_min} V",  
-        "Rest for 3 hours (20 minute period)",  
+        "Rest for 3 hours",  
         f"Charge at 0.1C until {V_max} V",
         f"Hold at {V_max}V until C/100",
-        "Rest for 1 hours (20 minute period)",
+        "Rest for 1 hours",
         # 0.5C cycle 
-        f"Discharge at 0.5C until {V_min} V (6 minute period)",  
-        "Rest for 3 hours (20 minute period)",
-        f"Charge at 0.5C until {V_max} V (6 minute period)",
+        f"Discharge at 0.5C until {V_min} V",  
+        "Rest for 3 hours",
+        f"Charge at 0.5C until {V_max} V",
         f"Hold at {V_max}V until C/100",
         # Update 23-11-17: add one more 0.5C cycle to increase throughput capacity
-        f"Discharge at 0.5C until {V_min} V (6 minute period)",  
-        "Rest for 3 hours (20 minute period)",
-        f"Charge at 0.5C until {V_max} V (6 minute period)",
+        f"Discharge at 0.5C until {V_min} V",  
+        "Rest for 3 hours",
+        f"Charge at 0.5C until {V_max} V",
         f"Hold at {V_max}V until C/100",   
-        "Rest for 3 hours (20 minute period)",  
+        "Rest for 3 hours",  
         ) ] 
     exp_RPT_GITT_text = [ (
         "Rest for 5 minutes (1 minute period)",  
@@ -2195,22 +2231,25 @@ def Initialize_exp_text( index_exp, V_max, V_min, Add_Rest):
     exp_refill = [ (
         f"Charge at 0.3C until {V_max}V",
         f"Hold at {V_max}V until C/100",
-        "Rest for 1 hours (20 minute period)", 
+        "Rest for 1 hours", 
         ) ] 
     if index_exp ==2:
         exp_adjust_before_age = [ (
             # adjust to target SOC, SOC before this step must be 100%
             f"Discharge at 1C for {discharge_time_mins} minutes or until {V_min}V", # discharge for 15%SOC
-            "Rest for 3 hours (20 minute period)", 
+            "Rest for 3 hours", 
             ) ] 
+        # Update: 231219 for Exp-2, need to top up the cell after ageing and before C/10
+        exp_RPT_text = exp_RPT_for_Partial_DOD_Age_text 
     else:
         exp_adjust_before_age = [ (
             # just a place holder for now TODO 
-            "Rest for 1 hours (20 minute period)", 
+            "Rest for 1 hours", 
             ) ] 
+        exp_RPT_text = exp_RPT_for_Full_DOD_Age_text 
     # step index for RPT
-    step_0p1C_CD = 2; step_0p1C_CC = 4;   step_0p1C_RE =3;    
-    step_0p5C_CD = 7;  
+    step_0p1C_CD = 4; step_0p1C_CC = 6;   step_0p1C_RE =5;    
+    step_0p5C_CD = 9;  
     Pack_return = [
         exp_AGE_text, step_AGE_CD, step_AGE_CC, step_AGE_CV,
         exp_breakin_text, exp_RPT_text, exp_RPT_GITT_text, 
