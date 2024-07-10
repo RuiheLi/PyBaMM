@@ -13,7 +13,7 @@ mpl.rc('font', **font)
 
 ########################     Global settings!!!
 rows_per_file = 3;  Scan_end_end = 27;
-purpose_i = "Full_Exp23_Paper_11_fine"
+purpose_i = "Full_Exp23_Paper_11"
 
 On_HPC = False 
 Runshort  =   False                    # a long run or a quick test
