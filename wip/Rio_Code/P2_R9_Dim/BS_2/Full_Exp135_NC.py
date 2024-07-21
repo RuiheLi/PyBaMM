@@ -12,11 +12,11 @@ fs=17; font = {'family' : 'DejaVu Sans','size'   : fs}
 mpl.rc('font', **font)
 
 ########################     Global settings!!!
-rows_per_file = 3;  Scan_end_end = 27;
-purpose_i = "Full_Exp23_Paper_11_mid2"
+rows_per_file = 1;  Scan_end_end = 9;
+purpose_i = "Full_Exp135_NC"
 
 On_HPC = False 
-Runshort  =   False                    # a long run or a quick test
+Runshort  =   True                    # a long run or a quick test
 
 
 if On_HPC:

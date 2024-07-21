@@ -12,11 +12,11 @@ fs=17; font = {'family' : 'DejaVu Sans','size'   : fs}
 mpl.rc('font', **font)
 
 ########################     Global settings!!!
-rows_per_file = 3;  Scan_end_end = 27;
-purpose_i = "Full_Exp23_Paper_11_mid2"
+rows_per_file = 1;  Scan_end_end = 12;
+purpose_i = "Full_Exp1235_NC"
 
 On_HPC = False 
-Runshort  =   False                    # a long run or a quick test
+Runshort  =   True                    # a long run or a quick test
 
 
 if On_HPC:
@@ -327,30 +327,14 @@ fs = 13; dpi = 100;
 midc_merge_all = [];Sol_RPT_all = [];Sol_AGE_all = [];
 Plot_Exp=True;     Timeout=False;  Timelimit = int(3600*2)
 Return_Sol=False;   Check_Small_Time=True;  R_from_GITT = True
-Add_Rest = False
-""" midc_merge,Sol_RPT,Sol_AGE=Run_P2_Excel(
+Add_Rest = False    ; Add_Rest = False
+midc_merge,Sol_RPT,Sol_AGE=Run_P2_Excel(
     Para_dict_list[0],BasicPath, Path_Input, 
     purpose,    Exp_pack, keys_all,dpi,fs,
-    Runshort,   Plot_Exp,Timeout,Return_Sol,
-    Check_Small_Time,R_from_GITT)  """
-if __name__ == "__main__":
-    pool = multiprocessing.Pool(int(pool_no))
-    processes = [
-    pool.apply_async(
-        Run_P2_Excel, 
-        args=(
-            Para_dict_i,BasicPath, Path_Input, 
-            purpose,    Exp_pack, keys_all,dpi,fs,
-            Runshort,   Plot_Exp,Timeout,Timelimit,
-            Return_Sol,Check_Small_Time,R_from_GITT,Add_Rest
-        ) )
-        for Para_dict_i in Para_dict_list]
-    Result = [p.get() for p in processes]  
+    Runshort,   Plot_Exp,Timeout,Timelimit,Return_Sol,
+    Check_Small_Time,R_from_GITT,Add_Rest)  
 
-for result in Result:
-    midc_merge_all.append(result[0])
-    Sol_RPT_all.append(result[1])
-    Sol_AGE_all.append(result[2]) 
+ 
 
 # After finish scans, get summary of the errors of all cases:
 fs=17;

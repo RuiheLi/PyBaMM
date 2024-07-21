@@ -1437,6 +1437,13 @@ def get_parameter_values():
         "Initial inner SEI thickness [m]": 1.23625e-08,
         "Initial outer SEI thickness [m]": 1.23625e-08,
         "EC initial concentration in electrolyte [mol.m-3]": 4541.0,
+        # Mark Ruihe start
+        'Typical EC concentration in electrolyte [mol.m-3]':4541.0, 
+        "Current solvent concentration in the reservoir [mol.m-3]":4541.0,
+        "Current electrolyte concentration in the reservoir [mol.m-3]":1000,
+        "Ratio of Li-ion concentration change in " 
+        "electrolyte consider solvent consumption":1.0,
+        # Mark Ruihe end
         "EC diffusivity [m2.s-1]": 2e-18,
         "SEI kinetic rate constant [m.s-1]": 1e-12,
         "SEI open-circuit potential [V]": 0.4,
@@ -1466,7 +1473,7 @@ def get_parameter_values():
         "Nominal cell capacity [A.h]": 5.0,
         "Typical current [A]": 5.0,
         "Current function [A]": 5.0,
-        "Contact resistance [Ohm]": 0.013,
+        "Contact resistance [Ohm]": 0.0115,
         # negative electrode
         "Negative electrode diffusivity activation energy [J.mol-1]":1.7e4,
         "Negative electrode conductivity [S.m-1]": 215.0,
@@ -1576,7 +1583,7 @@ def get_parameter_values():
         "EC partial molar volume [m3.mol-1]": 6.667e-05,
         # experiment
         "Reference temperature [K]": 298.15,
-        "Total heat transfer coefficient [W.m-2.K-1]": 10.0,
+        "Total heat transfer coefficient [W.m-2.K-1]": 20.0,
         "Ambient temperature [K]": 298.15,
         "Number of electrodes connected in parallel to make a cell": 1.0,
         "Number of cells connected in series to make a battery": 1.0,

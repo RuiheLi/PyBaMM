@@ -1,8 +1,0 @@
-#PBS -l walltime=3:00:00
-#PBS -l select=1:ncpus=192:mem=768gb
-
-module load anaconda3/personal
-source activate EnvPbGEM
-
-cd $PBS_O_WORKDIR
-python3 d2_int_long.py  
