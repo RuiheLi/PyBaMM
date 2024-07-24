@@ -13,6 +13,8 @@ from pybamm import constants,exp;import matplotlib as mpl
 ########################     Global settings!!!
 rows_per_file = 1;  Scan_end_end = 270  
 purpose_i = "Full_Exp2_NC_SA" 
+
+
 # define options:
 On_HPC =  False;        Runshort=True;    Add_Rest = False
 Plot_Exp=True;          Timeout=True;     Return_Sol=True;   
