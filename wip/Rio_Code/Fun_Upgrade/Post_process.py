@@ -623,9 +623,10 @@ def Fun_Save_Partial_Age(task_result, config):
     return 
 
 
-import shutil
-def Copy_png(Root_Path,rows_per_file,Scan_end_end,purpose_i):
-    Path_purpose = os.path.join(Root_Path, purpose_i)
+import shutil,os; import pandas as pd
+def Copy_png(Path_Results, purpose_i, Path_Plot_Collect,
+            rows_per_file, Scan_end_end):
+
     source_folders = []
     for i_bundle in range(int(Scan_end_end/rows_per_file)):
         Scan_start = (i_bundle)*rows_per_file+1;    
@@ -634,20 +635,27 @@ def Copy_png(Root_Path,rows_per_file,Scan_end_end,purpose_i):
         source_folders.append(purpose)
         #print(purpose)
 
-    # Create the Plot_Collect folder if it doesn't exist
-    plot_collect_directory = os.path.join(Path_purpose, "Plot_Collect")
-    os.makedirs(plot_collect_directory, exist_ok=True)
+    # Initialize a list to store the results
+    List_check_succeed = []
 
     # Move the .png files to the Plot_Collect folder
-    for folder in source_folders:
-        plots_directory = os.path.join(Path_purpose, folder, "Plots")
+    for k,folder in enumerate(source_folders):
+        plots_directory = os.path.join(
+            Path_Results, folder, "Plots")
         if os.path.exists(plots_directory):
-            for filename in os.listdir(plots_directory):
-                if filename.startswith("0_") and filename.endswith("Summary.png"):
-                    source_file = os.path.join(plots_directory, filename)
-                    destination_file = os.path.join(plot_collect_directory, filename)
-                    shutil.copy(source_file, destination_file)
-    return 
+            if not os.listdir(plots_directory):
+                print(f"The directory {folder} is empty, case {k+1} fail")
+                List_check_succeed.append([k+1, False])
+            else:
+                for filename in os.listdir(plots_directory):
+                    if filename.startswith("0_") and filename.endswith("Summary.png"):
+                        source_file = os.path.join(plots_directory, filename)
+                        destination_file = os.path.join(Path_Plot_Collect, filename)
+                        shutil.copy(source_file, destination_file)
+                List_check_succeed.append([k+1, True])
+    df_succeed = pd.DataFrame(List_check_succeed, columns=["Case", "Succeed"])
+
+    return df_succeed
 
 
 

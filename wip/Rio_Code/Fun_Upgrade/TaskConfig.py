@@ -1,4 +1,5 @@
 """ Define TaskConfig class to get all configuration """
+
 import csv, random, os, gc
 import pybamm as pb;import pandas as pd   ;import numpy as np;import os;
 import matplotlib.pyplot as plt;import os;#import imageio;import timeit
