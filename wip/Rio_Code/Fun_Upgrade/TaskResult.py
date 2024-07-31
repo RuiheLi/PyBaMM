@@ -1,3 +1,5 @@
+""" Define TaskResult class to get output """
+
 import os
 import numpy as np
 

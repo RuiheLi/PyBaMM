@@ -1,4 +1,5 @@
-""" Functions to actually run PyBaMM model """
+""" Functions to actually run PyBaMM model and catch any errors """
+
 import csv, random, os, gc
 import pybamm as pb;import pandas as pd   ;import numpy as np;import os;
 import matplotlib.pyplot as plt;import os;#import imageio;import timeit

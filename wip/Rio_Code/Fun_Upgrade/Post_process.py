@@ -1,4 +1,5 @@
-""" Functions for post-processing """
+""" Functions for post-processing - extract output 
+variables from pybamm object to customized dictionary and class"""
 import csv, random, os
 import numpy as np
 import pandas as pd
@@ -336,7 +337,7 @@ def GetSol_dict (my_dict, keys_all, Sol,
     return my_dict                              
 
 def Get_SOH_LLI_LAM(task_result,config):
-    
+
     my_dict_RPT = task_result.my_dict_RPT
     model_options = config.model_config.model_options
     DryOut = config.model_config.DryOut

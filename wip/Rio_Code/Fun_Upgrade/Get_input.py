@@ -1,4 +1,4 @@
-"""Module for Get inputs functions"""
+""" Functions to generate input files """
 
 import csv, random, os
 import numpy as np

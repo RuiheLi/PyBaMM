@@ -1,3 +1,5 @@
+""" Main function to run one case"""
+
 # For GEM-2 NC paper
 import csv, random, os, gc
 import pybamm as pb;import pandas as pd   ;import numpy as np;import os;
@@ -774,6 +776,3 @@ def Run_One_Case(config):
         print("Succeed doing something in {}".format(ModelTimer.time()))
         print(f'This is the end of No. {Scan_No} scan, Re {Re_No}')
         return task_result, config
-
-
-
