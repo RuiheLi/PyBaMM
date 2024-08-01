@@ -13,7 +13,7 @@ import random;import time, signal
 from .TaskResult import TaskResult
 from .Plot import *
 from .Post_process import *
-from .Fun_Upgrade import *
+
 
 # DEFINE my callback:
 class RioCallback(pb.callbacks.Callback):
@@ -160,8 +160,8 @@ def Run_Breakin(config, Experiment_Breakin, Para_0, Model_0):
 
 
 def Run_Breakin_lump_with_try_catch(
-        task_result,config,
-        Experiment_Breakin, Para_0, Model_0, SmallTimer):
+        task_result,config, Experiment_Breakin, 
+        Para_0, Model_0, SmallTimer):
     """
     Function to wrap Run_Breakin.
 
@@ -271,7 +271,8 @@ def Run_Breakin_lump_with_try_catch(
     task_result.Call_Breakin = Call_Breakin
     task_result.str_error_Breakin = str_error_Breakin
     task_result.DeBug_List_Breakin = DeBug_List_Breakin
-    del Flag_Breakin,Call_Breakin,str_error_Breakin,DeBug_List_Breakin; gc.collect()
+    del Flag_Breakin,Call_Breakin,str_error_Breakin,DeBug_List_Breakin; 
+    gc.collect()
 
     return task_result, config, Para_0, Model_0, SmallTimer, Sol_0
 
