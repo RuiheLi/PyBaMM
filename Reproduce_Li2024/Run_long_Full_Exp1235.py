@@ -1,6 +1,16 @@
 """ 
-This script is the baseline for main file to run functions from
-GEM-2_Ruihe 
+This script is the baseline to run long simuation for 
+the paper Li, Ruihe, Kirkaldy, Niall D., Oehler, Fabian, 
+Marinescu, Monica, Offer, Gregory J., & O'Kane, Simon E. J. (2023). 
+Lithium-ion battery degradation: using degradation mode analysis 
+to validate lifetime prediction modelling. arXiv, 
+[arXiv:2311.05482v2]. doi:10.48550/arXiv.2311.05482, 
+which is currently under review and will be published soon. 
+
+this specific example run cases defined folders "InputData/Full_Exp1235_NC"
+to run other cases, just change this to like 
+"Full_Exp23_Paper_11_fine"
+"SEI_Dry_Exp23_Paper_11_fine"
 """
 # Load modules
 import pybamm as pb;import pandas as pd;import numpy as np;
@@ -11,7 +21,9 @@ from scipy.io import savemat,loadmat;
 from pybamm import constants,exp;import matplotlib as mpl
 
 ########################     Global settings!!!
-rows_per_file = 1;  Scan_end_end = 12  
+rows_per_file = 1;  
+
+Scan_end_end = 12  
 purpose_i = "Full_Exp1235_NC" 
 
 
@@ -50,7 +62,7 @@ else:
     import sys  
     str_path_0 = os.path.abspath(os.path.join(pb.__path__[0],'..'))
     str_path_1 = os.path.abspath(
-        os.path.join(str_path_0,"wip/Rio_Code/Fun_P2"))
+        os.path.join(str_path_0,"Reproduce_Li2024"))
     sys.path.append(str_path_1) 
     Path_Input = os.path.expanduser(
         "~/EnvPBGEM_NC/SimSave/InputData/") # for Linux

@@ -1,6 +1,7 @@
-##########################################################
-##############    Part-0: Log of the scripts    ##########
-##########################################################
+# This is ongoing work, still tidying up the script to make it more readable. 
+
+
+
 # add 221205: if Timeout=='True', use Patrick's version, disable pool
 #             else, use pool to accelerate 
 # add Return_Sol, on HPC, always set to False, as it is useless, 
