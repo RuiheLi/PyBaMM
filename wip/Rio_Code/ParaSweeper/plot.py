@@ -12,7 +12,7 @@ def adjust_category_names(categories):
     ]
 
 # plot inside the function:
-def Plot_Cyc_RPT_4(task_result, config):
+def plot_rpt_4_figs(task_result, config):
     # Unpack:
     my_dict_RPT = task_result.my_dict_RPT
 
@@ -242,7 +242,8 @@ def Plot_Cyc_RPT_4(task_result, config):
 
 
 
-def Plot_DMA_Dec(task_result, config):
+def plot_dma(task_result, config):
+    """ plot degradation mode analysis for RPT tests """
     # Unpack:
     my_dict_RPT = task_result.my_dict_RPT
     Scan_No = config.Scan_No
@@ -302,7 +303,8 @@ def Plot_DMA_Dec(task_result, config):
 
 
 
-def Plot_HalfCell_V(task_result, config):
+def plot_half_cell_voltage_any(task_result, config):
+    """ Functions to plot half-cell voltage during both RPT and ageing """
     # Unpack:
     my_dict_RPT = task_result.my_dict_RPT
     my_dict_AGE = task_result.my_dict_AGE
@@ -317,7 +319,7 @@ def Plot_HalfCell_V(task_result, config):
     dpi = config.global_config.dpi
 
     #~~~~~~~~~~~~~~~~~ plot RPT 
-    def inFun_Plot(my_dict,str_jj):
+    def plot_half_cell_voltage_1(my_dict,str_jj):
         fig, axs = plt.subplots(3,2, figsize=(12,10),tight_layout=True)
         Str_Front= ["CD ","CC ",]
         Str_Back = ["Cathode potential [V]","Terminal voltage [V]","Anode potential [V]",]
@@ -342,13 +344,14 @@ def Plot_HalfCell_V(task_result, config):
             f"Scan_{Scan_No}_Re_{Re_No}-Exp-{Exp_No}-{str(int(Age_T_in_K- 273.15))}degC"
             f" Half cell Potential ({str_jj}).png", dpi=dpi) 
         plt.close() 
-    inFun_Plot(my_dict_RPT,"RPT")
-    inFun_Plot(my_dict_AGE,"AGE")
+    plot_half_cell_voltage_1(my_dict_RPT,"RPT")
+    plot_half_cell_voltage_1(my_dict_AGE,"AGE")
     return 
 
 
 
-def Plot_Loc_AGE_4(task_result,config):
+def plot_x_based_var_4_figs(task_result,config):
+    """ Plot location related variables during ageing """
 
     my_dict_AGE = task_result.my_dict_AGE
     Exp_No = config.exp_config.Exp_No
@@ -447,7 +450,8 @@ def Plot_Loc_AGE_4(task_result,config):
     plt.close()  # close the figure to save RAM
     return
 
-def Plot_Dryout(task_result, config):
+def plot_solvent_consumption(task_result, config):
+    """ Plot variables related to solvent consumption / dry-out model """
     # Unpack:
     mdic_dry = task_result.mdic_dry
     ce_EC_0 = mdic_dry["c_EC_r_new_All"][0] # be careful

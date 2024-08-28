@@ -12,13 +12,13 @@ str_path_1 = os.path.abspath(
     os.path.join(str_path_0,"wip/Rio_Code/Fun_Upgrade"))
 sys.path.append(str_path_1) 
 
-from wip.Rio_Code.Fun_Upgrade.TaskResult import *
-from wip.Rio_Code.Fun_Upgrade.Plot import *
+from wip.Rio_Code.ParaSweeper.TaskResult import *
+from wip.Rio_Code.ParaSweeper.plot import *
 # from wip.Rio_Code.Fun_Upgrade.Run_model import *
-from wip.Rio_Code.Fun_Upgrade.Fun_Upgrade import *
-from wip.Rio_Code.Fun_Upgrade.Post_process import *
-from wip.Rio_Code.Fun_Upgrade.TaskConfig import *
-from wip.Rio_Code.Fun_Upgrade.Get_input import *
+from wip.Rio_Code.ParaSweeper.main import *
+from wip.Rio_Code.ParaSweeper.post_process import *
+from wip.Rio_Code.ParaSweeper.TaskConfig import *
+from wip.Rio_Code.ParaSweeper.get_input_para import *
 
 print("import finish?")
 # reduce variables that require define outside
@@ -48,7 +48,7 @@ path_config = Path_config(
     rows_per_file= 1,Scan_end_end= 12,
     )
 global_config = Global_config(
-    On_HPC=On_HPC, Runshort=True, 
+    On_HPC=On_HPC, Runshort="GEM-2", 
     Plot_Exp=True, Timeout=True, Return_Sol=True, 
     Check_Short_Time=True, R_from_GITT=True,
     fs=13, dpi=100, Re_No=0, Timelimit=int(3600*48),

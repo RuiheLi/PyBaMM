@@ -15,7 +15,7 @@ import random;import time, signal
 
 
 # Function to read exp
-def Read_Exp(BasicPath_Save,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
+def read_experiment_data(BasicPath_Save, Exp_Any_Cell, Exp_Path, Exp_head, Exp_Any_Temp, i):
     Exp_Any_AllData  = {}
     for cell in Exp_Any_Cell:
         Exp_Any_AllData[cell] = {} # one cell
@@ -62,18 +62,17 @@ def Read_Exp(BasicPath_Save,Exp_Any_Cell,Exp_Path,Exp_head,Exp_Any_Temp,i):
     print("Finish reading Experiment!")
     return Exp_Any_AllData
 
+class ExpConfig:
+    def __init__(self, Exp_No, Age_T,tot_cyc, Cycle_bt_RPT, update,
+                Runs_bt_RPT, RPT_num, RPT_Cycles, Age_T_in_K, RPT_T_in_K, 
+                V_max=4.2, V_min=2.5, exp_AGE_text="", step_AGE_CD="", 
+                step_AGE_CC="", step_AGE_CV="", exp_breakin_text="", 
+                exp_RPT_text="", exp_GITT_text="", exp_refill="", 
+                exp_adjust_before_age="", step_0p1C_CD="", step_0p1C_CC="", 
+                step_0p1C_RE="", step_0p5C_CD="",
+                ):
 
-class Exp_config:
-    def __init__(self, V_max = 4.2 , V_min = 2.5, 
-            exp_AGE_text=None, step_AGE_CD=None, step_AGE_CC=None, step_AGE_CV=None,
-            exp_breakin_text=None, exp_RPT_text=None, exp_GITT_text=None, 
-            exp_refill=None, exp_adjust_before_age=None,
-            step_0p1C_CD=None, step_0p1C_CC=None, step_0p1C_RE=None, step_0p5C_CD=None,
-            Exp_No=None,Age_T=None,tot_cyc=None,Cycle_bt_RPT=None,update=None,
-            Runs_bt_RPT=None,RPT_num=None,
-            RPT_Cycles=None,Age_T_in_K=None,RPT_T_in_K=None):
-
-        self.V_max = V_max 
+        self.V_max = V_max
         self.V_min = V_min
 
         self.exp_AGE_text = exp_AGE_text
@@ -98,39 +97,71 @@ class Exp_config:
         self.Runs_bt_RPT = Runs_bt_RPT
         self.RPT_num = RPT_num
         self.RPT_Cycles = RPT_Cycles
-        self.Age_T_in_K=Age_T_in_K
-        self.RPT_T_in_K=RPT_T_in_K
+        self.Age_T_in_K = Age_T_in_K
+        self.RPT_T_in_K = RPT_T_in_K
 
-class Para_config:
-    def __init__(self, Para_dict_i=None):
+class ParameterConfig:
+    def __init__(self, Para_dict_i={}):
         self.Para_dict_i = Para_dict_i
 
-class Model_config:
-    def __init__(self,mesh_list=None,
-            submesh_strech=None,model_options=None,DryOut=None ):
+class ModelConfig:
+    def __init__(self,mesh_list,
+            submesh_strech,
+            model_options,
+            DryOut):
         self.mesh_list=mesh_list
         self.submesh_strech=submesh_strech
         self.model_options=model_options
         self.DryOut=DryOut
 
-class ExpData_config:
-    def __init__(self,cap_0 = None, 
-                Temp_Cell_Exp = None, 
-                Exp_Any_AllData = None,
-                XY_pack = None):
+class ExperimentDataConfig:
+    def __init__(self,cap_0, 
+                Temp_Cell_Exp, 
+                Exp_Any_AllData,
+                XY_pack):
         self.cap_0 = cap_0 # set initial capacity to standardize SOH and get initial SEI thickness 
         self.Temp_Cell_Exp = Temp_Cell_Exp
         self.Exp_Any_AllData = Exp_Any_AllData
         self.XY_pack = XY_pack
         
 
-class Global_config:
+class GlobalConfig:
     def __init__(self, On_HPC=False, Runshort="GEM-2", 
-            Plot_Exp=True, Timeout=True,Return_Sol=True, 
-            Check_Short_Time=True, R_from_GITT=True,
-            fs=13, dpi=100, Re_No=0, Timelimit=int(3600*48) ,
-            Timeout_text = 'I timed out',
-            colormap = "cool"):
+                 Plot_Exp=True, Timeout=True, Return_Sol=True, 
+                 Check_Short_Time=True, R_from_GITT=True,
+                 fs=13, dpi=100, Re_No=0, Timelimit=int(3600*48),
+                 Timeout_text='I timed out', colormap="cool"):
+        
+        # Ensure the parameters are of the correct type
+        if not isinstance(On_HPC, bool):
+            raise ValueError("On_HPC should be a boolean (True/False).")
+        if (
+            not isinstance(Runshort, str) or
+            not isinstance(Runshort, bool) ):
+            raise ValueError("Runshort should be either a string or boolean (True/False).")
+        if not isinstance(Plot_Exp, bool):
+            raise ValueError("Plot_Exp should be a boolean (True/False).")
+        if not isinstance(Timeout, bool):
+            raise ValueError("Timeout should be a boolean (True/False).")
+        if not isinstance(Return_Sol, bool):
+            raise ValueError("Return_Sol should be a boolean (True/False).")
+        if not isinstance(Check_Short_Time, bool):
+            raise ValueError("Check_Short_Time should be a boolean (True/False).")
+        if not isinstance(R_from_GITT, bool):
+            raise ValueError("R_from_GITT should be a boolean (True/False).")
+        if not isinstance(fs, int):
+            raise ValueError("fs should be an integer.")
+        if not isinstance(dpi, int):
+            raise ValueError("dpi should be an integer.")
+        if not isinstance(Re_No, int):
+            raise ValueError("Re_No should be an integer.")
+        if not isinstance(Timelimit, int):
+            raise ValueError("Timelimit should be an integer.")
+        if not isinstance(Timeout_text, str):
+            raise ValueError("Timeout_text should be a string.")
+        if not isinstance(colormap, str):
+            raise ValueError("colormap should be a string.")
+        
         self.On_HPC = On_HPC
         self.Runshort = Runshort
         self.Plot_Exp = Plot_Exp
@@ -139,7 +170,7 @@ class Global_config:
         self.Check_Short_Time = Check_Short_Time
         if Runshort == "GEM-2":
             self.R_from_GITT = R_from_GITT
-        else:   # overwrite 
+        else:  # overwrite 
             self.R_from_GITT = False 
         
         self.fs = fs
@@ -150,23 +181,35 @@ class Global_config:
         self.colormap = colormap
        
 
-class Path_config:
+class PathConfig:
     def __init__(
-            self, On_HPC = None, Path_Input = None, BasicPath_Save = None,
-            purpose_i = None, case_no = None, 
-            rows_per_file = None, Scan_end_end = None ):
+            self, On_HPC, Path_Input, BasicPath_Save,
+            purpose_i, case_no, 
+            rows_per_file, Scan_end_end):
         
-        Scan_start = (case_no-1)*rows_per_file+1  
-        Scan_end   = min(Scan_start + rows_per_file-1, Scan_end_end)    
+        # Ensure the parameters are of the correct type
+        if not isinstance(On_HPC, bool):
+            raise ValueError("On_HPC should be a boolean (True/False).")
+        if (
+            not isinstance(rows_per_file, int) or 
+            not isinstance(case_no, int) or 
+            not isinstance(Scan_end_end, int) ):
+            raise ValueError("rows_per_file, case_no, and "
+                            "Scan_end_end should be integers.")
+        
+        Scan_start = (case_no - 1) * rows_per_file + 1  
+        Scan_end = min(Scan_start + rows_per_file - 1, Scan_end_end)    
         purpose = f"{purpose_i}_Case_{Scan_start}_{Scan_end}"
-        Target  = f'/{purpose}/'
+        Target = f'/{purpose}/'
         para_csv = f"Bundle_{case_no}.csv"  
+        
         # Path setting:
-        if On_HPC:                          # Run on HPC
+        if On_HPC:  # Run on HPC
             Path_csv = f"InputData/{purpose_i}/" 
-            Para_file = Path_csv +  para_csv
+            Para_file = Path_csv + para_csv
         else:
-            Para_file = Path_Input+f'{purpose_i}/'+para_csv
+            Para_file = Path_Input + f'{purpose_i}/' + para_csv
+        
         self.BasicPath_Save = BasicPath_Save
         self.Path_Input = Path_Input
         self.Target = Target
@@ -180,7 +223,7 @@ class Path_config:
 class TaskConfig:
     def __init__(
             self, path_config, global_config, exp_config,
-            para_config,model_config,expData_config,Scan_No=None,): 
+            para_config,model_config,expData_config,Scan_No,): 
 
         self.path_config = path_config  
         self.global_config = global_config
@@ -189,13 +232,15 @@ class TaskConfig:
         self.model_config = model_config 
         self.expData_config = expData_config
         self.Scan_No = Scan_No
+        if not isinstance(Scan_No, int):
+            raise ValueError("Scan_No should be an integer.")
         
 
     # do further initialization:
-    def Get_Para_dict_i(self,Para_dict_i):
+    def get_para_dictionary(self,Para_dict_i):
         self.para_config.Para_dict_i = Para_dict_i
 
-    def Get_Exp_config(self):
+    def get_expconfig(self):
         self.para_config.Para_dict_i["Scan No"] = int(self.para_config.Para_dict_i["Scan No"])
         self.para_config.Para_dict_i["Exp No."] = int(self.para_config.Para_dict_i["Exp No."])
         Scan_No = self.para_config.Para_dict_i["Scan No"]
@@ -241,7 +286,7 @@ class TaskConfig:
 
 
     # # Get information for Experiment - LG M50 Ageing dataset
-    def Get_Exp_Pack(self):
+    def get_exp_data_config(self):
         Exp_No = self.exp_config.Exp_No
         Age_T = self.exp_config.Age_T
         Path_Input = self.path_config.Path_Input
@@ -358,7 +403,7 @@ class TaskConfig:
             int(Age_T) in [10,25,40]:
 
             Temp_Cell_Exp = Temp_Cell_Exp_All[Exp_No-1] 
-            Exp_Any_AllData = Read_Exp(
+            Exp_Any_AllData = read_experiment_data(
                 Path_Input,Exp_All_Cell[Exp_No-1],
                 Exp_Path,Exp_head,Exp_Temp_Cell[Exp_No-1],
                 Exp_No-1)
@@ -368,7 +413,7 @@ class TaskConfig:
         self.expData_config.Temp_Cell_Exp = Temp_Cell_Exp 
         self.expData_config.Exp_Any_AllData = Exp_Any_AllData
     # initialize expeirment text:
-    def Initialize_exp_text(self):
+    def initialize_experiment_text(self):
         Exp_No = self.exp_config.Exp_No
         V_max = self.exp_config.V_max
         V_min = self.exp_config.V_min
@@ -645,7 +690,7 @@ class TaskConfig:
     
 
     # 
-    def Create_folders(self):
+    def create_folders(self):
         BasicPath_Save = self.path_config.BasicPath_Save
         Target = self.path_config.Target
         if not os.path.exists(BasicPath_Save + Target):
@@ -660,7 +705,7 @@ class TaskConfig:
     #
     ## Update 23-05-18
     # Function to get cell average index from several cells in one T and one Exp
-    def Get_Cell_Mean_1T_1Exp(self):
+    def get_mean_exp_data(self):
         Exp_No = self.exp_config.Exp_No
         Age_T = self.exp_config.Age_T
 

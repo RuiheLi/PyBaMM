@@ -11,12 +11,14 @@ import openpyxl
 import traceback
 import random;import time, signal
 from .TaskResult import TaskResult
-from .Plot import *
-from .Post_process import *
+from .plot import *
+from .post_process import *
 
 
-# DEFINE my callback:
-class RioCallback(pb.callbacks.Callback):
+
+class Customized_Callback(pb.callbacks.Callback):
+    """ Define customized callback to include experiment error
+    and experiment infeasible """
     def __init__(self, logfile=None):
         self.logfile = logfile
         self.success  = True
@@ -67,7 +69,7 @@ class TimeoutFunc(object):
             # todo: need to incooperate other cases such as pb.expression_tree.exceptions.ModelError,
             #      pb.expression_tree.exceptions.SolverError
             p.terminate()
-            Call_ref = RioCallback() 
+            Call_ref = Customized_Callback() 
             # careful! the length of Result_List should be same 
             #   as what you get from main function!
             Result_List = [         
@@ -85,7 +87,7 @@ class TimeoutError(Exception):
 # define the model and run break-in cycle - 
 # input parameter: model_options, Experiment_Breakin, Para_0, mesh_list, submesh_strech
 # output: Sol_0 , Model_0, Call_Breakin
-def Run_Breakin(config, Experiment_Breakin, Para_0, Model_0):
+def run_break_in_experiment(config, Experiment_Breakin, Para_0, Model_0):
 
     mesh_list = config.model_config.mesh_list
     submesh_strech = config.model_config.submesh_strech
@@ -135,7 +137,7 @@ def Run_Breakin(config, Experiment_Breakin, Para_0, Model_0):
                 solver = pb.CasadiSolver(),
                 var_pts=var_pts,
                 submesh_types=submesh_types) 
-            Call_Breakin = RioCallback()    
+            Call_Breakin = Customized_Callback()    
             Sol_0    = Sim_0.solve(calc_esoh=False,callbacks=Call_Breakin)
         except (
             pb.expression_tree.exceptions.ModelError,
@@ -159,11 +161,11 @@ def Run_Breakin(config, Experiment_Breakin, Para_0, Model_0):
     return Result_list_breakin
 
 
-def Run_Breakin_lump_with_try_catch(
+def run_break_in_lump_with_try_catch(
         task_result,config, Experiment_Breakin, 
         Para_0, Model_0, SmallTimer):
     """
-    Function to wrap Run_Breakin.
+    Function to wrap run_break_in_experiment.
 
     Main purpose is to wrap "try ... except"
 
@@ -191,14 +193,14 @@ def Run_Breakin_lump_with_try_catch(
         # the following turns on for HPC only!
         if config.global_config.Timeout == True:
             timeout_RPT = TimeoutFunc(
-                Run_Breakin, 
+                run_break_in_experiment, 
                 timeout=config.global_config.Timelimit, 
                 timeout_val=config.global_config.Timeout_text)
             
             Result_list_breakin  = timeout_RPT(
                 config, Experiment_Breakin, Para_0, Model_0)
         else:
-            Result_list_breakin  = Run_Breakin(
+            Result_list_breakin  = run_break_in_experiment(
                 config, Experiment_Breakin, Para_0, Model_0)
             
         [Model_0,Sol_0,Call_Breakin,DeBug_List_Breakin] = Result_list_breakin
@@ -237,7 +239,7 @@ def Run_Breakin_lump_with_try_catch(
             print(f"Scan {Scan_No} Re {Re_No}: Finish break-in cycle")
         # post-process for break-in cycle - 0.1C only
         keys_all_RPT = task_result.keys_all_RPT
-        task_result.my_dict_RPT = GetSol_dict(
+        task_result.my_dict_RPT = get_customized_dict_from_solution(
             task_result.my_dict_RPT,keys_all_RPT, Sol_0, 0, 
             config.exp_config.step_0p1C_CD, 
             config.exp_config.step_0p1C_CC,
@@ -246,10 +248,10 @@ def Run_Breakin_lump_with_try_catch(
         # update 230517 - Get R from C/2 discharge only, discard GITT
         cap_full = Para_0["Nominal cell capacity [A.h]"]
         if config.global_config.R_from_GITT: 
-            Res_midSOC,Res_full,SOC_Res = Get_0p1s_R0(Sol_0,cap_full)
+            Res_midSOC,Res_full,SOC_Res = get_0p1s_resistance_gitt(Sol_0,cap_full)
         else: 
             step_0P5C_CD = Sol_0.cycles[0].steps[config.exp_config.step_0p5C_CD]
-            Res_midSOC,Res_full,SOC_Res = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
+            Res_midSOC,Res_full,SOC_Res = get_resistance_0p5C_discharge(step_0P5C_CD,cap_full)
         task_result.my_dict_RPT["SOC_Res"].append(SOC_Res)
         task_result.my_dict_RPT["Res_full"].append(Res_full)
         task_result.my_dict_RPT["Res_midSOC"].append(Res_midSOC)    
@@ -276,7 +278,7 @@ def Run_Breakin_lump_with_try_catch(
 
     return task_result, config, Para_0, Model_0, SmallTimer, Sol_0
 
-def Run_RPT_lump_with_try_catch(task_result,config,
+def run_rpt_lump_with_try_catch(task_result,config,
     Experiment_RPT, Paraupdate, 
     Model_Dry_old, Sol_Dry_old, SmallTimer, k, i):
 
@@ -290,7 +292,7 @@ def Run_RPT_lump_with_try_catch(task_result,config,
         # Timelimit = int(60*60*2)
         if Timeout == True:
             timeout_RPT = TimeoutFunc(
-                Run_Model_Base_On_Last_Solution_RPT, 
+                run_rpt_model_base_on_last_solution, 
                 timeout=Timelimit, 
                 timeout_val=Timeout_text)
             Result_list_RPT = timeout_RPT(
@@ -298,7 +300,7 @@ def Run_RPT_lump_with_try_catch(task_result,config,
                 Model_Dry_old, Sol_Dry_old, 
             )
         else:
-            Result_list_RPT = Run_Model_Base_On_Last_Solution_RPT(
+            Result_list_RPT = run_rpt_model_base_on_last_solution(
                 config, Experiment_RPT, Paraupdate, 
                 Model_Dry_old, Sol_Dry_old, 
             )
@@ -339,7 +341,7 @@ def Run_RPT_lump_with_try_catch(task_result,config,
         )
         SmallTimer.reset()
 
-        task_result.my_dict_RPT = GetSol_dict (
+        task_result.my_dict_RPT = get_customized_dict_from_solution (
             task_result.my_dict_RPT,task_result.keys_all_RPT, 
             Sol_Dry_i, 0,
             config.exp_config.step_0p1C_CD, 
@@ -355,10 +357,10 @@ def Run_RPT_lump_with_try_catch(task_result,config,
         # update 230517 - Get R from C/2 discharge only, discard GITT
         cap_full = Paraupdate["Nominal cell capacity [A.h]"] # 5
         if config.global_config.R_from_GITT: 
-            Res_midSOC,Res_full,SOC_Res = Get_0p1s_R0(Sol_Dry_i,cap_full)
+            Res_midSOC,Res_full,SOC_Res = get_0p1s_resistance_gitt(Sol_Dry_i,cap_full)
         else: 
             step_0P5C_CD = Sol_Dry_i.cycles[0].steps[config.exp_config.step_0p5C_CD]
-            Res_midSOC,Res_full,SOC_Res = Get_R_from_0P5C_CD(step_0P5C_CD,cap_full)
+            Res_midSOC,Res_full,SOC_Res = get_resistance_0p5C_discharge(step_0P5C_CD,cap_full)
         task_result.my_dict_RPT["SOC_Res"].append(SOC_Res)
         task_result.my_dict_RPT["Res_full"].append(Res_full)
         task_result.my_dict_RPT["Res_midSOC"].append(Res_midSOC)             
@@ -387,7 +389,7 @@ def Run_RPT_lump_with_try_catch(task_result,config,
         task_result, config, Para_0_Dry_old, Model_Dry_old, 
         SmallTimer, Sol_Dry_old)
 
-def Run_Age_lump_with_try_catch(
+def run_age_lump_with_try_catch(
     task_result, config, Experiment_Long, Paraupdate, 
     Model_Dry_old, Sol_Dry_old, SmallTimer, k, i):
 
@@ -397,14 +399,14 @@ def Run_Age_lump_with_try_catch(
     try:
         if Timeout == True:
             timeout_AGE = TimeoutFunc(
-                Run_Model_Base_On_Last_Solution, 
+                run_age_model_base_on_last_solution, 
                 timeout=config.global_config.Timelimit, 
                 timeout_val=config.global_config.Timeout_text)
             Result_list_AGE = timeout_AGE( 
                 config, Experiment_Long, Paraupdate, 
                 Model_Dry_old, Sol_Dry_old)
         else:
-            Result_list_AGE = Run_Model_Base_On_Last_Solution( 
+            Result_list_AGE = run_age_model_base_on_last_solution( 
                 config, Experiment_Long, Paraupdate, 
                 Model_Dry_old, Sol_Dry_old)
         [Model_Dry_i, Sol_Dry_i, Call_Age, DeBug_List_AGE] = Result_list_AGE
@@ -465,37 +467,37 @@ def Run_Age_lump_with_try_catch(
         step_AGE_CV = config.exp_config.step_AGE_CV 
         keys_all_AGE = task_result.keys_all_AGE
         if k==0 and i==0:    
-            task_result.my_dict_AGE = GetSol_dict (
+            task_result.my_dict_AGE = get_customized_dict_from_solution (
                 task_result.my_dict_AGE,keys_all_AGE, Sol_Dry_old, 0, 
                 step_AGE_CD, step_AGE_CC, step_0p1C_RE, step_AGE_CV)     
             task_result.my_dict_AGE["Cycle_AGE"].append(1)
         # update 240111
         if Flag_partial_AGE == True:
             try:
-                task_result.my_dict_AGE = GetSol_dict (
+                task_result.my_dict_AGE = get_customized_dict_from_solution (
                     task_result.my_dict_AGE,keys_all_AGE, Sol_Dry_old, -1, 
                     step_AGE_CD, step_AGE_CC, step_0p1C_RE, step_AGE_CV)    
             except IndexError:
                 print("The last cycle is incomplete, try [-2] cycle")
                 try:
-                    task_result.my_dict_AGE = GetSol_dict (
+                    task_result.my_dict_AGE = get_customized_dict_from_solution (
                         task_result.my_dict_AGE,keys_all_AGE, Sol_Dry_old, -2, 
                         step_AGE_CD, step_AGE_CC, step_0p1C_RE, step_AGE_CV)   
                 except IndexError:
                     print("[-2] cycle also does not work, try first one")
                     try:
-                        task_result.my_dict_AGE = GetSol_dict (
+                        task_result.my_dict_AGE = get_customized_dict_from_solution (
                             task_result.my_dict_AGE,keys_all_AGE, Sol_Dry_old, 0, 
                             step_AGE_CD, step_AGE_CC, step_0p1C_RE, step_AGE_CV)  
                     except:
                         print("Still does not work, less than one cycle, we are in trouble")
         else:
             try:
-                task_result.my_dict_AGE = GetSol_dict (
+                task_result.my_dict_AGE = get_customized_dict_from_solution (
                     task_result.my_dict_AGE,keys_all_AGE, Sol_Dry_old, -1, 
                     step_AGE_CD, step_AGE_CC, step_0p1C_RE, step_AGE_CV)    
             except:
-                print("GetSol_dict fail for a complete ageing set for unknown reasons!!!")
+                print("get_customized_dict_from_solution fail for a complete ageing set for unknown reasons!!!")
         task_result.my_dict_AGE["Agecycle_count"] +=  succeed_cycs 
 
         task_result.my_dict_AGE["avg_Age_T"].append(np.mean(
@@ -530,7 +532,7 @@ def Run_Age_lump_with_try_catch(
 
 
 
-def Run_Model_Base_On_Last_Solution_RPT( 
+def run_rpt_model_base_on_last_solution( 
     config, Experiment_RPT, Para_update, Model, Sol):
 
 
@@ -546,7 +548,7 @@ def Run_Model_Base_On_Last_Solution_RPT(
     # print("Model is now using an electrode width of:",Para_update['Electrode width [m]'])
 
     if isinstance(Sol, pb.solvers.solution.Solution):
-        list_short,dict_short = Get_Last_state(Model, Sol)
+        list_short,dict_short = get_solution_last_state(Model, Sol)
     elif isinstance(Sol, list):
         [dict_short, getSth] = Sol
         list_short = []
@@ -591,7 +593,7 @@ def Run_Model_Base_On_Last_Solution_RPT(
         var_pts = var_pts,
         submesh_types=submesh_types
     )
-    Call_RPT = RioCallback()  # define callback
+    Call_RPT = Customized_Callback()  # define callback
     # update 231208 - try 3 times until give up 
     i_run_try = 0
     while i_run_try<3:
@@ -645,7 +647,7 @@ def Run_Model_Base_On_Last_Solution_RPT(
                     break
             Sol_new['Throughput capacity [A.h]'].entries += getSth
             # update 23-11-17 change method to get throughput capacity to avioid problems of empty solution:
-            thr_tot = Get_ThrCap(Sol_new)
+            thr_tot = get_charge_throughput_from_current(Sol_new)
             Sol_new['Throughput capacity [A.h]'].entries[-1] = getSth + thr_tot # only the last one is true
             DeBug_List = "Empty"
             print(f"Succeed to run RPT for the {i_run_try}th time")
@@ -656,7 +658,7 @@ def Run_Model_Base_On_Last_Solution_RPT(
 
 
 # Define a function to calculate based on previous solution
-def Run_Model_Base_On_Last_Solution( 
+def run_age_model_base_on_last_solution( 
     config, Experiment_Long, Para_update, Model, Sol):
     # 
     Update_Cycles = config.exp_config.update
@@ -668,7 +670,7 @@ def Run_Model_Base_On_Last_Solution(
         "Ratio of Li-ion concentration change in electrolyte"
         " consider solvent consumption"]
     if isinstance(Sol, pb.solvers.solution.Solution):
-        list_short,dict_short = Get_Last_state(Model, Sol)
+        list_short,dict_short = get_solution_last_state(Model, Sol)
     elif isinstance(Sol, list):
         [dict_short, getSth] = Sol
         list_short = []
@@ -706,7 +708,7 @@ def Run_Model_Base_On_Last_Solution(
             submesh_params={"side": "right", "stretch": int(submesh_strech)})
         submesh_types["negative particle"] = particle_mesh
         submesh_types["positive particle"] = particle_mesh 
-    Call_Age = RioCallback()  # define callback
+    Call_Age = Customized_Callback()  # define callback
     
     # update 231208 - try 3 times until give up 
     i_run_try = 0

@@ -65,7 +65,7 @@ def save_combinations_to_csv(combinations, parameter_names, filename):
         for combination in combinations:
             writer.writerow(combination)
 
-def Get_Scan_files(
+def get_scan_files_inputs(
         BasicPath_Save,Target_name,model_options,
         parameter_names,para_short_name,
         Pack,   num,
@@ -138,7 +138,8 @@ def get_list_from_tuple(d, num):
     else:
         result_list = []
     return result_list
-def Get_Scan_Orth_Latin(
+
+def get_inputs_orthogonal_latin_hypercube(
         BasicPath_Save,Target_name,model_options,
         parameter_names,para_short_name,
         Pack, num,

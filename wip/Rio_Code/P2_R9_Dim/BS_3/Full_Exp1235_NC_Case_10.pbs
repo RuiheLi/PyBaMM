@@ -1,0 +1,8 @@
+#PBS -l walltime=72:00:00
+#PBS -l select=1:ncpus=03:mem=32gb
+
+module load anaconda3/personal
+source activate Env_GEM_NC
+
+cd $PBS_O_WORKDIR
+python3 Full_Exp1235_NC_Case_10.py

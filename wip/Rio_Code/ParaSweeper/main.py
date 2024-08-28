@@ -12,18 +12,13 @@ from queue import Empty
 import openpyxl
 import traceback
 import random;import time, signal
-from wip.Rio_Code.Fun_Upgrade.TaskResult import TaskResult
-from wip.Rio_Code.Fun_Upgrade.TaskResult import *
-from wip.Rio_Code.Fun_Upgrade.Plot import *
-from wip.Rio_Code.Fun_Upgrade.Run_model import *
-from wip.Rio_Code.Fun_Upgrade.Post_process import *
-from wip.Rio_Code.Fun_Upgrade.TaskConfig import *
-from wip.Rio_Code.Fun_Upgrade.Get_input import *
-
-###################################################################
-#############    New functions from P3 - 221113        ############
-###################################################################
-
+from wip.Rio_Code.ParaSweeper.TaskResult import TaskResult
+from wip.Rio_Code.ParaSweeper.TaskResult import *
+from wip.Rio_Code.ParaSweeper.plot import *
+from wip.Rio_Code.ParaSweeper.solve_pybamm_model import *
+from wip.Rio_Code.ParaSweeper.post_process import *
+from wip.Rio_Code.ParaSweeper.TaskConfig import *
+from wip.Rio_Code.ParaSweeper.get_input_para import *
 
 
 def handle_signal(signal_num, frame):
@@ -35,7 +30,7 @@ def handle_signal(signal_num, frame):
 
 
 # Update 2023-10-04 
-def Overwrite_Initial_L_SEI_0_Neg_Porosity(Para_0,config):
+def adjust_L_sei_neg_porosity_0_with_cap_loss_0(Para_0,config):
     """ 
     This is to overwrite the initial negative electrode porosity 
     and initial SEI thickness (inner, outer) to be consistent 
@@ -77,8 +72,9 @@ def Overwrite_Initial_L_SEI_0_Neg_Porosity(Para_0,config):
 
     return Para_0
 
-# this function is to initialize the para with a known dict
-def Para_init(config):
+
+def initialize_parameter(config):
+    """ Function is to initialize the para with a known dict """
     Para_dict_used = config.para_config.Para_dict_i.copy()
     Para_0 = pb.ParameterValues(Para_dict_used["Para_Set"]  ) # Note: this is a pybamm.object
     Para_dict_used.pop("Para_Set")
@@ -163,12 +159,13 @@ def Para_init(config):
         else:
             Para_0.update({key: value},check_already_exists=False)
 
-    Para_0 = Overwrite_Initial_L_SEI_0_Neg_Porosity(Para_0,config)
+    Para_0 = adjust_L_sei_neg_porosity_0_with_cap_loss_0(Para_0,config)
     return config,Para_0
 
 # Input: Para_0
 # Output: mdic_dry, Para_0
-def Initialize_mdic_dry(Para_0):
+def initialize_dict_solvent_consumption(Para_0):
+    """ Function to initialize dictionary for solvent consumption model """
     temp_Int_ElelyExces_Ratio =  Para_0[
         "Initial electrolyte excessive amount ratio"] 
     # used to calculate ce_EC_All
@@ -329,7 +326,7 @@ def check_concave_convex(x_values, y_values):
     return shape_results
 
 # Ensure some variables are integral:
-def Get_controller_from_Para_dict_i(Para_dict_i,config):
+def update_config_with_para_dict(Para_dict_i,config):
     Para_dict_i["Scan No"] = int(Para_dict_i["Scan No"])
     Para_dict_i["Exp No."] = int(Para_dict_i["Exp No."])
     config.Scan_No = Para_dict_i["Scan No"]
@@ -337,7 +334,7 @@ def Get_controller_from_Para_dict_i(Para_dict_i,config):
     config.Age_T = Para_dict_i["Ageing temperature"]  
     return Para_dict_i,config
 
-def Get_PyBaMM_Experiment(config):
+def define_pybamm_experiment(config):
     # Define experiment: return three pybamm.experiment objects, 
     #    be careful not to include pybamm objects in config
     # uppack:
@@ -371,12 +368,13 @@ def Get_PyBaMM_Experiment(config):
         Experiment_RPT    = pb.Experiment( 
             exp_RPT_text * 1
             + exp_adjust_before_age*1) 
-    return Experiment_Long,Experiment_Breakin,Experiment_RPT
+    return Experiment_Long, Experiment_Breakin, Experiment_RPT
 
 
-def Process_DryOut(Sol_Dry_old, Para_0_Dry_old,task_result,config):
+def process_solvent_consumption_model(
+        Sol_Dry_old, Para_0_Dry_old, task_result, config):
     if config.model_config.DryOut == "On":
-        DryOut_List,Paraupdate = Cal_new_con_Update(  
+        DryOut_List,Paraupdate = func_solvent_consumption(  
             Sol_Dry_old, Para_0_Dry_old)
         task_result.DryOut_List = DryOut_List
     else:
@@ -384,7 +382,7 @@ def Process_DryOut(Sol_Dry_old, Para_0_Dry_old,task_result,config):
     return task_result, Paraupdate
 
 
-def Run_One_Case(config): 
+def run_one_case(config): 
     ##########################################################
     ##############    Part-1: Initialization    ##############
     ##########################################################
@@ -396,17 +394,17 @@ def Run_One_Case(config):
     Re_No = config.global_config.Re_No
 
     print(f'Start Now! Scan {Scan_No} Re {Re_No}')  
-    config.Create_folders() # create folders
+    config.create_folders() # create folders
 
     log_buffer = io.StringIO()
 
     # Initialize PyBaMM parameter and further update config
-    config,Para_0 = Para_init(config) 
+    config,Para_0 = initialize_parameter(config) 
 
     # Get PyBaMM experiment
     (
         Experiment_Long,Experiment_Breakin,
-        Experiment_RPT) = Get_PyBaMM_Experiment(config)
+        Experiment_RPT) = define_pybamm_experiment(config)
 
     # initialize my_dict for outputs
     task_result = TaskResult()
@@ -418,7 +416,7 @@ def Run_One_Case(config):
     task_result.Initialize_my_dict()
 
     # Initialize dry-out model - whether dry-out or not
-    Para_0, DryOut, mdic_dry = Initialize_mdic_dry(Para_0)
+    Para_0, DryOut, mdic_dry = initialize_dict_solvent_consumption(Para_0)
     config.model_config.DryOut = DryOut
     task_result.Add_Dryout_Dict(mdic_dry)
     task_result.Keys_error = ["Error tot %","Error SOH %","Error LLI %",
@@ -440,7 +438,7 @@ def Run_One_Case(config):
     # run break-in cycle and get results:
     (
         task_result, config, Para_0, Model_0, SmallTimer, Sol_0
-        ) = Run_Breakin_lump_with_try_catch(
+        ) = run_break_in_lump_with_try_catch(
             task_result,config,Experiment_Breakin, Para_0, 
             Model_0, SmallTimer)
     
@@ -459,14 +457,14 @@ def Run_One_Case(config):
             task_result.my_dict_AGE["avg_Age_T"] = []
             while i < config.exp_config.Runs_bt_RPT:
                 # process dry-out model - contain non-dry-out option
-                task_result, Paraupdate = Process_DryOut(
+                task_result, Paraupdate = process_solvent_consumption_model(
                     Sol_Dry_old, Para_0_Dry_old,task_result,config)
                 
                 # Run aging cycle:
                 (
                     task_result,config, Para_0_Dry_old, 
                     Model_Dry_old, SmallTimer, Sol_Dry_old
-                    ) = Run_Age_lump_with_try_catch(
+                    ) = run_age_lump_with_try_catch(
                     task_result,config,Experiment_Long, Para_0_Dry_old, 
                     Model_Dry_old, Sol_Dry_old, SmallTimer, k, i)
                 i += 1;   ### Finish small loop and add 1 to i 
@@ -477,13 +475,13 @@ def Run_One_Case(config):
             #     parameters (otherwise will have problems)
 
             # process dry-out model - contain non-dry-out option
-            task_result, Paraupdate = Process_DryOut(
+            task_result, Paraupdate = process_solvent_consumption_model(
                 Sol_Dry_old, Para_0_Dry_old, task_result, config)  
             # Run RPT cycle
             (
                 task_result, config, Para_0_Dry_old, 
                 Model_Dry_old, SmallTimer, Sol_Dry_old
-                ) = Run_RPT_lump_with_try_catch(
+                ) = run_rpt_lump_with_try_catch(
                 task_result, config, Experiment_RPT, Paraupdate, 
                 Model_Dry_old, Sol_Dry_old, SmallTimer, k, i)
             
@@ -495,38 +493,38 @@ def Run_One_Case(config):
             ##########################################################
 
             # Add model LLI, LAM manually 
-            task_result = Get_SOH_LLI_LAM(task_result,config)
+            task_result = get_customized_summary_variables(task_result,config)
             print(f"Scan {Scan_No} Re {Re_No}: Getting extra variables "
                 f"within {SmallTimer.time()}")
             SmallTimer.reset()
 
             # Evaluate errors systematically
-            task_result = Evaluate_MPE_with_ExpData(task_result,config)
+            task_result = evaluate_mean_percentage_error(task_result,config)
 
             #########      3-1: Plot cycle,location, Dryout related 
             # set plotting
             font = {'family' : 'DejaVu Sans','size'   : config.global_config.fs}
             mpl.rc('font', **font)
 
-            Plot_Cyc_RPT_4(task_result, config)
-            Plot_DMA_Dec(task_result, config)
+            plot_rpt_4_figs(task_result, config)
+            plot_dma(task_result, config)
             if len(task_result.my_dict_AGE["CDend Porosity"])>1:
-                Plot_Loc_AGE_4(task_result, config)
-                Plot_HalfCell_V(task_result, config)
+                plot_x_based_var_4_figs(task_result, config)
+                plot_half_cell_voltage_any(task_result, config)
             if DryOut == "On":
-                Plot_Dryout(task_result, config)
+                plot_solvent_consumption(task_result, config)
             print(f"Scan {Scan_No} Re {Re_No}: Finish all plots"
                 f" within {SmallTimer.time()}")
             SmallTimer.reset()
 
             log_messages = log_buffer.getvalue()
             log_messages = log_messages.strip()
-            Write_Dict_to_Excel(task_result, config, log_messages)
+            write_dict_into_excel(task_result, config, log_messages)
             #########      3-2: Save data as .mat or .json
-            Fun_Save_for_Reload(task_result,Model_Dry_old,Para_0_Dry_old,config)
-            Fun_Save_for_debug(task_result, config)
+            save_results_into_pickle(task_result,Model_Dry_old,Para_0_Dry_old,config)
+            save_results_for_debug(task_result, config)
             # update 231217: save ageing solution if partially succeed in ageing set
-            Fun_Save_Partial_Age(task_result, config)
+            save_partial_ageing_solution(task_result, config)
             # update 231217: save ageing solution if partially succeed in ageing set
             print(
                 f"Scan {Scan_No} Re {Re_No}: Save Early for RPT {k} "
@@ -545,7 +543,7 @@ def Run_One_Case(config):
         task_result.mpe_all = [np.nan] * 8
         task_result.Pass_Fail = "Fail at break-in cycle"
         # Update 240430 new script: 
-        Write_Dict_to_Excel(task_result, config, log_messages,)
+        write_dict_into_excel(task_result, config, log_messages,)
         for key in task_result.Keys_error:
             task_result.my_dict_RPT[key] =  np.nan
     
@@ -572,13 +570,13 @@ def Run_One_Case(config):
         font = {'family' : 'DejaVu Sans','size'   : config.global_config.fs}
         mpl.rc('font', **font)
 
-        Plot_Cyc_RPT_4(task_result, config)
-        Plot_DMA_Dec(task_result, config)
+        plot_rpt_4_figs(task_result, config)
+        plot_dma(task_result, config)
         if len(task_result.my_dict_AGE["CDend Porosity"])>1:
-            Plot_Loc_AGE_4(task_result, config)
-            Plot_HalfCell_V(task_result, config)
+            plot_x_based_var_4_figs(task_result, config)
+            plot_half_cell_voltage_any(task_result, config)
         if DryOut == "On":
-            Plot_Dryout(task_result, config)
+            plot_solvent_consumption(task_result, config)
 
         print(f"Scan {Scan_No} Re {Re_No}: Finish all plots"
             f" within {SmallTimer.time()}")
@@ -589,13 +587,13 @@ def Run_One_Case(config):
         #########      3-3: Save summary to excel 
         log_messages = log_buffer.getvalue()
         log_messages = log_messages.strip()
-        Write_Dict_to_Excel(task_result, config, log_messages)
+        write_dict_into_excel(task_result, config, log_messages)
 
         #########      3-2: Save data as .mat or .json
-        Fun_Save_for_Reload(task_result,Model_Dry_old,Para_0_Dry_old,config)
-        Fun_Save_for_debug(task_result, config)
+        save_results_into_pickle(task_result,Model_Dry_old,Para_0_Dry_old,config)
+        save_results_for_debug(task_result, config)
         # update 231217: save ageing solution if partially succeed in ageing set
-        Fun_Save_Partial_Age(task_result, config)
+        save_partial_ageing_solution(task_result, config)
         # update 231217: save ageing solution if partially succeed in ageing set
         print(f"Scan {Scan_No} Re {Re_No}: Try saving within {SmallTimer.time()}")
         SmallTimer.reset()

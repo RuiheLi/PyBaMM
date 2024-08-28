@@ -2370,19 +2370,19 @@ def Get_tot_cyc(Runshort,index_exp,Temp_K,Scan_i):
         if index_exp == 1: # 0~30% SOC cycling
             tot_cyc = 3084; cyc_age = 257; update = 257; 
         if index_exp == 2: # 70~85% SOC cycling                 
-            tot_cyc = 6168; cyc_age = 514; update = 514;  # actually 516 on cycler
+            tot_cyc = 6192; cyc_age = 516; update = 516;  # actually 516 on cycler
         if index_exp == 3: # 70~85% SOC cycling
-            tot_cyc = 6168; cyc_age = 514; update = 514;  # actually 516 on cycler
+            tot_cyc = 6192; cyc_age = 514; update = 514;  # actually 516 on cycler
         if index_exp == 5: # 0~100% SOC cycling
-            tot_cyc = 1155; cyc_age = 77; update = 77;    # actually 77 on cycler
+            tot_cyc = 1170; cyc_age = 78; update = 78;    # actually 77 on cycler
         if index_exp == 6:
-            tot_cyc = 1170*10; cyc_age = 77; update = 77;
+            tot_cyc = 1170*10; cyc_age = 78; update = 78;
         if index_exp == 7:
-            tot_cyc = 1170*10; cyc_age = 77; update = 77;
+            tot_cyc = 1170*10; cyc_age = 78; update = 78;
         if index_exp == 8:
-            tot_cyc = 1170*10; cyc_age = 77; update = 77;
+            tot_cyc = 1170*10; cyc_age = 78; update = 78;
         if index_exp == 9:
-            tot_cyc = 1170*10; cyc_age = 77; update = 77;
+            tot_cyc = 1170*10; cyc_age = 78; update = 78;
     elif Runshort == "Reservoir":
         pass
 

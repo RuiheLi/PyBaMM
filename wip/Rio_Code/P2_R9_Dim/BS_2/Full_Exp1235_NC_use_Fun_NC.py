@@ -11,14 +11,14 @@ from scipy.io import savemat,loadmat;
 from pybamm import constants,exp;import matplotlib as mpl
 
 ########################     Global settings!!!
-rows_per_file = 1;  Scan_end_end = 270  
-purpose_i = "Full_Exp2_NC_SA" 
+rows_per_file = 1;  Scan_end_end = 12  
+purpose_i = "Full_Exp1235_NC" 
 
 
 # define options:
-On_HPC =  False;        Runshort=True;    Add_Rest = False
+On_HPC =  False;        Runshort="GEM-2";    Add_Rest = False
 Plot_Exp=True;          Timeout=True;     Return_Sol=True;   
-Check_Small_Time=True;  R_from_GITT = False
+Check_Small_Time=True;  R_from_GITT = True
 fs = 13; dpi = 100; Re_No =0
 Options = [ 
     On_HPC,Runshort,Add_Rest,
@@ -31,7 +31,7 @@ Timelimit = int(3600*48) # give 48 hours!
 if On_HPC:
     i_bundle = int(os.environ["PBS_ARRAY_INDEX"])
 else:
-    i_bundle = 9; 
+    i_bundle = 10; 
 Scan_start = (i_bundle-1)*rows_per_file+1;    
 Scan_end   = min(Scan_start + rows_per_file-1, Scan_end_end)    
 purpose = f"{purpose_i}_Case_{Scan_start}_{Scan_end}"

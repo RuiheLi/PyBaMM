@@ -5,12 +5,12 @@ import numpy as np
 import pandas as pd
 import pybamm as pb
 import matplotlib.pyplot as plt
-from .Fun_Upgrade import *
+from .main import *
 
 # Update 231117 new method to get throughput capacity to avoid problems of empty solution
-def Get_ThrCap(sol_PRT): 
+def get_charge_throughput_from_current(sol_rpt): 
     thr_tot = 0
-    for cycle in sol_PRT.cycles:
+    for cycle in sol_rpt.cycles:
         for step in cycle.steps:
             # print(type(step))
             if not isinstance(step,pb.solvers.solution.EmptySolution):
@@ -20,11 +20,11 @@ def Get_ThrCap(sol_PRT):
                 thr_tot += thr_i
     return thr_tot
 
-def Get_Last_state(Model, Sol):
+def get_solution_last_state(model, Sol):
     dict_short = {}
     list_short = []
     # update 220808 to satisfy random model option:
-    for var, equation in Model.initial_conditions.items():
+    for var, equation in model.initial_conditions.items():
         #print(var._name)
         list_short.append(var._name)
     # delete Porosity times concentration and Electrolyte potential then add back
@@ -42,190 +42,14 @@ def Get_Last_state(Model, Sol):
         dict_short.update( { list_short_i : Sol.last_state[list_short_i].data  } )
     return list_short,dict_short
 
-# Define a function to calculate concentration change, whether electrolyte being squeezed out or added in
-def Cal_new_con_Update(Sol,Para):   # subscript r means the reservoir
-    # Note: c_EC_r is the initial EC  concentraiton in the reservoir; 
-    #       c_e_r  is the initial Li+ concentraiton in the reservoir;
-    #############################################################################################################################  
-    ###############################           Step-1 Prepare parameters:        #################################################
-    #############################################################################################################################  
-    L_p   =Para["Positive electrode thickness [m]"]
-    L_n   =Para["Negative electrode thickness [m]"]
-    L_s   =Para["Separator thickness [m]"]
-    L_y   =Para["Electrode width [m]"]   # Also update to change A_cc and therefore Q
-    L_z   =Para["Electrode height [m]"]
-    c_EC_r_old=Para["Current solvent concentration in the reservoir [mol.m-3]"]   # add two new parameters for paper 2
-    c_e_r_old =Para["Current electrolyte concentration in the reservoir [mol.m-3]"]
-    # Initial EC concentration in JR
-    c_EC_JR_old =Para["Bulk solvent concentration [mol.m-3]"]  # Be careful when multiplying with pore volume to get amount in mole. Because of electrolyte dry out, that will give more amount than real.   
-    # LLI due to electrode,Ratio of EC and lithium is 1:1 -> EC amount consumed is LLINegSEI[-1]
-    LLINegSEI = (
-        Sol["Loss of lithium to SEI [mol]"].entries[-1] 
-        - Sol["Loss of lithium to SEI [mol]"].entries[0] )
-    LLINegSEIcr = (
-        Sol["Loss of lithium to SEI on cracks [mol]"].entries[-1]
-        - 
-        Sol["Loss of lithium to SEI on cracks [mol]"].entries[0]
-        )
-    LLINegDeadLiP = (
-        Sol["Loss of lithium to dead lithium plating [mol]"].entries[-1] 
-        - Sol["Loss of lithium to dead lithium plating [mol]"].entries[0])
-    LLINegLiP = (
-        Sol["Loss of lithium to lithium plating [mol]"].entries[-1] 
-        - Sol["Loss of lithium to lithium plating [mol]"].entries[0])
-    cLi_Xavg  = Sol["X-averaged electrolyte concentration [mol.m-3]"].entries[-1] 
-    # Pore volume change with time:
-    PoreVolNeg_0 = Sol["X-averaged negative electrode porosity"].entries[0]*L_n*L_y*L_z;
-    PoreVolSep_0 = Sol["X-averaged separator porosity"].entries[0]*L_s*L_y*L_z;
-    PoreVolPos_0 = Sol["X-averaged positive electrode porosity"].entries[0]*L_p*L_y*L_z;
-    PoreVolNeg_1 = Sol["X-averaged negative electrode porosity"].entries[-1]*L_n*L_y*L_z;
-    PoreVolSep_1 = Sol["X-averaged separator porosity"].entries[-1]*L_s*L_y*L_z;
-    PoreVolPos_1 = Sol["X-averaged positive electrode porosity"].entries[-1]*L_p*L_y*L_z;
-    #############################################################################################################################  
-    ##### Step-2 Determine How much electrolyte is added (from the reservoir to JR) or squeezed out (from JR to reservoir) ######
-    #######################   and finish electrolyte mixing     #################################################################  
-    Vol_Elely_Tot_old = Para["Current total electrolyte volume in whole cell [m3]"] 
-    Vol_Elely_JR_old  = Para["Current total electrolyte volume in jelly roll [m3]"] 
-    if Vol_Elely_Tot_old - Vol_Elely_JR_old < 0:
-        print('Model error! Electrolyte in JR is larger than in the cell!')
-    Vol_Pore_tot_old  = PoreVolNeg_0 + PoreVolSep_0 + PoreVolPos_0    # pore volume at start time of the run
-    Vol_Pore_tot_new  = PoreVolNeg_1 + PoreVolSep_1 + PoreVolPos_1    # pore volume at end   time of the run, intrinsic variable 
-    Vol_Pore_decrease = Vol_Elely_JR_old  - Vol_Pore_tot_new # WHY Vol_Elely_JR_old not Vol_Pore_tot_old here? Because even the last state of the last solution (n-1) and the first state of the next solution (n) can be slightly different! 
-    # EC:lithium:SEI=2:2:1     for SEI=(CH2OCO2Li)2, but because of too many changes are required, change to 2:1:1 for now
-    # update 230703: Simon insist we should do: EC:lithium:SEI  =  2:2:1 and change V_SEI accordingly 
-    # Because inner and outer SEI partial molar volume is the same, just set one for whole SEI
-    VmolSEI   = Para["Outer SEI partial molar volume [m3.mol-1]"] # 9.8e-5,
-    VmolLiP   = Para["Lithium metal partial molar volume [m3.mol-1]"] # 1.3e-05
-    VmolEC    = Para["EC partial molar volume [m3.mol-1]"]
-    #################   KEY EQUATION FOR DRY-OUT MODEL                   #################
-    # UPDATE 230525: assume the formation of dead lithium doesn’t consumed EC
-    Vol_EC_consumed  =  ( LLINegSEI + LLINegSEIcr   ) * 1 * VmolEC    # Mark: either with 2 or not, will decide how fast electrolyte being consumed!
-    Vol_Elely_need   = Vol_EC_consumed - Vol_Pore_decrease
-    Vol_SEILiP_increase = 0.5*(
-        (LLINegSEI+LLINegSEIcr) * VmolSEI 
-        #+ LLINegLiP * VmolLiP
-        )    #  volume increase due to SEI+total LiP 
-    #################   KEY EQUATION FOR DRY-OUT MODEL                   #################
-
-    Test_V = Vol_SEILiP_increase - Vol_Pore_decrease  #  This value should always be zero, but now not, which becomes the source of error!
-    Test_V2= (Vol_Pore_tot_old - Vol_Elely_JR_old) / Vol_Elely_JR_old * 100; # Porosity errors due to first time step
-    
-    # Start from here, there are serveral variables to be determined:
-    #   1) Vol_Elely_add, or Vol_Elely_squeezed; depends on conditions. easier for 'squeezed' condition
-    #   2) Vol_Elely_Tot_new, should always equals to Vol_Elely_Tot_old -  Vol_EC_consumed;
-    #   3) Vol_Elely_JR_new, for 'add' condition: see old code; for 'squeezed' condition, equals to pore volume in JR
-    #   4) Ratio_Dryout, for 'add' condition: see old code; for 'squeezed' condition, equals to Vol_Elely_Tot_new/Vol_Pore_tot_new 
-    #   5) Ratio_CeEC_JR and Ratio_CeLi_JR: for 'add' condition: see old code; for 'squeezed' condition, equals to 1 (unchanged)
-    #   6) c_e_r_new and c_EC_r_new: for 'add' condition: equals to old ones (unchanged); for 'squeezed' condition, need to carefully calculate     
-    #   7) Width_new: for 'add' condition: see old code; for 'squeezed' condition, equals to L_y (unchanged)
-    Vol_Elely_Tot_new = Vol_Elely_Tot_old - Vol_EC_consumed;
-
-    
-    if Vol_Elely_need < 0:
-        print('Electrolyte is being squeezed out, check plated lithium (active and dead)')
-        Vol_Elely_squeezed = - Vol_Elely_need;   # Make Vol_Elely_squeezed>0 for simplicity 
-        Vol_Elely_add = 0.0;
-        Vol_Elely_JR_new = Vol_Pore_tot_new; 
-        Ratio_Dryout = Vol_Elely_Tot_new / Vol_Elely_JR_new
-        Ratio_CeEC_JR = 1.0;    # the concentrations in JR don't need to change
-        Ratio_CeLi_JR = 1.0; 
-        SqueezedLiMol   =  Vol_Elely_squeezed*cLi_Xavg;
-        SqueezedECMol   =  Vol_Elely_squeezed*c_EC_JR_old;
-        Vol_Elely_reservoir_old = Vol_Elely_Tot_old - Vol_Elely_JR_old; 
-        LiMol_reservoir_new = Vol_Elely_reservoir_old*c_e_r_old  + SqueezedLiMol;
-        ECMol_reservoir_new = Vol_Elely_reservoir_old*c_EC_r_old + SqueezedECMol;
-        c_e_r_new= LiMol_reservoir_new / (Vol_Elely_reservoir_old+Vol_Elely_squeezed);
-        c_EC_r_new= ECMol_reservoir_new / (Vol_Elely_reservoir_old+Vol_Elely_squeezed);
-        Width_new = L_y; 
-    else:   # this means Vol_Elely_need >= 0, therefore the folliwing script should works for Vol_Elely_need=0 as well!
-        # Important: Calculate added electrolyte based on excessive electrolyte, can be: 1) added as required; 2) added some, but less than required; 3) added 0 
-        Vol_Elely_squeezed = 0;  
-        if Vol_Elely_Tot_old > Vol_Elely_JR_old:                             # This means Vol_Elely_JR_old = Vol_Pore_tot_old ()
-            if Vol_Elely_Tot_old-Vol_Elely_JR_old >= Vol_Elely_need:         # 1) added as required
-                Vol_Elely_add     = Vol_Elely_need;  
-                Vol_Elely_JR_new  = Vol_Pore_tot_new;  # also equals to 'Vol_Pore_tot_new', or Vol_Pore_tot_old - Vol_Pore_decrease
-                Ratio_Dryout = 1.0;
-            else:                                                            # 2) added some, but less than required;                                                         
-                Vol_Elely_add     = Vol_Elely_Tot_old - Vol_Elely_JR_old;   
-                Vol_Elely_JR_new  = Vol_Elely_Tot_new;                       # This means Vol_Elely_JR_new <= Vol_Pore_tot_new
-                Ratio_Dryout = Vol_Elely_JR_new/Vol_Pore_tot_new;
-        else:                                                                # 3) added 0 
-            Vol_Elely_add = 0;
-            Vol_Elely_JR_new  = Vol_Elely_Tot_new; 
-            Ratio_Dryout = Vol_Elely_JR_new/Vol_Pore_tot_new;
-
-        # Next: start mix electrolyte based on previous defined equation
-        # Lithium amount in liquid phase, at initial time point
-        TotLi_Elely_JR_Old = Sol["Total lithium in electrolyte [mol]"].entries[-1]; # remember this is only in JR
-        # Added lithium and EC amount in the added lithium electrolyte: - 
-        AddLiMol   =  Vol_Elely_add*c_e_r_old
-        AddECMol   =  Vol_Elely_add*c_EC_r_old
-        # Total amount of Li and EC in current electrolyte:
-        # Remember Li has two parts, initial and added; EC has three parts, initial, consumed and added
-        TotLi_Elely_JR_New   = TotLi_Elely_JR_Old + AddLiMol
-        TotECMol_JR   = Vol_Elely_JR_old*c_EC_JR_old - LLINegSEI + AddECMol  # EC:lithium:SEI=2:2:1     for SEI=(CH2OCO2Li)2
-        Ratio_CeEC_JR  = TotECMol_JR    /   Vol_Elely_JR_new   / c_EC_JR_old
-        Ratio_CeLi_JR  = TotLi_Elely_JR_New    /   TotLi_Elely_JR_Old   /  Ratio_Dryout # Mark, change on 21-11-19
-        c_e_r_new  = c_e_r_old;
-        c_EC_r_new = c_EC_r_old;
-        Width_new   = Ratio_Dryout * L_y;
-        
-    # Collect the above parameter in DryOut_List to shorten the code  
-    DryOut_List   = [
-        Vol_EC_consumed, 
-        Vol_Elely_need, 
-        Test_V, 
-        Test_V2, 
-        Vol_Elely_add, 
-        Vol_Elely_Tot_new, 
-        Vol_Elely_JR_new, 
-        Vol_Pore_tot_new, 
-        Vol_Pore_decrease, 
-        c_e_r_new, c_EC_r_new,
-        Ratio_Dryout, Ratio_CeEC_JR, 
-        Ratio_CeLi_JR,
-        Width_new, 
-        ]  # 16 in total
-    #print('Loss of lithium to negative SEI', LLINegSEI, 'mol') 
-    #print('Loss of lithium to dead lithium plating', LLINegDeadLiP, 'mol') 
-    #############################################################################################################################  
-    ###################       Step-4 Update parameters here        ##############################################################
-    #############################################################################################################################
-    Para.update(   
-        {'Bulk solvent concentration [mol.m-3]':  
-         c_EC_JR_old * Ratio_CeEC_JR  })
-    Para.update(
-        {'EC initial concentration in electrolyte [mol.m-3]':
-         c_EC_JR_old * Ratio_CeEC_JR },) 
-    Para.update(   
-        {'Ratio of Li-ion concentration change in electrolyte consider solvent consumption':  
-        Ratio_CeLi_JR }, check_already_exists=False) 
-    Para.update(   
-        {'Current total electrolyte volume in whole cell [m3]':  Vol_Elely_Tot_new  }, 
-        check_already_exists=False)
-    Para.update(   
-        {'Current total electrolyte volume in jelly roll [m3]':  Vol_Elely_JR_new  }, 
-        check_already_exists=False)
-    Para.update(   
-        {'Ratio of electrolyte dry out in jelly roll':Ratio_Dryout}, 
-        check_already_exists=False)
-    Para.update(   {'Electrode width [m]':Width_new})    
-    Para.update(   
-        {'Current solvent concentration in the reservoir [mol.m-3]':c_EC_r_new}, 
-        check_already_exists=False)     
-    Para.update(   
-        {'Current electrolyte concentration in the reservoir [mol.m-3]':c_e_r_new}, 
-        check_already_exists=False)             
-    return DryOut_List,Para
-
-
 
 # update 230312: add a function to get the discharge capacity and resistance
-def Get_0p1s_R0(sol_RPT,cap_full):
+def get_0p1s_resistance_gitt(sol_rpt,cap_full):
+    """ Function to get 0.1 second resistance from GITT test """
     Index = np.arange(1,25,1)  # TODO add this into config
     Res_0p1s = []; SOC = [100,];
     for i,index in enumerate(Index):
-        cycle = sol_RPT.cycles[index]
+        cycle = sol_rpt.cycles[index]
         Res_0p1s.append(   (
             np.mean(cycle.steps[1]["Terminal voltage [V]"].entries[-10:-1])
             - cycle.steps[2]["Terminal voltage [V]"].entries[0]
@@ -238,7 +62,9 @@ def Get_0p1s_R0(sol_RPT,cap_full):
     return Res_0p1s[12],Res_0p1s,SOC
 
 # update 230517 add a function to get R_50%SOC from C/2 discharge
-def Get_R_from_0P5C_CD(step_0P5C_CD,cap_full):
+def get_resistance_0p5C_discharge(step_0P5C_CD,cap_full):
+    """ Function to get 0.1 second resistance from 0.5C discharge test using 
+    voltage components """
     # print("Total data points: ",len(step_0P5C_CD["Time [h]"].entries))
     Dis_Cap = abs(
         step_0P5C_CD["Discharge capacity [A.h]"].entries[0] 
@@ -276,7 +102,7 @@ def mean_percentage_error(A, B):
 # idea: do interpolation following TODO this is where weighting works
 # initial:: X_1_st,X_5_st,Y_1_st_avg,Y_2_st_avg,Y_3_st_avg,Y_4_st_avg,Y_5_st_avg
 # to compare: my_dict_RPT
-def Compare_Exp_Model(task_result, config):
+def compare_ageing_model_with_expeirment(task_result, config):
     
     # Unpack:
     my_dict_RPT = task_result.my_dict_RPT
@@ -388,7 +214,7 @@ def Compare_Exp_Model(task_result, config):
 
 
 # Evaluate errors systematically:
-def Evaluate_MPE_with_ExpData(task_result,config):
+def evaluate_mean_percentage_error(task_result,config):
     Exp_No = config.exp_config.Exp_No
     Age_T_in_K = config.exp_config.Age_T_in_K
     Keys_error = task_result.Keys_error
@@ -396,8 +222,8 @@ def Evaluate_MPE_with_ExpData(task_result,config):
     if Exp_No in np.arange(1, 6) and \
         int(Age_T_in_K - 273.15) in [10, 25, 40]:
 
-        config.Get_Cell_Mean_1T_1Exp()  # XY_pack
-        mpe_all = Compare_Exp_Model(task_result, config)
+        config.get_mean_exp_data()  # XY_pack
+        mpe_all = compare_ageing_model_with_expeirment(task_result, config)
     else:
 
         config.XY_pack         = "nan"
@@ -419,8 +245,9 @@ def Evaluate_MPE_with_ExpData(task_result,config):
     return task_result
 
 # Add 220808 - to simplify the post-processing
-def GetSol_dict (my_dict, keys_all, Sol, 
+def get_customized_dict_from_solution (my_dict, keys_all, Sol, 
     cycle_no,step_CD, step_CC , step_RE, step_CV ):
+    """ Function to get customized dictionary from pybamm.solution """
 
     [keys_loc,keys_tim,keys_cyc]  = keys_all;
     # get time_based variables:
@@ -513,7 +340,10 @@ def GetSol_dict (my_dict, keys_all, Sol,
                         Sol.cycles[cycle_no].steps[step_no][key[6:]].entries[:,-1]).tolist()  )
     return my_dict                              
 
-def Get_SOH_LLI_LAM(task_result,config):
+def get_customized_summary_variables(task_result, config):
+    """ Function to calculate SOH, LLI, LAM etc in a customized way, 
+    this function exists because previously we found that pybamm 
+    doesn't define LLI, LAM, SOH properly. """
 
     my_dict_RPT = task_result.my_dict_RPT
     model_options = config.model_config.model_options
@@ -593,8 +423,9 @@ def Get_SOH_LLI_LAM(task_result,config):
     return task_result
 
 # Update 240429: Define a new dictionary to write summary result into Excel file
-def Write_Dict_to_Excel(
+def write_dict_into_excel(
         task_result, config, log_messages):
+    """ Function to write customized dictionary into Excel file """
     # unpack: 
     mpe_all = task_result.mpe_all
     Pass_Fail = task_result.Pass_Fail
@@ -707,7 +538,8 @@ def Write_Dict_to_Excel(
     return 
 
 import pickle
-def Fun_Save_for_Reload(task_result,Model_Dry_old,Para_0_Dry_old,config):
+def save_results_into_pickle(task_result,Model_Dry_old,Para_0_Dry_old,config):
+    """ Function to save simulation results into pickle files """
     # unpack: 
     DryOut = config.model_config.DryOut
     Scan_No = config.Scan_No
@@ -718,16 +550,16 @@ def Fun_Save_for_Reload(task_result,Model_Dry_old,Para_0_Dry_old,config):
         task_result.mdic_dry]
     
     if isinstance(task_result.Sol_RPT[-1],pb.solvers.solution.Solution):
-        _,dict_short = Get_Last_state(Model_Dry_old, task_result.Sol_RPT[-1])
+        _,dict_short = get_solution_last_state(Model_Dry_old, task_result.Sol_RPT[-1])
         sol_last = task_result.Sol_RPT[-1]
     else:
-        _,dict_short = Get_Last_state(Model_Dry_old, task_result.Sol_AGE[-1])
+        _,dict_short = get_solution_last_state(Model_Dry_old, task_result.Sol_AGE[-1])
         sol_last = task_result.Sol_AGE[-1]
         print("!!!!!!!Big problem! The last RPT fails, "
             "need to restart from RPT next time")
     # calculate dry-out parameter first
     if DryOut == "On":
-        DryOut_List,Paraupdate = Cal_new_con_Update(sol_last, Para_0_Dry_old)
+        DryOut_List,Paraupdate = func_solvent_consumption(sol_last, Para_0_Dry_old)
     else: 
         Paraupdate = Para_0_Dry_old; DryOut_List = "nan"
     i_try = 0
@@ -748,7 +580,8 @@ def Fun_Save_for_Reload(task_result,Model_Dry_old,Para_0_Dry_old,config):
     return    
 
 
-def Fun_Save_for_debug(task_result, config):
+def save_results_for_debug(task_result, config):
+    """ Save results for later debugging """
     Scan_No = config.Scan_No
     Re_No = config.global_config.Re_No
 
@@ -765,7 +598,8 @@ def Fun_Save_for_debug(task_result, config):
 
 
 
-def Fun_Save_Partial_Age(task_result, config):
+def save_partial_ageing_solution(task_result, config):
+    """ Save partial ageing pybamm.solution when it fails mid-way """
     # unpack: 
     Scan_No = config.Scan_No
     Re_No = config.global_config.Re_No
@@ -801,8 +635,8 @@ def Fun_Save_Partial_Age(task_result, config):
 
 
 import shutil,os; import pandas as pd
-def Copy_png(Path_Results, purpose_i, Path_Plot_Collect,
-            rows_per_file, Scan_end_end):
+def copy_png_files(Path_Results, purpose_i, Path_Plot_Collect,
+                    rows_per_file, Scan_end_end):
 
     source_folders = []
     for i_bundle in range(int(Scan_end_end/rows_per_file)):
