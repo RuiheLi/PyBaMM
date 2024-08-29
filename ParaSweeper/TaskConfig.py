@@ -15,7 +15,9 @@ import random;import time, signal
 
 
 # Function to read exp
-def read_experiment_data(BasicPath_Save, Exp_Any_Cell, Exp_Path, Exp_head, Exp_Any_Temp, i):
+def read_experiment_data(
+        BasicPath_Save, Exp_Any_Cell, Exp_Path, 
+        Exp_head, Exp_Any_Temp, i):
     Exp_Any_AllData  = {}
     for cell in Exp_Any_Cell:
         Exp_Any_AllData[cell] = {} # one cell
@@ -63,14 +65,14 @@ def read_experiment_data(BasicPath_Save, Exp_Any_Cell, Exp_Path, Exp_head, Exp_A
     return Exp_Any_AllData
 
 class ExpConfig:
-    def __init__(self, Exp_No, Age_T,tot_cyc, Cycle_bt_RPT, update,
-                Runs_bt_RPT, RPT_num, RPT_Cycles, Age_T_in_K, RPT_T_in_K, 
-                V_max=4.2, V_min=2.5, exp_AGE_text="", step_AGE_CD="", 
-                step_AGE_CC="", step_AGE_CV="", exp_breakin_text="", 
-                exp_RPT_text="", exp_GITT_text="", exp_refill="", 
-                exp_adjust_before_age="", step_0p1C_CD="", step_0p1C_CC="", 
-                step_0p1C_RE="", step_0p5C_CD="",
-                ):
+    def __init__(self, V_max = 4.2 , V_min = 2.5, 
+            exp_AGE_text=None, step_AGE_CD=None, step_AGE_CC=None, step_AGE_CV=None,
+            exp_breakin_text=None, exp_RPT_text=None, exp_GITT_text=None, 
+            exp_refill=None, exp_adjust_before_age=None,
+            step_0p1C_CD=None, step_0p1C_CC=None, step_0p1C_RE=None, step_0p5C_CD=None,
+            Exp_No=None,Age_T=None,tot_cyc=None,Cycle_bt_RPT=None,update=None,
+            Runs_bt_RPT=None,RPT_num=None,
+            RPT_Cycles=None,Age_T_in_K=None,RPT_T_in_K=None):
 
         self.V_max = V_max
         self.V_min = V_min
@@ -105,20 +107,18 @@ class ParameterConfig:
         self.Para_dict_i = Para_dict_i
 
 class ModelConfig:
-    def __init__(self,mesh_list,
-            submesh_strech,
-            model_options,
-            DryOut):
+    def __init__(self,mesh_list=None,
+            submesh_strech=None,model_options=None,DryOut=None ):
         self.mesh_list=mesh_list
         self.submesh_strech=submesh_strech
         self.model_options=model_options
         self.DryOut=DryOut
 
 class ExperimentDataConfig:
-    def __init__(self,cap_0, 
-                Temp_Cell_Exp, 
-                Exp_Any_AllData,
-                XY_pack):
+    def __init__(self,cap_0 = None, 
+                Temp_Cell_Exp = None, 
+                Exp_Any_AllData = None,
+                XY_pack = None):
         self.cap_0 = cap_0 # set initial capacity to standardize SOH and get initial SEI thickness 
         self.Temp_Cell_Exp = Temp_Cell_Exp
         self.Exp_Any_AllData = Exp_Any_AllData
@@ -136,7 +136,7 @@ class GlobalConfig:
         if not isinstance(On_HPC, bool):
             raise ValueError("On_HPC should be a boolean (True/False).")
         if (
-            not isinstance(Runshort, str) or
+            not isinstance(Runshort, str) and
             not isinstance(Runshort, bool) ):
             raise ValueError("Runshort should be either a string or boolean (True/False).")
         if not isinstance(Plot_Exp, bool):
@@ -562,10 +562,10 @@ class TaskConfig:
             "Rest for 10 s",
             "Rest for 10 s",   # add here to correct values of step_0p1C_CD 
             # 0.1C cycle 
-            f"Discharge at 0.1C for 10 s",  
+            f"Discharge at 0.1C until {V_min} V",  
             "Rest for 10 s",  
-            f"Charge at 0.1C for 10 s",
-            f"Rest for 10 s",
+            f"Charge at 0.1C until {V_max} V",
+            f"Hold at {V_max}V until C/100",
             "Rest for 10 s",
             # 0.5C cycle 
             f"Discharge at 0.5C for 10 s",  
@@ -579,10 +579,10 @@ class TaskConfig:
             "Rest for 10 s",
             "Rest for 10 s",   # add here to correct values of step_0p1C_CD 
             # 0.1C cycle 
-            f"Discharge at 0.1C for 10 s",  
+            f"Discharge at 0.1C until {V_min} V",   
             "Rest for 10 s",  
-            f"Charge at 0.1C for 10 s",
-            f"Rest for 10 s",
+            f"Charge at 0.1C until {V_max} V",
+            f"Hold at {V_max}V until C/100",
             "Rest for 10 s",
             # 0.5C cycle 
             f"Discharge at 0.5C for 10 s",  
@@ -596,10 +596,10 @@ class TaskConfig:
             f"Hold at {V_max}V until C/100",
             "Rest for 1 hours", 
             # 0.1C cycle 
-            f"Discharge at 0.1C for 10 s",  
+            f"Discharge at 0.1C until {V_min} V",  
             "Rest for 10 s",  
-            f"Charge at 0.1C for 10 s",
-            f"Rest for 10 s",
+            f"Charge at 0.1C until {V_max} V",
+            f"Hold at {V_max}V until C/100",
             "Rest for 10 s",
             # 0.5C cycle 
             f"Discharge at 0.5C for 10 s",  

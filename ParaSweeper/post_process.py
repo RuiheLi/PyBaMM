@@ -6,6 +6,7 @@ import pandas as pd
 import pybamm as pb
 import matplotlib.pyplot as plt
 from .main import *
+from ParaSweeper.solvent_consumption_model import func_solvent_consumption
 
 # Update 231117 new method to get throughput capacity to avoid problems of empty solution
 def get_charge_throughput_from_current(sol_rpt): 

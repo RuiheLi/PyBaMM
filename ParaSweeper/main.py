@@ -12,14 +12,14 @@ from queue import Empty
 import openpyxl
 import traceback
 import random;import time, signal
-from wip.Rio_Code.ParaSweeper.TaskResult import TaskResult
-from wip.Rio_Code.ParaSweeper.TaskResult import *
-from wip.Rio_Code.ParaSweeper.plot import *
-from wip.Rio_Code.ParaSweeper.solve_pybamm_model import *
-from wip.Rio_Code.ParaSweeper.post_process import *
-from wip.Rio_Code.ParaSweeper.TaskConfig import *
-from wip.Rio_Code.ParaSweeper.get_input_para import *
-
+from ParaSweeper.TaskResult import TaskResult
+from ParaSweeper.TaskResult import *
+from ParaSweeper.plot import *
+from ParaSweeper.solve_pybamm_model import *
+from ParaSweeper.post_process import *
+from ParaSweeper.TaskConfig import *
+from ParaSweeper.get_input_para import *
+from ParaSweeper.solvent_consumption_model import func_solvent_consumption
 
 def handle_signal(signal_num, frame):
 	raise TimeoutError

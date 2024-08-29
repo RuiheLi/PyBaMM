@@ -5,15 +5,27 @@ import numpy as np
 
 class TaskResult:
     def __init__(
-            self, midc_merge, Call_Breakin, Flag_Breakin,
-            str_error_Breakin, Call_RPT, DeBug_List_Breakin, 
-            Call_Age, DryOut_List, mpe_all, Pass_Fail,
-            Keys_error, Sol_RPT=[],Sol_AGE=[], Flag_AGE = True, 
+            self, midc_merge=None,
+            Sol_RPT=[],Sol_AGE=[],
+
+            Call_Breakin=None, Flag_Breakin = None,
+            str_error_Breakin = None,
+            DeBug_List_Breakin=None,
+            
+            Call_Age=None,      Flag_AGE = True, 
             str_error_AGE = "Empty", 
             DeBug_List_AGE = "Empty",
-            Flag_partial_AGE = False,
+
+            Call_RPT = None,    Flag_partial_AGE = False,
             str_error_RPT = "Empty", 
-            DeBug_List_RPT = "Empty", ):
+            DeBug_List_RPT = "Empty", 
+
+            DryOut_List = None,
+            mpe_all = None,
+            Pass_Fail = None,
+            Keys_error = None,
+            
+            ):
         # get output keys - customized    
         self.midc_merge = midc_merge 
         self.Sol_RPT = Sol_RPT 
