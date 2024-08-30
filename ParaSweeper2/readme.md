@@ -1,5 +1,15 @@
 # ParaSweeper is a script developed by the ESE group at Imperial College London that aims at sweeping over variables (parameters) of a complicated physics-based models. The obtained input-output pairs can then be used to do sensitivity analysis, train suggorate models, etc. The main features/advantages of this tool lays in that it handles inputs/outputs and errors properly. It facilitates high-throughput computing for those "heavy", computational expensive models. 
 
+The main idea is to have three layers of information:
+
+layer-1: sweep_task and case, stored as Excel (or other) files
+layer-2: config_exp, config_para, config_model: decode information 
+                in case
+            config_sol: store post-processing data from pybamm
+layer-3: pybamm objects, including experiments, parameter_values, 
+            models, and solution
+
+
 ## In its examples, we showcase how to use this model to run solvent-consumption model, and reproduce the Li2024 paper (GEM-2 paper).
 
 ## Define the terminology:

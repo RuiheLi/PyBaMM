@@ -1,13 +1,5 @@
 """ Main function to run one case
 
-The main idea is to have three layers of information:
-
-layer-1: sweep_task and case, stored as Excel (or other) files
-layer-2: config_exp, config_para, config_model: decode information 
-                in case
-            config_sol: store post-processing data from pybamm
-layer-3: pybamm objects, including experiments, parameter_values, 
-            models, and solution
 
 """
 

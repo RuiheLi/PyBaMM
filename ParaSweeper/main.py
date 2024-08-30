@@ -445,6 +445,7 @@ def run_one_case(config):
     #############################################################
     #######   2-2: Write a big loop to finish the long experiment    
     if task_result.Flag_Breakin == True: 
+        # Flag_Breakin: means whether break-in cycles is successful
         k=0
         # Para_All.append(Para_0);Model_All.append(Model_0);Sol_All_i.append(Sol_0); 
         Para_0_Dry_old = Para_0     
