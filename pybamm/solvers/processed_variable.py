@@ -230,14 +230,11 @@ class ProcessedVariable(object):
             )
         else:
             # function of space and time. Note that the order of 't' and 'space'
-            # is the reverse of what you'd expect
-            self._interpolation_function = interp.interp2d(
-                self.t_pts,
-                pts_for_interp,
-                entries_for_interp,
-                kind="linear",
-                fill_value=np.nan,
-                bounds_error=False,
+            # is the reverse of what you'd expect.
+            # SciPy >= 1.14 removed interp2d; use RegularGridInterpolator on the
+            # same regular grid (see SciPy interpolate transition guide).
+            self._interpolation_function = InterpolantTimeSpace(
+                self.t_pts, pts_for_interp, entries_for_interp
             )
 
     def initialise_2D(self):
@@ -632,17 +629,64 @@ class Interpolant1D:
             return self.interpolant(z)
 
 
+class InterpolantTimeSpace:
+    """
+    Linear interpolation on a regular (time, space) grid. Replaces
+    ``interp2d(t_pts, space_pts, z)`` removed in SciPy 1.14+.
+    ``z[j, i]`` is the value at ``(t_pts[i], space_pts[j])`` (legacy ``interp2d`` layout).
+
+    Legacy ``interp2d.__call__`` uses FITPACK ``bisplev`` semantics: two 1-D inputs
+    always define a full Cartesian grid (including when lengths match).
+    """
+
+    def __init__(self, t_pts, space_pts, z):
+        z = np.asarray(z)
+        self._f = interp.RegularGridInterpolator(
+            (np.asarray(t_pts), np.asarray(space_pts)),
+            z.T,
+            method="linear",
+            bounds_error=False,
+            fill_value=np.nan,
+        )
+
+    def __call__(self, t, s):
+        t_in = np.asarray(t, dtype=float)
+        s_in = np.asarray(s, dtype=float)
+        scalar_t = t_in.ndim == 0
+        scalar_s = s_in.ndim == 0
+        t = np.atleast_1d(t_in)
+        s = np.atleast_1d(s_in)
+        if t.ndim != 1 or s.ndim != 1:
+            raise ValueError("interp2d expects 1-D coordinate arrays")
+        Tgrid, Sgrid = np.meshgrid(t, s, indexing="ij")
+        pts = np.stack([Tgrid.ravel(), Sgrid.ravel()], axis=-1)
+        out = self._f(pts).reshape(Tgrid.shape)
+        # Return shape ``(len(space), len(time))`` like SciPy ``interp2d``
+        z = out.T
+        # Scalar + vector cases (SciPy ``interp2d`` returns a 1-D or 2-D slice)
+        if scalar_t and scalar_s:
+            return np.array([z[0, 0]])  # shape ``(1,)`` like SciPy
+        if scalar_t and not scalar_s:
+            return z  # shape ``(len(space), 1)``
+        if scalar_s and not scalar_t:
+            return z[0, :]  # shape ``(len(time),)``
+        return z
+
+
 class Interpolant2D:
     def __init__(
         self, first_dim_pts_for_interp, second_dim_pts_for_interp, entries_for_interp
     ):
-        self.interpolant = interp.interp2d(
-            second_dim_pts_for_interp,
-            first_dim_pts_for_interp,
-            entries_for_interp[:, :, 0],
-            kind="linear",
-            fill_value=np.nan,
+        z = np.asarray(entries_for_interp[:, :, 0])
+        self._f = interp.RegularGridInterpolator(
+            (
+                np.asarray(second_dim_pts_for_interp),
+                np.asarray(first_dim_pts_for_interp),
+            ),
+            z.T,
+            method="linear",
             bounds_error=False,
+            fill_value=np.nan,
         )
 
     def __call__(self, input):
@@ -654,15 +698,25 @@ class Interpolant2D:
         if isinstance(first_dim, np.ndarray) and isinstance(second_dim, np.ndarray):
             first_dim = first_dim[:, 0, 0]
             second_dim = second_dim[:, 0]
-            return self.interpolant(second_dim, first_dim)
+            Sgrid, Fgrid = np.meshgrid(second_dim, first_dim, indexing="ij")
+            pts = np.column_stack((Sgrid.ravel(), Fgrid.ravel()))
+            out = self._f(pts).reshape(Sgrid.shape)
+            # Match SciPy ``interp2d`` output shape ``(len(first), len(second))``
+            return out.T
         elif isinstance(first_dim, np.ndarray):
             first_dim = first_dim[:, 0]
-            return self.interpolant(second_dim, first_dim)[:, 0]
+            t, s = np.broadcast_arrays(second_dim, first_dim)
+            pts = np.column_stack((t.ravel(), s.ravel()))
+            vals = self._f(pts).reshape(t.shape)
+            return vals if vals.ndim == 1 else vals[:, 0]
         elif isinstance(second_dim, np.ndarray):
             second_dim = second_dim[:, 0]
-            return self.interpolant(second_dim, first_dim)
+            t, s = np.broadcast_arrays(second_dim, first_dim)
+            pts = np.column_stack((t.ravel(), s.ravel()))
+            return self._f(pts)
         else:
-            return self.interpolant(second_dim, first_dim)[0]
+            v = self._f(np.array([[second_dim, first_dim]]))[0]
+            return np.asarray(v)
 
 
 def eval_dimension_name(name, x, r, y, z, R):

@@ -1,0 +1,21 @@
+{
+  "include": ["figures", "figures/shared/p3_bootstrap.py"],
+  "extraPaths": [
+    "../Fun_P3",
+    "../../.."
+  ],
+  "executionEnvironments": [
+    {
+      "root": "figures/main",
+      "extraPaths": ["../../Fun_P3", "../../../..", "../shared"]
+    },
+    {
+      "root": "figures/SI",
+      "extraPaths": ["../../Fun_P3", "../../../..", "../shared"]
+    },
+    {
+      "root": "figures/shared",
+      "extraPaths": ["../../Fun_P3", "../../../.."]
+    }
+  ]
+}

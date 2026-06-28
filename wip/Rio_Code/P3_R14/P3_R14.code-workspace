@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "P3_R14"
+    }
+  ],
+  "settings": {
+    "python.analysis.extraPaths": [
+      "${workspaceFolder}/../Fun_P3",
+      "${workspaceFolder}/../../..",
+      "${workspaceFolder}/figures/shared"
+    ]
+  }
+}

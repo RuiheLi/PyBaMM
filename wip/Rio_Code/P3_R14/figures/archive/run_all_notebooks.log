@@ -1,0 +1,49 @@
+[2026-05-16 07:16:42] BATCH START, 3 notebook(s)
+  REPO_ROOT = D:\LRHWork\Model_RH\PyBaMM-ECdrag2
+
+[2026-05-16 07:16:43] START Rate_Performance_Get_Sol.ipynb
+[2026-05-16 11:16:54] FAIL in 14410.5s
+  err tail:
+CellTimeoutError: A cell timed out while it was being executed, after 14400 seconds.
+The message was: Cell execution timed out.
+Here is a preview of the cell contents:
+-------------------
+['Sol_LD = [] # For mesh [10,5,10,100,20], 1e-11, cannot finish 1.9C after 30min; cannot finish 1.88C after 80 min, 1.86C takes 14 min', 'Sol_HD = [] ', 'i=0', 'for Rate_Dis in Rate_Dis_All:', '    D_e_EC_cross = Para_DD[i]["Lithium ion EC cross diffusivity [m2.s-1]"]']
+...
+['    str_pickle =  f"Double_D_e_EC_cross={D_e_EC_cross}"', '    sol_return,cap,Trise,t_dis,vol_dis = Run_P3_OneCycle_Dict(', '        i, Para_DD[i], Path_pack,Rate_Dis,str_pickle,', '        Return_sol=True,Save_sol=True)', '    Sol_HD.append(sol_return)']
+-------------------
+
+
+[2026-05-16 11:16:54] START Debug_Xitilde.ipynb
+[2026-05-16 11:21:07] FAIL in 253.7s
+  err tail:
+    x_loc,var_elely,Title_keys,Crate_index,Save_Fig)
+
+------------------
+
+
+[1;31m---------------------------------------------------------------------------[0m
+[1;31mNameError[0m                                 Traceback (most recent call last)
+Cell [1;32mIn[18], line 80[0m
+[0;32m     78[0m DD_LDx_Crate [38;5;241m=[39m DD_Xitilde_Fun_Crate
+[0;32m     79[0m DD_HDx_Crate [38;5;241m=[39m DD_Xitilde_3_Crate
+[1;32m---> 80[0m Plot_Concentration_1_Crate(SD_Crate,DD_LDx_Crate,DD_HDx_Crate,
+[0;32m     81[0m     x_loc,var_elely,Title_keys,Crate_index,Save_Fig)
+[0;32m     82[0m Plot_Concentration_1_Crate(SD_Crate,DD_LDx_Crate,DD_HDx_Crate,
+[0;32m     83[0m     x_loc,var_LJP,Title_LJP,Crate_index,Save_Fig)
+[0;32m     84[0m Plot_Concentration_1_Crate(SD_Crate,DD_LDx_Crate,DD_HDx_Crate,
+[0;32m     85[0m     x_loc,var_elely,Title_keys,Crate_index,Save_Fig)
+
+Cell [1;32mIn[18], line 12[0m, in [0;36mPlot_Concentration_1_Crate[1;34m(SD_Crate, DD_LDx_Crate, DD_HDx_Crate, x_loc, var_elely, Title_keys, Crate_index, Save_Fig)[0m
+[0;32m      9[0m time_Double_Low [38;5;241m=[39m (sol_Double_Low[38;5;241m.[39mcycles[[38;5;241m0[39m][38;5;241m.[39msteps[[38;5;241m1[39m][[38;5;124m'[39m[38;5;124mTime [s][39m[38;5;124m'[39m][38;5;241m.[39mentries[38;5;241m-[39msol_Double_Low[38;5;241m.[39mcycles[[38;5;241m0[39m][38;5;241m.[39msteps[[38;5;241m1[39m][[38;5;124m'[39m[38;5;124mTime [s][39m[38;5;124m'[39m][38;5;241m.[39mentries[[38;5;241m0[39m])[38;5;241m.[39mtolist()
+[0;32m     11[0m t_select [38;5;241m=[39m [38;5;28mmin[39m(time_Single_High[[38;5;241m-[39m[38;5;241m2[39m],time_Double_High[[38;5;241m-[39m[38;5;241m2[39m],time_Double_Low[[38;5;241m-[39m[38;5;241m2[39m])
+[1;32m---> 12[0m i_Single_High [38;5;241m=[39m FindClose(time_Single_High,t_select)
+[0;32m     13[0m i_Double_High [38;5;241m=[39m FindClose(time_Double_High,t_select)
+[0;32m     15[0m i_Double_Low [38;5;241m=[39m FindClose(time_Double_Low,t_select)
+
+[1;31mNameError[0m: name 'FindClose' is not defined
+
+[2026-05-16 11:21:07] START 1EC1DMC_Rate_Performance.ipynb
+[2026-05-16 12:15:35] OK in 3267.4s
+
+[2026-05-16 12:15:35] BATCH END

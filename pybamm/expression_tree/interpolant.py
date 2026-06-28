@@ -126,9 +126,33 @@ class Interpolant(pybamm.Function):
                     "interpolator should be 'linear' or 'cubic' if x is two-dimensional"
                 )
             else:
-                interpolating_function = interpolate.interp2d(
-                    x1, x2, y, kind=interpolator
+                # SciPy >= 1.14 removed interp2d; RegularGridInterpolator on the same grid.
+                method = "linear" if interpolator == "linear" else "cubic"
+                interpolating_function = interpolate.RegularGridInterpolator(
+                    (x1, x2),
+                    y.T,
+                    method=method,
+                    bounds_error=False,
+                    fill_value=np.nan,
                 )
+
+                def _call_rgi(v1, v2, _f=interpolating_function):
+                    v1 = np.asarray(v1, dtype=float)
+                    v2 = np.asarray(v2, dtype=float)
+                    if v1.shape != v2.shape:
+                        if v1.size == 1:
+                            v1 = np.resize(v1, v2.shape)
+                        elif v2.size == 1:
+                            v2 = np.resize(v2, v1.shape)
+                        else:
+                            raise ValueError(
+                                "If v1 and v2 have different shapes, one must be size 1"
+                            )
+                    v1b, v2b = np.broadcast_arrays(v1, v2)
+                    pts = np.stack([v1b.ravel(), v2b.ravel()], axis=-1)
+                    return _f(pts).reshape(v1b.shape)
+
+                interpolating_function = _call_rgi
         else:
             raise ValueError("Invalid dimension of x: {0}".format(len(x)))
 

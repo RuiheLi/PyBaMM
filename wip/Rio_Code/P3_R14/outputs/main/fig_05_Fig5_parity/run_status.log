@@ -1,0 +1,10 @@
+[2026-06-11 07:33:21] fig5 START ts_dis=[0.1] mesh_r_n=80 plot_only=False
+[2026-06-11 07:33:21] fig5 solve period=0.1s BEGIN
+[2026-06-12 07:40:22] fig5 solve period=0.1s OK wall=86820.6s
+[2026-06-12 07:40:23] fig5 saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\Double_SimSave\Fig5_parity\fig5_45C_mesh80_period0.1s.pkl
+[2026-06-12 07:40:23] fig5 plot saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\Double_SimSave\Fig5_parity\fig5_45C_mesh80_0.1s_profile.png
+[2026-06-12 07:40:23] fig5 DONE
+[2026-06-14 18:36:23] fig5 START ts_dis=[0.1] mesh_r_n=80 plot_only=True
+[2026-06-14 18:36:23] fig5 load D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\outputs\main\fig_05_Fig5_parity\fig5_45C_mesh80_period0.1s.pkl
+[2026-06-14 18:36:24] fig5 plot saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\outputs\main\fig_05_Fig5_parity\fig5_45C_mesh80_0.1s_profile.png
+[2026-06-14 18:36:24] fig5 DONE

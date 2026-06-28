@@ -1,0 +1,3592 @@
+
+[Tick] 2026-05-07 21:49:17
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-07 22:49:17
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-07 23:49:17
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 00:49:17
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 01:49:17
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 02:49:17
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 03:49:18
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 04:49:18
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 05:49:18
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 06:49:18
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 07:49:18
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 08:49:18
+
+==== Port repo status ====
+## stage3/batch1-minimal
+ M src/pybamm/models/full_battery_models/base_battery_model.py
+ M src/pybamm/models/full_battery_models/lithium_ion/dfn.py
+ M src/pybamm/models/submodels/electrolyte_conductivity/__init__.py
+ M src/pybamm/parameters/lithium_ion_parameters.py
+?? src/pybamm/models/submodels/electrolyte_conductivity/sol_full_conductivity.py
+
+==== Port repo recent commits ====
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+15693619e Update version
+53c3e7490 Revert "Modifies `QuickPlot.plot` ..." (#4622)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 09:49:18
+
+==== Port repo status ====
+## stage3/batch1-minimal
+
+==== Port repo recent commits ====
+937e3cb64 ECdrag2 port M4: c_EC state + EC<->Li+ cross-diffusion
+d6ebd9f6d ECdrag2 port M3 Batch-1: minimal sol-full electrolyte conductivity
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 10:49:18
+
+==== Port repo status ====
+## stage3/batch1-minimal
+
+==== Port repo recent commits ====
+937e3cb64 ECdrag2 port M4: c_EC state + EC<->Li+ cross-diffusion
+d6ebd9f6d ECdrag2 port M3 Batch-1: minimal sol-full electrolyte conductivity
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 11:49:18
+
+==== Port repo status ====
+## stage3/batch1-minimal
+
+==== Port repo recent commits ====
+937e3cb64 ECdrag2 port M4: c_EC state + EC<->Li+ cross-diffusion
+d6ebd9f6d ECdrag2 port M3 Batch-1: minimal sol-full electrolyte conductivity
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 12:49:19
+
+==== Port repo status ====
+## stage3/batch1-minimal
+
+==== Port repo recent commits ====
+937e3cb64 ECdrag2 port M4: c_EC state + EC<->Li+ cross-diffusion
+d6ebd9f6d ECdrag2 port M3 Batch-1: minimal sol-full electrolyte conductivity
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 13:49:19
+
+==== Port repo status ====
+## stage3/batch1-minimal
+
+==== Port repo recent commits ====
+937e3cb64 ECdrag2 port M4: c_EC state + EC<->Li+ cross-diffusion
+d6ebd9f6d ECdrag2 port M3 Batch-1: minimal sol-full electrolyte conductivity
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 14:49:19
+
+==== Port repo status ====
+## stage3/batch1-minimal
+
+==== Port repo recent commits ====
+937e3cb64 ECdrag2 port M4: c_EC state + EC<->Li+ cross-diffusion
+d6ebd9f6d ECdrag2 port M3 Batch-1: minimal sol-full electrolyte conductivity
+f73e056d3 Merge pull request #4624 from pybamm-team/rel/v24.11.2
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 15:49:19
+
+==== Port repo status ====
+## stage3/batch1-minimal
+
+==== Port repo recent commits ====
+51c46c156 ECdrag2 port M5: solvent diffusion 'constant' + first parity run
+937e3cb64 ECdrag2 port M4: c_EC state + EC<->Li+ cross-diffusion
+d6ebd9f6d ECdrag2 port M3 Batch-1: minimal sol-full electrolyte conductivity
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 16:49:19
+
+==== Port repo status ====
+## stage3/batch1-minimal
+
+==== Port repo recent commits ====
+51c46c156 ECdrag2 port M5: solvent diffusion 'constant' + first parity run
+937e3cb64 ECdrag2 port M4: c_EC state + EC<->Li+ cross-diffusion
+d6ebd9f6d ECdrag2 port M3 Batch-1: minimal sol-full electrolyte conductivity
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 17:49:19
+
+==== Port repo status ====
+## stage3/batch1-minimal
+
+==== Port repo recent commits ====
+51c46c156 ECdrag2 port M5: solvent diffusion 'constant' + first parity run
+937e3cb64 ECdrag2 port M4: c_EC state + EC<->Li+ cross-diffusion
+d6ebd9f6d ECdrag2 port M3 Batch-1: minimal sol-full electrolyte conductivity
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 18:49:19
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m6.npz
+
+==== Port repo recent commits ====
+24799703c ECdrag2 port M6: dynamic c_EC parity with cross-diffusion (no migration)
+51c46c156 ECdrag2 port M5: solvent diffusion 'constant' + first parity run
+937e3cb64 ECdrag2 port M4: c_EC state + EC<->Li+ cross-diffusion
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 19:49:19
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9.py
+?? wip/parity_port_m9b.npz
+?? wip/parity_port_m9b.py
+
+==== Port repo recent commits ====
+3fc6d416c ECdrag2 port M8: SEI consumption + refill source terms ('full with sei refill')
+0032c9add ECdrag2 port M7: EC migration term + 'full with migration' option
+24799703c ECdrag2 port M6: dynamic c_EC parity with cross-diffusion (no migration)
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-08 20:49:19
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+3fc6d416c ECdrag2 port M8: SEI consumption + refill source terms ('full with sei refill')
+0032c9add ECdrag2 port M7: EC migration term + 'full with migration' option
+
+==== Source repo status ====
+## No commits yet on main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/
+----------------------------------------
+
+[Tick] 2026-05-09 20:25:22
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## main
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/ECdrag2_dimensionalized_equations.md
+?? wip/Rio_Code/P3_R14/ECdrag2_symbol_mapping_for_port.md
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/extract_docx_equations.py
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 00:24:23
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 08:23:07
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 09:23:07
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 10:23:07
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 11:23:07
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 12:23:07
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 13:23:07
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 14:23:08
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 15:23:08
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 16:23:08
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 17:23:08
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 18:23:08
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 19:23:08
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-12 20:23:09
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+ M wip/Rio_Code/P3_R14/DoubleTransport_Dimensionalization.md
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-13 14:30:14
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------
+
+[Tick] 2026-05-13 15:30:14
+
+==== Port repo status ====
+## stage3/batch1-minimal
+?? wip/parity_port_m10.npz
+?? wip/parity_port_m6.npz
+?? wip/parity_port_m7.npz
+?? wip/parity_port_m8.npz
+?? wip/parity_port_m9.npz
+?? wip/parity_port_m9b.npz
+
+==== Port repo recent commits ====
+1ae829da2 ECdrag2 port M11: unit tests + CHANGELOG entry + draft PR description
+0476f9f56 ECdrag2 port M10: 'interstitial-diffusion limited (legacy)' SEI option (v23-faithful j_sei)
+a561f1b5c ECdrag2 port M9: end-to-end P3_R14 4-stage protocol parity (sei porosity change off)
+
+==== Source repo status ====
+## 2026-05-09-3bfk
+?? .all-contributorsrc
+?? .clang-format
+?? .git-blame-ignore-revs
+?? .github/
+?? .gitignore
+?? .pre-commit-config.yaml
+?? .readthedocs.yml
+?? CHANGELOG.md
+?? CITATION.cff
+?? CMakeBuild.py
+?? CMakeLists.txt
+?? CODE-OF-CONDUCT.md
+?? CONTRIBUTING.md
+?? FindSUNDIALS.cmake
+?? FindSuiteSparse.cmake
+?? LICENSE.txt
+?? README.md
+?? asv.conf.json
+?? benchmarking.ipynb
+?? benchmarks/
+?? build-pure-wheel.sh
+?? build-wheel.sh
+?? build_manylinux_wheels/
+?? docs/
+?? examples/
+?? postBuild
+?? pybamm/
+?? requirements.txt
+?? run-tests.py
+?? scripts/
+?? setup.py
+?? tests/
+?? texput.log
+?? tox.ini
+?? vcpkg-configuration.json
+?? vcpkg.json
+?? wip/4-hour-test.ipynb
+?? wip/Rio_Code/ACS_Paper_elely.ipynb
+?? wip/Rio_Code/AskPyBaMM/
+?? wip/Rio_Code/Compare_parameter_value.ipynb
+?? wip/Rio_Code/Compare_parameter_value_output/
+?? wip/Rio_Code/Electrolyte/
+?? wip/Rio_Code/ExpData/
+?? wip/Rio_Code/Fun_P2/
+?? wip/Rio_Code/Fun_P3/
+?? wip/Rio_Code/MP_Study/
+?? wip/Rio_Code/P2_R0/
+?? wip/Rio_Code/P2_R1/
+?? wip/Rio_Code/P2_R3/
+?? wip/Rio_Code/P2_R4/
+?? wip/Rio_Code/P3R10/
+?? wip/Rio_Code/P3R8_FindLimiting/
+?? wip/Rio_Code/P3R9_Mergedev/
+?? wip/Rio_Code/P3_R0/
+?? wip/Rio_Code/P3_R1/
+?? wip/Rio_Code/P3_R11_cECinPhie/
+?? wip/Rio_Code/P3_R12_LJPMac/
+?? wip/Rio_Code/P3_R13_LJPTae/
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_OneCycAge_3C_sol_diff.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Rate_Performance_AnSol.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_1C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C.ipynb
+?? wip/Rio_Code/P3_R14/1EC1DMC_Val_GITT_2C_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Dec_e.ipynb
+?? wip/Rio_Code/P3_R14/Debug_Xitilde.ipynb
+?? wip/Rio_Code/P3_R14/Double_SimSave/
+?? wip/Rio_Code/P3_R14/Long_int.py
+?? wip/Rio_Code/P3_R14/Para/
+?? wip/Rio_Code/P3_R14/Rate_Performance_Get_Sol.ipynb
+?? wip/Rio_Code/P3_R14/Reload_Age.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.executed.ipynb
+?? wip/Rio_Code/P3_R14/Reproduce_sol_seg_Xitilde_func.ipynb
+?? wip/Rio_Code/P3_R14/hourly_progress.log
+?? wip/Rio_Code/P3_R14/hourly_progress_tracker.ps1
+?? wip/Rio_Code/P3_R14/old/
+?? wip/Rio_Code/P3_R14/parity_compare.py
+?? wip/Rio_Code/P3_R14/parity_compare_m6.py
+?? wip/Rio_Code/P3_R14/parity_compare_m7.py
+?? wip/Rio_Code/P3_R14/parity_compare_m8.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9.py
+?? wip/Rio_Code/P3_R14/parity_compare_m9b.py
+?? wip/Rio_Code/P3_R14/parity_source.npz
+?? wip/Rio_Code/P3_R14/parity_source.py
+?? wip/Rio_Code/P3_R14/parity_source_m6.npz
+?? wip/Rio_Code/P3_R14/parity_source_m6.py
+?? wip/Rio_Code/P3_R14/parity_source_m7.npz
+?? wip/Rio_Code/P3_R14/parity_source_m7.py
+?? wip/Rio_Code/P3_R14/parity_source_m8.npz
+?? wip/Rio_Code/P3_R14/parity_source_m8.py
+?? wip/Rio_Code/P3_R14/parity_source_m9.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9.py
+?? wip/Rio_Code/P3_R14/parity_source_m9b.npz
+?? wip/Rio_Code/P3_R14/parity_source_m9b.py
+?? wip/Rio_Code/P3_R14/smoke_test_p3_simulation.py
+?? wip/Rio_Code/P3_R2_withSEI/
+?? wip/Rio_Code/P3_R3_withPostProsess/
+?? wip/Rio_Code/P3_R4_RewriteEqs/
+?? wip/Rio_Code/P3_R5_LongCycle/
+?? wip/Rio_Code/P3_R6_Shortcycle/
+?? wip/Rio_Code/P3_R7_FixedMigration/
+?? wip/Rio_Code/Study/
+?? wip/Rio_Code/Xi_func.ipynb
+?? wip/Rio_Code/_patch_compare_nb.py
+?? wip/Rio_Code/big.py
+?? wip/Rio_Code/copy_box.ipynb
+?? wip/Rio_Code/domain.py
+?? wip/Rio_Code/output.log
+?? wip/Rio_Code/phase.py
+?? wip/Rio_Code/rio_callback.ipynb
+?? wip/Rio_Code/write_xlsx.ipynb
+----------------------------------------

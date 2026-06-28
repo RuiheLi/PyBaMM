@@ -45,6 +45,7 @@ out/
 config.py
 matplotlibrc
 *.pickle
+*.pkl
 *.sav
 
 # ideas
@@ -121,3 +122,7 @@ vcpkg_installed/
 # benchmarks
 html/
 results/
+
+# local backups and LaTeX noise
+texput.log
+wip/Rio_Code/P3_R14_backup_*/

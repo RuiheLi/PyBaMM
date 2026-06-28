@@ -1,0 +1,24 @@
+[2026-06-11 07:33:21] fig8 START rates=[0.1, 1.0, 2.0] mesh_r_n=60 plot_only=False
+[2026-06-11 07:33:21] fig8 solve 0.1C BEGIN
+[2026-06-11 07:34:08] fig8 solve 0.1C OK wall=46.6s
+[2026-06-11 07:34:20] fig8 saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\Double_SimSave\Fig8_discharge_voltage\fig8_0.1C_single_mesh60.pkl
+[2026-06-11 07:34:20] fig8 solve 0.1C BEGIN
+[2026-06-11 07:35:07] fig8 solve 0.1C OK wall=46.7s
+[2026-06-11 07:35:19] fig8 saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\Double_SimSave\Fig8_discharge_voltage\fig8_0.1C_dual_mesh60.pkl
+[2026-06-11 07:35:19] fig8 solve 1.0C BEGIN
+[2026-06-11 07:35:49] fig8 solve 1.0C OK wall=30.3s
+[2026-06-11 07:35:51] fig8 saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\Double_SimSave\Fig8_discharge_voltage\fig8_1.0C_single_mesh60.pkl
+[2026-06-11 07:35:51] fig8 solve 1.0C BEGIN
+[2026-06-11 07:36:22] fig8 solve 1.0C OK wall=30.7s
+[2026-06-11 07:36:23] fig8 saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\Double_SimSave\Fig8_discharge_voltage\fig8_1.0C_dual_mesh60.pkl
+[2026-06-11 07:36:23] fig8 solve 2.0C BEGIN
+[2026-06-11 07:45:24] fig8 solve 2.0C OK wall=540.5s
+[2026-06-11 07:45:35] fig8 saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\Double_SimSave\Fig8_discharge_voltage\fig8_2.0C_single_mesh60.pkl
+[2026-06-11 07:45:35] fig8 solve 2.0C BEGIN
+[2026-06-12 09:11:52] fig8 solve 2.0C OK wall=91576.7s
+[2026-06-12 09:11:54] fig8 saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\Double_SimSave\Fig8_discharge_voltage\fig8_2.0C_dual_mesh60.pkl
+[2026-06-12 09:12:43] fig8 plot saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\Double_SimSave\Fig8_discharge_voltage\Fig8_discharge_voltage_profiles.png
+[2026-06-12 09:12:43] fig8 DONE
+[2026-06-14 18:34:56] fig8 START rates=[0.1, 1.0, 2.0] mesh_r_n=60 plot_only=True
+[2026-06-14 18:36:12] fig8 plot saved D:\LRHWork\Model_RH\PyBaMM-ECdrag2\wip\Rio_Code\P3_R14\outputs\main\fig_08_Fig8_discharge_voltage\Fig8_discharge_voltage_profiles.png
+[2026-06-14 18:36:12] fig8 DONE
